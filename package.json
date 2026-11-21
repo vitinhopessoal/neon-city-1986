@@ -20,7 +20,8 @@
     "desktop": "vite build && electron .",
     "desktop:dev": "node tools/desktop/dev.mjs",
     "dist:win": "vite build && electron-builder --win nsis portable",
-    "icon": "node tools/desktop/make-icon.mjs"
+    "icon": "node tools/desktop/make-icon.mjs",
+    "dist:linux": "vite build && electron-builder --linux AppImage deb"
   },
   "dependencies": {
     "three": "^0.187.0"
@@ -34,7 +35,10 @@
     "electron@39.8.10": true
   },
   "main": "electron/main.cjs",
-  "author": "NEON CITY dev",
+  "author": {
+    "name": "NEON CITY dev",
+    "email": "vitinhopessoal@users.noreply.github.com"
+  },
   "build": {
     "appId": "com.neoncity.game1986",
     "productName": "NEON CITY 1986",
@@ -67,6 +71,24 @@
     },
     "portable": {
       "artifactName": "NEON-CITY-1986-Portable-${version}.${ext}"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Game",
+      "icon": "build/icon.png",
+      "executableName": "neon-city-1986",
+      "synopsis": "Jogo de ação em mundo aberto, anos 80",
+      "artifactName": "NEON-CITY-1986-${version}-linux-${arch}.${ext}",
+      "syncDesktopName": true,
+      "maintainer": "NEON CITY dev <vitinhopessoal@users.noreply.github.com>"
+    },
+    "deb": {
+      "artifactName": "NEON-CITY-1986-${version}-linux-${arch}.${ext}"
     }
-  }
+  },
+  "desktopName": "neon-city-1986.desktop",
+  "homepage": "https://github.com/vitinhopessoal/neon-city-1986"
 }

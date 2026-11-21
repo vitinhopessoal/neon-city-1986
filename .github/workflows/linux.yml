@@ -1,0 +1,45 @@
+# Gera as versões Linux (AppImage e .deb) numa máquina Ubuntu do GitHub
+# e anexa à Release da tag. Roda ao publicar uma tag v* ou manualmente (Actions → Run workflow).
+name: Build Linux
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag da Release que recebe os arquivos (ex.: v0.1.0)'
+        required: true
+        default: 'v0.1.0'
+
+permissions:
+  contents: write
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      # Manual: compila a branch escolhida em "Run workflow" (main) e anexa à tag informada.
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Testes de lógica (oceano e polícia)
+        run: npm run test:ocean && npm run test:police
+
+      - name: Build e empacotamento Linux
+        run: npm run dist:linux -- --publish never
+
+      - name: Anexar à Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.inputs.tag || github.ref_name }}
+        run: |
+          ls -la release
+          gh release upload "$TAG" release/*.AppImage release/*.deb --clobber
