@@ -27,6 +27,22 @@ de produção (`dist/`) por um protocolo interno `app://neon-city/`.
 - O protocolo `app://` só serve arquivos de dentro de `dist/`.
 - `dev-maps/` (TEST CITY) não entra no build nem no executável, como no build web.
 
+## Linux (Linux Mint, Ubuntu e derivados)
+
+As versões Linux são geradas pelo GitHub Actions (`.github/workflows/linux.yml`) numa máquina
+Ubuntu e anexadas à Release: rode em **Actions → Build Linux → Run workflow** ou publique uma tag `v*`.
+Localmente, num Linux: `npm run dist:linux`. No Windows o AppImage não pode ser gerado, porque o
+empacotamento exige links simbólicos.
+
+- **`.deb` (recomendado no Mint)**: dois cliques no arquivo → **Instalar pacote**. Ou, no terminal:
+  `sudo apt install ./NEON-CITY-1986-0.1.0-linux-amd64.deb`. O jogo aparece no menu como **NEON CITY 1986**.
+  Para remover: `sudo apt remove neon-city-1986`.
+- **AppImage (sem instalar)**: botão direito → Propriedades → Permissões → *Permitir executar o arquivo como
+  programa*, depois dois cliques. Ou `chmod +x NEON-CITY-1986-0.1.0-linux-x86_64.AppImage && ./NEON-CITY-1986-0.1.0-linux-x86_64.AppImage`.
+  Se reclamar de FUSE: `sudo apt install libfuse2t64` (Mint 22) ou `sudo apt install libfuse2` (Mint 21).
+- Saves no Linux: `~/.config/neon-city-1986`.
+- Placa NVIDIA: use o driver proprietário (Gerenciador de Drivers do Mint) para o WebGL rodar com aceleração.
+
 ## Observações
 
 - O executável não é assinado digitalmente. Na primeira execução o Windows SmartScreen pode
