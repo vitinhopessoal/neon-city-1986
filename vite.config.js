@@ -1,0 +1,89 @@
+import { defineConfig } from 'vite';
+import { createReadStream, readFileSync, statSync } from 'node:fs';
+import { resolve, sep, extname } from 'node:path';
+
+/**
+ * Serve a pasta dev-maps/ em /dev-maps/ SOMENTE no servidor de desenvolvimento.
+ * Mapas de teste e conteúdo externo ficam isolados dos recursos do jogo e
+ * nunca entram no build de produção (dist/).
+ */
+function devMapsPlugin() {
+  const root = resolve(process.cwd(), 'dev-maps');
+  const types = { '.glb': 'model/gltf-binary', '.gltf': 'model/gltf+json', '.json': 'application/json', '.bin': 'application/octet-stream', '.png': 'image/png', '.jpg': 'image/jpeg' };
+  return {
+    name: 'neon-city-dev-maps',
+    apply: 'serve',
+    configureServer(server) {
+      server.middlewares.use('/dev-maps', (req, res, next) => {
+        try {
+          const rel = decodeURIComponent((req.url || '/').split('?')[0]);
+          const file = resolve(root, `.${rel}`);
+          if (file !== root && !file.startsWith(root + sep)) {
+            res.statusCode = 403;
+            return res.end('Forbidden');
+          }
+          const st = statSync(file, { throwIfNoEntry: false });
+          if (!st || !st.isFile()) {
+            res.statusCode = 404;
+            return res.end('Not found');
+          }
+          res.setHeader('Content-Type', types[extname(file).toLowerCase()] || 'application/octet-stream');
+          res.setHeader('Content-Length', st.size);
+          res.setHeader('Cache-Control', 'no-cache');
+          createReadStream(file).pipe(res);
+        } catch (err) {
+          next(err);
+        }
+      });
+    },
+  };
+}
+
+function thirdPartyNoticesPlugin() {
+  return {
+    name: 'neon-city-third-party-notices',
+    apply: 'build',
+    generateBundle() {
+      this.emitFile({
+        type: 'asset',
+        fileName: 'THIRD-PARTY-NOTICES.txt',
+        source: 'Three.js — licença da biblioteca distribuída com o jogo\n\n'
+          + readFileSync(resolve(process.cwd(), 'node_modules/three/LICENSE'), 'utf8'),
+      });
+    },
+  };
+}
+
+export default defineConfig(({ command }) => ({
+  base: './',
+  // Inclui o protagonista do usuário tanto no servidor local quanto no build.
+  publicDir: 'public',
+  plugins: [devMapsPlugin(), thirdPartyNoticesPlugin()],
+  server: {
+    port: 5173,
+    open: false,
+    // Escuta só em loopback (padrão "localhost"); o cloudflared encaminha a partir da própria máquina.
+    // Túnel temporário (Cloudflare Quick Tunnel): libera SOMENTE este hostname, mantendo a
+    // proteção de host do Vite para todos os outros. Remova esta linha ao encerrar o teste.
+    allowedHosts: ['pools-subdivision-petersburg-attacks.trycloudflare.com'],
+    fs: {
+      // Padrões do Vite + itens que nunca devem ser servidos: pacotes compactados na raiz
+      // (ex.: o mod de terceiros) e a configuração local de ferramentas (.claude/).
+      deny: ['.env', '.env.*', '*.{crt,pem}', '**/.git/**', '**/*.{zip,rar,7z}', '**/.claude/**'],
+    },
+  },
+  build: {
+    target: 'es2020',
+    outDir: 'dist',
+    chunkSizeWarningLimit: 1200,
+    rollupOptions: {
+      output: {
+        // Separa o Three.js em um chunk próprio (melhor cache entre versões do jogo).
+        manualChunks(id) {
+          if (id.includes('node_modules/three')) return 'three';
+          return undefined;
+        },
+      },
+    },
+  },
+}));

@@ -1,0 +1,18 @@
+node_modules/
+dist/
+*.log
+# Mapas de teste/externos: gerados ou de terceiros — nunca versionar.
+dev-maps/*
+!dev-maps/README.md
+tools/ai-reference-temp/
+# Pacotes compactados na raiz (mods/arquivos de terceiros e o ZIP original do protagonista).
+*.zip
+*.rar
+*.7z
+# Saída do empacotamento desktop (instalador/portátil gerados por electron-builder).
+release/
+# Pastas temporárias e caches locais.
+tools/review-temp/
+assets-src/protagonist/.cache/
+__pycache__/
+.claude/
