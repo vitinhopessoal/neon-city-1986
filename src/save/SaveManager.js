@@ -156,6 +156,7 @@ export class SaveManager {
       garages: g.properties.serializeGarages(),
       vehicles: g.properties.serializeVehicles(),
       boats: g.boats ? g.boats.serialize() : null,
+      radio: g.radio ? g.radio.serialize() : null,
       interiors: g.interiors?.save?.data ? structuredClone(g.interiors.save.data) : null,
       missions: {},
       prefs: { quality: g.qualityKey, camera: g.cameras.mode },
@@ -278,6 +279,7 @@ export class SaveManager {
     g.properties.deserialize(s, map, warnings);
     // 4b) Barcos (OCEAN DRIVE): registros do armazém e barcos deixados na água.
     g.boats?.deserialize(s.boats, warnings);
+    if (s.radio) g.radio?.deserialize(s.radio);
     // 5) Horário (reaproveita o ciclo existente: preset visual + relógio).
     const m = s.time.minutes;
     const preset = m >= 6 * 60 && m < 17 * 60 ? 'morning' : m >= 17 * 60 && m < 20 * 60 ? 'sunset' : 'night';

@@ -10,6 +10,17 @@ npm run desktop
 Para gerar o instalador e a versão portátil em `release/`: `npm run dist:win`.
 Detalhes em [docs/DESKTOP.md](docs/DESKTOP.md). A versão web continua com `npm run dev`.
 
+## NEON RADIO NETWORK — rádio nos carros, barcos, lojas e casas
+
+Oito emissoras fictícias (NEON FM, GROOVE, THUNDER ROCK, STREET BEAT, OCEAN BREEZE,
+TROPICAL CALIENTE, CITY TALK e MIDNIGHT JAZZ) com programação contínua: ao voltar para a
+mesma estação, ela está em outro ponto da grade. Há DJs, vinhetas, comerciais e notícias
+que reagem a perseguições e outros eventos. No veículo, o **scroll do mouse** abre a
+roleta de rádios; depois de 2 s sem mexer, a estação destacada passa a tocar. Músicas e
+vozes são originais, geradas pelo projeto (`npm run build:radio`). Volumes por canal em
+**P → Configurações**. Testes: `npm run test:radio` e `__NEON_TEST__.radioSuite()`.
+Detalhes em [docs/RADIO.md](docs/RADIO.md).
+
 ## NEON MOTOR COMPANY — nove carros modelados no Blender
 
 PALM COMPACT, BAY CITY 100, COAST WAGON (populares), METRO EXECUTIVE, OCEAN COUPE,

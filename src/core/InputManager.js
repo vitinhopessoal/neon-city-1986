@@ -36,6 +36,9 @@ export const DEFAULT_BINDINGS = {
   quickSelect: ['Tab'],
   weaponNext: ['WheelDown'],
   weaponPrev: ['WheelUp'],
+  // Rádio (dentro de carros e lanchas): o mesmo scroll, em contexto exclusivo com as armas.
+  radioNext: ['WheelDown'],
+  radioPrev: ['WheelUp'],
   weapon1: ['Digit1'],
   weapon2: ['Digit2'],
   weapon3: ['Digit3'],
@@ -82,6 +85,8 @@ export const ACTION_INFO = {
   quickSelect: { context: 'pé', label: 'Seleção rápida de armas (segurar)' },
   weaponNext: { context: 'pé', label: 'Próxima arma' },
   weaponPrev: { context: 'pé', label: 'Arma anterior' },
+  radioNext: { context: 'carro', label: 'Roleta de rádio: próxima emissora' },
+  radioPrev: { context: 'carro', label: 'Roleta de rádio: emissora anterior' },
   weapon1: { context: 'pé', label: 'Arma 1 (Bren Ten)' },
   weapon2: { context: 'pé', label: 'Arma 2 (S&W 645)' },
   weapon3: { context: 'pé', label: 'Arma 3 (S&W 4503)' },

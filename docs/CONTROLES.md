@@ -126,3 +126,13 @@ Na água não há pulo nem armas. O nado começa onde o fundo passa de 1,3 m e t
 - `?map=test-city`: começa no mapa de testes.
 - `?player=original|glb`: escolhe o protagonista (padrão: modelo 3D importado, com fallback automático).
 - `?interiors=open`: ignora os horários de funcionamento (todos os estabelecimentos abertos).
+
+## Rádio (NEON RADIO NETWORK)
+
+| Tecla | Ação | Contexto |
+|---|---|---|
+| Scroll do mouse | Abre a roleta de rádios e passa para a próxima/anterior emissora (inclui RADIO OFF). Após 2 s sem mexer, a roleta some e a emissora destacada toca | dentro de carros e lanchas |
+| Scroll do mouse | Troca de arma (sem mudança) | a pé |
+
+As setas continuam esterçando, Q continua sendo a buzina e o scroll a pé continua trocando de arma.
+Os volumes de geral, música, rádio, vozes, efeitos e ambiente ficam em **P → Configurações**.

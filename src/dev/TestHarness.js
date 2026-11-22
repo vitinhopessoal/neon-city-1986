@@ -248,6 +248,11 @@ export function createTestHarness(game) {
       const { runNeonMotorSuite } = await import('./NeonMotorSuite.js');
       return runNeonMotorSuite(T, opts);
     },
+    /** PROMPT 14: os 32 testes obrigatórios do NEON RADIO NETWORK no jogo real. */
+    async radioSuite() {
+      const { runRadioSuite } = await import('./RadioSuite.js');
+      return runRadioSuite(T);
+    },
     async boot() {
       for (let i = 0; i < 60 && game.state !== 'title'; i++) await new Promise((r) => setTimeout(r, 250));
       game.start();

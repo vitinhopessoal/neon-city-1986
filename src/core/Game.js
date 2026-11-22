@@ -29,6 +29,7 @@ import { VehicleCustomizationManager } from '../vehicles/customization/VehicleCu
 import { WaterManager } from '../water/WaterManager.js';
 import { BoatManager } from '../boats/BoatManager.js';
 import { placeNeonShowcase } from '../vehicles/models/NeonShowcase.js';
+import { RadioManager } from '../audio/radio/RadioManager.js';
 
 const QUALITY_KEY = 'neoncity.quality';
 
@@ -152,6 +153,9 @@ export class Game {
     // OCEAN DRIVE (PROMPT 11): mar navegável, ilhas, marinas, barcos e natação.
     this.water = new WaterManager(this);
     this.boats = new BoatManager(this, this.water);
+    // NEON RADIO NETWORK (PROMPT 14): rádio nos veículos, barcos, lojas e casas; notícias por eventos.
+    this.radio = new RadioManager(this);
+    this.radio.attachEvents(this.city?.events);
     this.playTime = 0;
     this.menuOpen = false;
     this.qualityPresets = CONFIG.graphics.presets;
@@ -291,6 +295,7 @@ export class Game {
     this.interiors?.save?.reset();
     this.properties.newGame();
     this.boats?.newGame();
+    this.radio?.newGame();
     this.save.newGameId();
     this.playTime = 0;
     this.player.status.setHealth(100);
@@ -509,6 +514,7 @@ export class Game {
     // Água e barcos depois do oceano: a física usa o mesmo uTime do quadro desenhado.
     this.water?.update(dt, this.camera);
     this.boats?.update(dt);
+    this.radio?.update(dt, this.input);
     this.cameras.update(dt);
     this.customs?.cameraTick(dt);
     this.boats?.cameraTick(dt);

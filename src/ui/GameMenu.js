@@ -31,6 +31,14 @@ export class GameMenu {
     this.body = this.el.querySelector('[data-ref="body"]');
     this.status = this.el.querySelector('[data-ref="status"]');
     this.open = false;
+    // Volumes por canal (Configurações): aplicados na hora e lembrados entre sessões.
+    this.el.addEventListener('input', (e) => {
+      const r = e.target.closest('[data-vol]');
+      if (!r) return;
+      game.audio.setLevel(r.dataset.vol, r.value / 100);
+      if (r.nextElementSibling) r.nextElementSibling.textContent = r.value;
+      game.radio?.playback.refreshLevels();
+    });
     this.el.addEventListener('click', (e) => {
       const t = e.target.closest('[data-tab]');
       if (t) { this.tab(t.dataset.tab); return; }
@@ -111,6 +119,7 @@ export class GameMenu {
       const presets = Object.entries(g.qualityPresets || {});
       this.body.innerHTML = `<p class="gm-note">Qualidade gráfica</p><div class="gm-row">${presets.map(([k, p]) => `<button data-act="quality" data-arg="${k}" class="${k === g.qualityKey ? 'active' : ''}">${esc(p.label)}</button>`).join('')}</div>
         <p class="gm-note">Som</p><div class="gm-row"><button data-act="mute">${g.audio.muted ? 'ATIVAR SOM' : 'DESATIVAR SOM'}</button></div>
+        <div class="gm-volumes">${[['master', 'Volume geral'], ['music', 'Música'], ['radio', 'Rádio'], ['voice', 'Vozes'], ['sfx', 'Efeitos'], ['ambient', 'Ambiente']].map(([k, label]) => `<label class="gm-vol"><span>${label}</span><input type="range" min="0" max="100" step="5" data-vol="${k}" value="${Math.round((g.audio.levels?.[k] ?? 1) * 100)}"><b>${Math.round((g.audio.levels?.[k] ?? 1) * 100)}</b></label>`).join('')}</div>
         <p class="gm-note">Salvamento: ${esc(g.save.backend?.kind || '—')} · autosave em compras, garagem, ao dormir e ao sair de casa.</p>`;
     }
   }

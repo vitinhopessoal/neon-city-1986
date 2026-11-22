@@ -180,7 +180,7 @@ const pizzeria = {
   palette: P(0x8a3b2c, 0xf2e3c8, 0xf5efe6, 0x2f7a5a),
   windows: [{ x: -0.3, w: 3.0 }, { x: 0.3, w: 3.0 }],
   light: { sky: 0xffd2a0, ground: 0x6a3a2a, hemi: 0.95, exposure: 1.0, windowColor: 0xffb36b, poolStrength: 0.45, points: [{ x: 0, y: 3.0, z: 0.15, color: 0xffb36b, intensity: 10, distance: 12 }, { x: 0.15, y: 3.0, z: -0.3, color: 0xffd08a, intensity: 7, distance: 9 }] },
-  audio: { track: null, ambience: 'pizza' },
+  audio: { track: null, ambience: 'pizza', radio: 'tropical' }, // rádio da casa (NEON RADIO NETWORK)
   layout(b, ctx) {
     const { w: W, d: D, h: H } = ctx;
     const counterZ = -D / 2 + 3.2;
@@ -305,7 +305,7 @@ const market = {
   palette: P(0xe8e4da, 0xf4f6ee, 0xf2f3f0, 0x2f9a6a),
   windows: [{ x: -0.3, w: 3.4 }, { x: 0.32, w: 3.4 }],
   light: { sky: 0xeef6ff, ground: 0x8a8a90, hemi: 1.25, exposure: 1.0, windowColor: 0xe8f4ff, poolStrength: 0.25, points: [{ x: 0, y: 3.3, z: 0, color: 0xf4fbff, intensity: 9, distance: 16 }] },
-  audio: { track: null, ambience: 'market' },
+  audio: { track: null, ambience: 'market', radio: 'ocean_breeze' },
   layout(b, ctx) {
     const { w: W, d: D, h: H } = ctx;
     // Caixas registradoras perto da entrada (lado oposto ao vão da porta).
@@ -412,7 +412,7 @@ const workshop = {
   palette: P(0x8d9096, 0x9fb0c0, 0x7d8590, 0xffd23f),
   windows: [],
   light: { sky: 0xdfe8ff, ground: 0x5a5a5a, hemi: 1.1, exposure: 1.0, windowColor: 0xdfe8ff, poolStrength: 0.3, points: [{ x: -0.15, y: 4.3, z: -0.1, color: 0xeaf2ff, intensity: 12, distance: 16 }] },
-  audio: { track: null, ambience: 'workshop' },
+  audio: { track: null, ambience: 'workshop', radio: 'thunder_rock' },
   layout(b, ctx) {
     const { w: W, d: D, h: H } = ctx;
     // Faixas amarelas no piso e portão de garagem (lado interno da fachada).
@@ -1070,7 +1070,7 @@ const electronics = {
   palette: P(0x3a3e46, 0xe8ecf2, 0xf2f4f6, 0x45f3ff),
   windows: [{ x: -0.3, w: 3.0 }, { x: 0.32, w: 3.0 }],
   light: { sky: 0xeaf4ff, ground: 0x4a4a54, hemi: 1.0, exposure: 1.0, windowColor: 0xd8f0ff, poolStrength: 0.3, points: [{ x: 0, y: 3.0, z: 0, color: 0xeaf6ff, intensity: 9, distance: 13 }] },
-  audio: { track: null, ambience: 'electronics' },
+  audio: { track: null, ambience: 'electronics', radio: 'street_beat' },
   layout(b, ctx) {
     const { w: W, d: D, h: H } = ctx;
     // Parede de TVs de tubo (todas com a mesma tela animada).

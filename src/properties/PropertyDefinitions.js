@@ -45,7 +45,7 @@ export function createPropertyDefs(pm) {
     palette: P(0xb88a5a, 0xf2e3d0, 0xf6f1ea, 0x45a0a8),
     windows: [{ x: -0.32, w: 1.8 }, { x: 0.32, w: 1.8 }],
     light: { sky: 0xffe4c4, ground: 0x7a5a4a, hemi: 1.0, exposure: 1.0, windowColor: 0xffc890, poolStrength: 0.45, env: 0.1, points: [{ x: -0.25, y: 2.5, z: 0.25, color: 0xffd8a8, intensity: 7, distance: 9 }, { x: 0.35, y: 2.5, z: -0.3, color: 0xffe2b8, intensity: 5, distance: 7 }] },
-    audio: { track: null, ambience: 'home' },
+    audio: { track: null, ambience: 'home', radio: 'neon_fm' }, // rádio do apartamento
     property: {
       kind: 'apartment_simple', typeLabel: 'Apartamento simples', price: PRICES.properties.sunset_apartment, starter: true,
       description: 'Um apartamento pequeno e aconchegante no prédio de esquina da Coral Street. Sala com TV, quarto, cozinha compacta e banheiro.',
@@ -123,7 +123,7 @@ export function createPropertyDefs(pm) {
     palette: P(0xd9c8a8, 0xf6efe4, 0xfaf6f0, 0x2f8f83),
     windows: [{ x: 0.3, w: 2.2 }],
     light: { sky: 0xfff0d8, ground: 0x8a7a5a, hemi: 1.1, exposure: 1.0, windowColor: 0xffe2b0, poolStrength: 0.4, env: 0.1, points: [{ x: 0.15, y: 2.6, z: 0.2, color: 0xffe2b8, intensity: 8, distance: 11 }, { x: -0.3, y: 2.6, z: -0.25, color: 0xfff0d8, intensity: 6, distance: 9 }] },
-    audio: { track: null, ambience: 'home' },
+    audio: { track: null, ambience: 'home', radio: 'midnight_jazz' },
     property: {
       kind: 'house', typeLabel: 'Casa residencial', price: PRICES.properties.palm_residence,
       description: 'Bangalô tropical de um andar na Coral Street, com jardim murado, sala ampla, cozinha integrada e garagem anexa.',

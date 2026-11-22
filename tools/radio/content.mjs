@@ -1,0 +1,313 @@
+// NEON RADIO NETWORK — roteiros originais (PROMPT 14). Tudo aqui é texto escrito para o projeto:
+// nomes de emissoras, DJs, músicas, artistas, comerciais e notícias são fictícios.
+// As falas viram áudio com as vozes locais do Windows (tools/radio/tts.ps1) e o pós-processamento
+// de cada "persona" (tom, ritmo e equalização) definido em VOICES.
+
+/** Personas de voz: voz SAPI + taxa de fala + fator de tom (ffmpeg asetrate) + filtro. */
+export const VOICES = {
+  violet: { voice: 'Microsoft Maria Desktop', rate: 0, pitch: 0.96, eq: 'warm' },
+  tony: { voice: 'Microsoft Maria Desktop', rate: 2, pitch: 0.8, eq: 'bright' },
+  jack: { voice: 'Microsoft Maria Desktop', rate: 1, pitch: 0.76, eq: 'gritty' },
+  rico: { voice: 'Microsoft Maria Desktop', rate: 1, pitch: 0.83, eq: 'bright' },
+  lisa: { voice: 'Microsoft Maria Desktop', rate: -2, pitch: 1.0, eq: 'warm' },
+  carlos: { voice: 'Microsoft Maria Desktop', rate: 1, pitch: 0.85, eq: 'bright' },
+  carlosEn: { voice: 'Microsoft Zira Desktop', rate: 1, pitch: 0.85, eq: 'bright' },
+  frank: { voice: 'Microsoft Maria Desktop', rate: -1, pitch: 0.77, eq: 'news' },
+  nora: { voice: 'Microsoft Maria Desktop', rate: -3, pitch: 0.94, eq: 'warm' },
+  announcer: { voice: 'Microsoft Maria Desktop', rate: 0, pitch: 0.72, eq: 'promo' },
+  promoF: { voice: 'Microsoft Maria Desktop', rate: 1, pitch: 1.06, eq: 'promo' },
+  helena: { voice: 'Microsoft Maria Desktop', rate: 0, pitch: 1.03, eq: 'phone' },
+  ramos: { voice: 'Microsoft Maria Desktop', rate: -1, pitch: 0.7, eq: 'phone' },
+  caller: { voice: 'Microsoft Maria Desktop', rate: 2, pitch: 0.88, eq: 'phone' },
+};
+
+export const STATIONS = [
+  {
+    id: 'neon_fm', name: 'NEON FM', freq: '86.1', genre: 'Synthwave · Synthpop', style: 'synthwave', dj: 'violet', djName: 'DJ VIOLET',
+    colors: ['#ff4fd8', '#5ff4ff'], slogan: 'o som da noite elétrica',
+    tracks: [
+      { title: 'Laser Boulevard', artist: 'Chrome Lovers Club' },
+      { title: 'Midnight Signal', artist: 'Velvet Circuit' },
+      { title: 'Pink Horizon', artist: 'Nova Arcade' },
+      { title: 'Neon Rain', artist: 'The Instant Kids' },
+    ],
+    lines: {
+      open: ['Boa noite, Neon City. Aqui é a DJ Violet, na Neon FM, oitenta e seis ponto um. Aumenta o volume que a cidade está acesa.', 'Você está na Neon FM. Eu sou a Violet, e a noite elétrica continua.', 'Neon FM, oitenta e seis ponto um. Violet com você, entre letreiros cor de rosa e avenidas molhadas.', 'Olá, motoristas noturnos. Violet aqui, pronta pra mais uma volta pela orla.'],
+      intro: ['Agora, Chrome Lovers Club, com Laser Boulevard.', 'Velvet Circuit, Midnight Signal. Coloca o cinto.', 'Pra você que está na Ocean Avenue: Nova Arcade, Pink Horizon.', 'The Instant Kids, com Neon Rain. Uma das minhas favoritas.'],
+      back: ['Isso foi puro sintetizador. Do jeito que a gente gosta.', 'Que linha de baixo, hein? Neon FM.', 'A Violet aprova. Próxima parada: mais música.', 'Se você estava cantando no trânsito, eu não conto pra ninguém.'],
+      comment: ['Sabe aquela hora em que o céu de Sunset Beach fica roxo? É pra essa hora que a Neon FM existe.', 'Recado pros pilotos da madrugada: devagar nas curvas da orla, tá?', 'Alguém aí já reparou que toda palmeira de Neon City parece posar pra foto?', 'Eu tenho uma teoria: quanto mais rosa o letreiro, melhor a música lá dentro.', 'Fones, toca-fitas e janelas abertas. É assim que se ouve Neon FM.', 'Hoje a cidade está brilhando mais que de costume. Deve ser você.'],
+      morning: ['Bom dia, Neon City. Café forte e sintetizador, combinação perfeita.'],
+      afternoon: ['Boa tarde. O sol está alto e a Neon FM também.'],
+      sunset: ['O sol está se pondo na orla. Hora de acender os faróis e o rádio.'],
+      night: ['Já passou da meia luz. A Neon FM é a trilha sonora da sua noite.'],
+      toAds: ['A Violet volta já. Antes, os nossos patrocinadores.', 'Pausa rápida. Fica comigo.'],
+      police: ['Ouvi sirenes lá fora. Cuidado aí, motoristas. Neon FM continua com você.', 'Pelo jeito a noite está agitada pra polícia de Neon City. Respira e dirige com calma.'],
+      sea: ['Quem está no mar hoje, manda um alô pra Violet. A marina está linda.'],
+      bye: ['Fica ligado na Neon FM. A noite não para.', 'Aqui é a Violet. Até a próxima música.'],
+    },
+    ids: ['Neon FM, oitenta e seis ponto um. O som da noite elétrica.', 'Você está ouvindo Neon FM.', 'Neon FM. Sintetizadores vinte e quatro horas.'],
+  },
+  {
+    id: 'groove', name: 'GROOVE', freq: '98.5', genre: 'Funk · Disco · Boogie', style: 'disco', dj: 'tony', djName: 'TONY FLASH',
+    colors: ['#ffb238', '#ff4f6d'], slogan: 'a pista nunca fecha',
+    tracks: [
+      { title: 'Mirror Ball Lady', artist: 'Sugar Satellite' },
+      { title: 'Get Down Ocean Drive', artist: 'The Velvet Brothers' },
+      { title: 'Roller Skate Romance', artist: 'Disco Dynamo' },
+      { title: 'Funky Palm Tree', artist: 'Brass Machine' },
+    ],
+    lines: {
+      open: ['Ê, Neon City! Tony Flash na Groove, noventa e oito e meio! Quem está parado aí, mexe o ombro!', 'Groove, noventa e oito e meio, e eu sou o Tony Flash, o homem mais brilhante do dial!', 'Alô, alô, pista de dança sobre rodas! Tony Flash chegou!', 'Se você não está dançando, confere se o rádio está ligado. Groove!'],
+      intro: ['Sugar Satellite, Mirror Ball Lady! Liga o globo espelhado!', 'The Velvet Brothers, Get Down Ocean Drive! Essa é pra rodar na avenida!', 'Disco Dynamo, Roller Skate Romance. Patins nos pés, coração na mão!', 'Brass Machine, Funky Palm Tree. Metais, baby, metais!'],
+      back: ['Que suingue! Groove, noventa e oito e meio!', 'Essa fez até o semáforo dançar!', 'Tony Flash aprova com dois polegares e um passinho!', 'Quem foi que deixou o groove escapar desse jeito? Fui eu!'],
+      comment: ['Sabe qual é o segredo do Tony? Calça boca de sino e otimismo.', 'Recado pra galera da orla: a pista é aqui, no seu painel!', 'Meu terno tem mais lantejoula que o letreiro do Neon Paradise!', 'Se a vida te der um engarrafamento, faz dele uma pista de dança!', 'Hoje eu acordei com tanto groove que o despertador pediu música!', 'Groove não é estilo, é atitude!'],
+      morning: ['Bom dia, Neon City! Até o café hoje está dançando!'],
+      afternoon: ['Boa tarde, pessoal! Sol, suor e suingue!'],
+      sunset: ['Pôr do sol na orla e globo espelhado no coração!'],
+      night: ['A noite chegou e a Groove acendeu a pista!'],
+      toAds: ['Segura o passinho que já voltamos!', 'Intervalo comercial, mas o groove continua!'],
+      police: ['Opa, sirene na cidade! Calma, pessoal, que a única perseguição aqui é atrás do ritmo!', 'Ouvi dizer que a polícia está ocupada hoje. Dirige no ritmo, sem pressa!'],
+      sea: ['Quem está de barco, faz uma pista no convés!'],
+      bye: ['Tony Flash, sempre brilhando! Fica na Groove!', 'Não muda de estação, que o groove não para!'],
+    },
+    ids: ['Groove, noventa e oito e meio. A pista nunca fecha.', 'Funk, disco e boogie. Groove!', 'Você está na Groove, noventa e oito e meio.'],
+  },
+  {
+    id: 'thunder_rock', name: 'THUNDER ROCK', freq: '104.3', genre: 'Rock · Hard Rock', style: 'rock', dj: 'jack', djName: 'JACK VOLT',
+    colors: ['#ff3b2f', '#f2f2f2'], slogan: 'volume no talo',
+    tracks: [
+      { title: 'Highway Thunderbolt', artist: 'Iron Coast' },
+      { title: 'Burnout Saturday', artist: 'The Rusty Pistons' },
+      { title: 'Electric Shark', artist: 'Voltage Kings' },
+      { title: 'Last Gas Station', artist: 'Denim Riot' },
+    ],
+    lines: {
+      open: ['Thunder Rock, cento e quatro ponto três! Jack Volt na área, e o volume vai no talo!', 'Aqui é o Jack Volt. Se a guitarra não estiver alta, a culpa é sua!', 'Thunder Rock! Rock pesado pra quem não tira o pé do acelerador!', 'Ei, Neon City! Desliga o ar condicionado e abre a janela. É rock!'],
+      intro: ['Iron Coast, Highway Thunderbolt! Pé no fundo!', 'The Rusty Pistons, Burnout Saturday. Cheiro de pneu queimado!', 'Voltage Kings, com Electric Shark! Cuidado que morde!', 'Denim Riot, Last Gas Station. Pra quem já rodou demais.'],
+      back: ['Isso é rock de verdade! Thunder Rock!', 'Meus ouvidos zumbem, e eu adoro!', 'Mais um riff desses e eu quebro o microfone!', 'Se seu carro tremeu, foi a bateria. A do rock, não a do carro.'],
+      comment: ['Tem gente que ouve música calma. Que bom pra elas. Aqui é Thunder Rock!', 'Minha jaqueta de couro tem mais estrada que muito caminhão!', 'Recado pros motoqueiros da orla: capacete, sempre. Rock, também.', 'Synthpop? Nunca ouvi falar. Brincadeira. Mas aqui não toca!', 'O Jack Volt não dorme. O Jack Volt faz solo de guitarra.', 'Cabelo comprido e consciência limpa. Esse é o lema.'],
+      morning: ['Bom dia? Pra mim é madrugada estendida. Rock!'],
+      afternoon: ['Tarde quente, guitarra mais quente ainda!'],
+      sunset: ['O sol está caindo, e o volume subindo!'],
+      night: ['Noite de Neon City. O rock acorda agora.'],
+      toAds: ['Comerciais! Aproveita e afina a guitarra.', 'Já volto. Não ouse mudar de estação!'],
+      police: ['Sirenes lá fora? Pra mim é só mais um instrumento!', 'Parece que alguém está fugindo da polícia. Se for você, abaixa o rádio e presta atenção!'],
+      sea: ['Rock no mar? Claro! Levanta a âncora!'],
+      bye: ['Jack Volt, desligando o amplificador. Mentira, nunca desligo!', 'Thunder Rock, cento e quatro ponto três. Rock até o fim!'],
+    },
+    ids: ['Thunder Rock, cento e quatro ponto três. Volume no talo.', 'Isso é Thunder Rock!', 'Rock pesado. Thunder Rock.'],
+  },
+  {
+    id: 'street_beat', name: 'STREET BEAT', freq: '92.7', genre: 'Electro · Hip-Hop · Breakbeat', style: 'electro', dj: 'rico', djName: 'MC RICO',
+    colors: ['#3cff7a', '#ffe14f'], slogan: 'a batida da rua',
+    tracks: [
+      { title: 'Boombox Avenue', artist: 'Crew 86' },
+      { title: 'Breakin on Coral Street', artist: 'DJ Static' },
+      { title: 'Robot Handshake', artist: 'Electro Freaks' },
+      { title: 'Concrete Rhythm', artist: 'Lady Cassette' },
+    ],
+    lines: {
+      open: ['Street Beat, noventa e dois e sete! MC Rico no comando, falando direto da rua!', 'É o MC Rico, e isso é Street Beat! Batida pesada pra quem vive a cidade!', 'Alô, quebradas de Neon City! A rádio da rua está no ar!', 'Street Beat! Tênis branco, rádio no ombro e rima na ponta da língua!'],
+      intro: ['Crew oitenta e seis, Boombox Avenue! Liga o som no máximo!', 'DJ Static, Breakin on Coral Street. Abre a roda!', 'Electro Freaks, Robot Handshake. Movimento de robô, valendo!', 'Lady Cassette, Concrete Rhythm. A rainha da fita cassete!'],
+      back: ['Essa batida é da rua pra rua! Street Beat!', 'Se o grave não balançou seu retrovisor, aumenta!', 'MC Rico aprova. Respeito pros produtores!', 'Isso é cultura, isso é Neon City!'],
+      comment: ['Recado pra galera do break no calçadão: domingo tem roda, hein!', 'A rua ensina mais que muito livro. Mas lê também, tá?', 'Meu tênis está mais limpo que a minha consciência. E olha que ela está limpa!', 'Grafite colorido, batida firme e respeito. É assim que funciona.', 'O MC Rico manda um salve pra todo mundo que trabalha de madrugada!', 'Boombox não é rádio. Boombox é estilo de vida.'],
+      morning: ['Bom dia, Neon City! Acorda com batida, que o dia rende!'],
+      afternoon: ['Boa tarde, rua! Sol quente e grave pesado!'],
+      sunset: ['Pôr do sol no calçadão. Hora da roda de break!'],
+      night: ['A noite é nossa! Street Beat no volume!'],
+      toAds: ['Pausa pros patrocinadores. Segura a batida!', 'Já volta, já volta! Não sai daí!'],
+      police: ['Ouvi sirene pra todo lado. Pessoal, cabeça fria e mão no volante!', 'A polícia está agitada hoje. Fica esperto e respeita a pista!'],
+      sea: ['Salve pra quem está curtindo o mar com a Street Beat!'],
+      bye: ['MC Rico, saindo de cena. Mas a batida fica!', 'Street Beat, noventa e dois e sete. A batida da rua!'],
+    },
+    ids: ['Street Beat, noventa e dois e sete. A batida da rua.', 'Electro e hip-hop. Street Beat!', 'Você está na Street Beat.'],
+  },
+  {
+    id: 'ocean_breeze', name: 'OCEAN BREEZE', freq: '101.2', genre: 'Soft Rock · Baladas', style: 'soft', dj: 'lisa', djName: 'LISA MOON',
+    colors: ['#7fd7ff', '#fff2c7'], slogan: 'canções para a beira-mar',
+    tracks: [
+      { title: 'Postcards from the Pier', artist: 'Harbor Lights' },
+      { title: 'Slow Dance at the Marina', artist: 'Amber Coast' },
+      { title: 'Seashell Telephone', artist: 'Linda Shore' },
+      { title: 'Golden Hour Highway', artist: 'The Driftwood Band' },
+    ],
+    lines: {
+      open: ['Boa noite. Aqui é Lisa Moon, na Ocean Breeze, cento e um ponto dois. Respire fundo e aproveite.', 'Ocean Breeze. Canções suaves para quem dirige devagar à beira mar.', 'Olá. Lisa Moon com você, com a janela aberta e o mar ao lado.', 'Você sintonizou a Ocean Breeze. Fique à vontade.'],
+      intro: ['Harbor Lights, Postcards from the Pier.', 'Amber Coast, com Slow Dance at the Marina. Para dançar devagar.', 'Linda Shore, Seashell Telephone. Uma canção sobre saudade.', 'The Driftwood Band, Golden Hour Highway. Para a hora dourada.'],
+      back: ['Que canção bonita. Ocean Breeze.', 'Às vezes, uma balada diz tudo.', 'Essa me lembra noites de verão na marina.', 'Música para ouvir com o coração aberto.'],
+      comment: ['Já reparou como o mar de Sunset Beach muda de cor ao entardecer?', 'Uma dica da Lisa: desacelere. A cidade fica mais bonita assim.', 'Mandem lembranças para quem vocês amam. A Ocean Breeze leva.', 'Hoje eu caminhei pelo píer e pensei em vocês, ouvintes.', 'Nada como uma canção suave depois de um dia longo.', 'O vento da orla está fresco. Perfeito para esta música.'],
+      morning: ['Bom dia. Que o seu dia seja leve como uma brisa.'],
+      afternoon: ['Boa tarde. Um intervalo de calma no meio do dia.'],
+      sunset: ['O pôr do sol está lindo hoje. Se puder, olhe para o mar.'],
+      night: ['A noite chegou, tranquila. Ocean Breeze faz companhia.'],
+      toAds: ['Uma pausa breve, e eu volto com mais canções.', 'Fique comigo. Voltamos em instantes.'],
+      police: ['A cidade parece agitada hoje. Aqui, a gente segue com calma. Dirija com cuidado.', 'Ouço sirenes ao longe. Que todos cheguem bem em casa.'],
+      sea: ['Para quem está no mar agora: boa navegação.'],
+      bye: ['Aqui é Lisa Moon. Obrigada pela companhia.', 'Ocean Breeze, cento e um ponto dois. Até logo.'],
+    },
+    ids: ['Ocean Breeze, cento e um ponto dois. Canções para a beira mar.', 'Você está ouvindo Ocean Breeze.', 'Ocean Breeze. Suave como o mar.'],
+  },
+  {
+    id: 'tropical', name: 'TROPICAL CALIENTE', freq: '95.4', genre: 'Latina · Tropical', style: 'latin', dj: 'carlos', djName: 'CARLOS SOL',
+    colors: ['#ff8a00', '#00d1a0'], slogan: 'sabor latino na costa',
+    tracks: [
+      { title: 'Salsa en la Playa', artist: 'Orquesta Coral' },
+      { title: 'Mambo de Medianoche', artist: 'Los Flamingos' },
+      { title: 'Cumbia del Muelle', artist: 'Rosa Marina' },
+      { title: 'Caliente Boulevard', artist: 'Sol y Sombra' },
+    ],
+    lines: {
+      open: ['Buenas noches, Neon City! Carlos Sol na Tropical Caliente, noventa e cinco e quatro!', 'Tropical Caliente! Ritmo latino pra esquentar a costa!', 'Hola, amigos! Aqui é o Carlos Sol, com muito sabor!', 'Se o seu carro tem rodas, ele também tem ritmo! Tropical Caliente!'],
+      intro: ['Orquesta Coral, Salsa en la Playa! Pé na areia!', 'Los Flamingos, Mambo de Medianoche! Dale!', 'Rosa Marina, Cumbia del Muelle. Para bailar no píer!', 'Sol y Sombra, Caliente Boulevard! Sabor!'],
+      back: ['Que sabor! Tropical Caliente!', 'Essa percussão aquece até o ar condicionado!', 'Carlos Sol aprova com muito molho!', 'Assim é que se dança na costa!'],
+      comment: ['Minha avó dizia: quem dança, não envelhece. Então dança, amigo!', 'Um alô pra todos os cozinheiros de Neon City. Esse ritmo é tempero!', 'Hoje o calor está forte, mas a música está mais forte ainda!', 'Congas, timbales e coração. Essa é a receita.', 'Se você errar o passo, finge que foi de propósito!', 'A costa inteira está balançando, eu sinto daqui!'],
+      morning: ['Buenos días, Neon City! Café cubano e muito ritmo!'],
+      afternoon: ['Boa tarde! O sol está caliente e a rádio também!'],
+      sunset: ['Atardecer na orla! Que lindo, amigos!'],
+      night: ['A noite latina começou! Tropical Caliente!'],
+      toAds: ['Un momentito! Já voltamos!', 'Pausa rápida, amigos. Não saiam daí!'],
+      police: ['Muitas sirenes hoje! Calma, amigos, dirijam com cuidado!', 'A polícia está correndo por aí. Melhor correr só na pista de dança!'],
+      sea: ['Saludos para quem está navegando! O mar é tropical também!'],
+      bye: ['Carlos Sol se despede, mas o ritmo fica!', 'Tropical Caliente, noventa e cinco e quatro. Hasta luego!'],
+    },
+    linesEn: {
+      comment: ['Good evening, Neon City! This is Carlos Sol, keeping it hot on the coast!', 'Hey amigos, turn it up! Tropical Caliente never sleeps!'],
+    },
+    ids: ['Tropical Caliente, noventa e cinco e quatro. Sabor latino na costa.', 'Tropical Caliente!', 'Ritmo latino. Tropical Caliente.'],
+  },
+  {
+    id: 'city_talk', name: 'CITY TALK', freq: '88.9', genre: 'Notícias · Entrevistas · Humor', style: 'talk', dj: 'frank', djName: 'FRANK HOLLOWAY',
+    colors: ['#e9e9e9', '#3d7bff'], slogan: 'a voz de Neon City', tracks: [],
+    lines: {
+      open: ['Boa noite. Eu sou Frank Holloway, e esta é a City Talk, oitenta e oito ponto nove. A voz de Neon City.', 'City Talk. Notícias, debates e a opinião de quem vive a cidade.', 'Você está na City Talk. Frank Holloway com as principais notícias.', 'Olá, ouvintes. Começa agora mais uma edição da City Talk.'],
+      intro: [], back: [],
+      comment: ['Lembrando que a City Talk está aberta às suas ligações. A cidade é de todos.', 'Uma opinião pessoal: Neon City precisa de mais faixas de pedestre e menos buzinas.', 'Recebemos muitas cartas sobre o barulho na orla. Vamos falar disso mais tarde.', 'O trânsito da Ocean Avenue continua sendo o assunto preferido dos nossos ouvintes.', 'Se você tem uma história da cidade, a City Talk quer ouvir.', 'Notícias em primeiro lugar. Sempre foi assim nesta casa.'],
+      morning: ['Bom dia, Neon City. Vamos às primeiras notícias.'],
+      afternoon: ['Boa tarde. Acompanhe a edição da tarde.'],
+      sunset: ['Fim de tarde na cidade. Hora de atualizar as notícias.'],
+      night: ['Boa noite. As notícias não dormem, e a City Talk também não.'],
+      toAds: ['Voltamos após os comerciais.', 'Uma pausa para os nossos anunciantes.'],
+      police: [], sea: [],
+      bye: ['Frank Holloway. Boa noite, e até a próxima edição.', 'City Talk, oitenta e oito ponto nove. Obrigado pela audiência.'],
+    },
+    ids: ['City Talk, oitenta e oito ponto nove. A voz de Neon City.', 'Você está na City Talk.', 'City Talk. Notícias e opinião.'],
+  },
+  {
+    id: 'midnight_jazz', name: 'MIDNIGHT JAZZ', freq: '90.6', genre: 'Jazz · Fusion · Instrumental', style: 'jazz', dj: 'nora', djName: 'NORA BLUE',
+    colors: ['#6a5cff', '#ffd27a'], slogan: 'jazz depois da meia-noite',
+    tracks: [
+      { title: 'Blue Hour on Coral Street', artist: 'The Pelican Pier Trio' },
+      { title: 'Smoke and Saxophones', artist: 'Cooper Lane Quartet' },
+      { title: 'Velvet Lounge', artist: 'Nina Starling' },
+      { title: 'Fusion Freeway', artist: 'Tidal Groove Ensemble' },
+    ],
+    lines: {
+      open: ['Boa noite. Aqui é Nora Blue, na Midnight Jazz, noventa ponto seis. Sente-se, relaxe.', 'Midnight Jazz. Música para depois da meia noite.', 'Olá. Nora Blue com você, entre saxofones e luzes baixas.', 'Você está na Midnight Jazz. Deixe a cidade lá fora por um instante.'],
+      intro: ['The Pelican Pier Trio, Blue Hour on Coral Street.', 'Cooper Lane Quartet, Smoke and Saxophones.', 'Nina Starling, Velvet Lounge. Elegância pura.', 'Tidal Groove Ensemble, Fusion Freeway. Um pouco mais de energia.'],
+      back: ['Que improviso. Midnight Jazz.', 'O jazz é uma conversa. E essa foi ótima.', 'Cada nota no lugar certo, e algumas no lugar errado, de propósito.', 'Isso foi um convite para desacelerar.'],
+      comment: ['Dizem que o melhor jazz de Neon City toca nos clubes perto da orla, depois das duas da manhã.', 'Se você está dirigindo sozinho agora, saiba que não está. A Nora está aqui.', 'Um contrabaixo bem tocado é como um bom amigo. Sempre presente.', 'A noite pede menos pressa. E mais música.', 'Às vezes o silêncio entre as notas diz mais que as próprias notas.', 'Para os trabalhadores da madrugada, este programa é de vocês.'],
+      morning: ['Bom dia. Jazz também combina com a manhã.'],
+      afternoon: ['Boa tarde. Uma pausa elegante no meio do dia.'],
+      sunset: ['O céu está mudando de cor. O jazz também.'],
+      night: ['A noite está bonita. Midnight Jazz.'],
+      toAds: ['Uma breve pausa. Já retornamos.', 'Fique comigo. Voltamos logo.'],
+      police: ['A cidade está barulhenta esta noite. Aqui dentro, o jazz segue tranquilo.', 'Sirenes ao longe. Que todos fiquem bem.'],
+      sea: ['Para quem está navegando sob a lua: este jazz é para vocês.'],
+      bye: ['Nora Blue. Boa noite, e bons sonhos.', 'Midnight Jazz, noventa ponto seis. Até a próxima.'],
+    },
+    ids: ['Midnight Jazz, noventa ponto seis. Jazz depois da meia noite.', 'Você está ouvindo Midnight Jazz.', 'Midnight Jazz. Luzes baixas, som alto.'],
+  },
+];
+
+/** Comerciais: estabelecimentos do próprio jogo (nomes do projeto), duas versões cada. */
+export const ADS = [
+  { id: 'ad_neon_customs_1', voice: 'announcer', bed: 'rock', text: 'Seu carro está sem graça? Na NEON CUSTOMS, ele sai com rodas novas, pintura brilhante e motor preparado. NEON CUSTOMS, na Sunset Auto Works. Personalize. Acelere. Brilhe.' },
+  { id: 'ad_neon_customs_2', voice: 'promoF', bed: 'synthwave', text: 'Faróis, aerofólios, suspensão rebaixada. Se você imaginar, a NEON CUSTOMS monta. Passe pela oficina rosa da Sunset Auto Works.' },
+  { id: 'ad_pizza_1', voice: 'promoF', bed: 'latin', text: 'Fome de madrugada? Sunset Slice Pizza! Massa fina, queijo derretido e o melhor molho da orla. Sunset Slice. Uma fatia de felicidade.' },
+  { id: 'ad_pizza_2', voice: 'announcer', bed: 'disco', text: 'Duas pizzas grandes pelo preço de uma e meia. Só na Sunset Slice Pizza. Leve a família. Ou não. A gente não julga.' },
+  { id: 'ad_paradise_1', voice: 'announcer', bed: 'electro', text: 'Neon Paradise. A boate mais iluminada de Neon City. Pista de dança, luzes de laser e DJs a noite inteira. Neon Paradise. O paraíso abre às dez.' },
+  { id: 'ad_paradise_2', voice: 'promoF', bed: 'synthwave', text: 'Quinta feira é noite dos anos dourados no Neon Paradise. Traje elegante, ombreiras liberadas.' },
+  { id: 'ad_autoworks_1', voice: 'announcer', bed: 'rock', text: 'Barulho estranho no motor? Sunset Auto Works. Mecânicos de confiança desde sempre. Conserto rápido, preço justo e café de graça na espera.' },
+  { id: 'ad_autoworks_2', voice: 'promoF', bed: 'soft', text: 'Seu carro bateu? Calma. A Sunset Auto Works deixa ele novinho. E a gente não conta pra ninguém.' },
+  { id: 'ad_azure_1', voice: 'promoF', bed: 'soft', text: 'Azure Palms Hotel. Quartos com vista para o mar, piscina iluminada e o melhor café da manhã da costa. Azure Palms. Você merece.' },
+  { id: 'ad_azure_2', voice: 'announcer', bed: 'jazz', text: 'Sexta à noite, jazz ao vivo no lounge do Azure Palms Hotel. Reservas na recepção. Elegância à beira mar.' },
+  { id: 'ad_marina_1', voice: 'announcer', bed: 'latin', text: 'Sempre sonhou com uma lancha? Sunset Marina! Barcos novos e seminovos, vagas no Marina Storage e passeios até Coral Island. Sunset Marina. O mar é seu.' },
+  { id: 'ad_marina_2', voice: 'promoF', bed: 'soft', text: 'Fim de semana em Hidden Cove? Alugue um barco na Sunset Marina e descubra as praias secretas de Neon City.' },
+];
+
+/**
+ * Notícias. kind = tipo de evento do jogo que a notícia exige (só toca se o evento aconteceu);
+ * 'ambient' = notícia de ambientação (claramente fictícia, não depende de evento).
+ * Nunca citam a posição exata do jogador: no máximo a região.
+ */
+export const NEWS = [
+  { kind: 'chase', text: 'Uma perseguição policial movimentou as avenidas de Neon City nas últimas horas. Viaturas da polícia acompanharam um veículo em alta velocidade. As autoridades ainda investigam o ocorrido.' },
+  { kind: 'chase', text: 'Moradores relataram sirenes e carros em alta velocidade pela cidade. A polícia confirmou uma perseguição, mas não divulgou detalhes.' },
+  { kind: 'chase', text: 'Mais uma perseguição em Neon City. Segundo a polícia, o suspeito dirigia de forma perigosa. Testemunhas falam em manobras impressionantes.' },
+  { kind: 'chase', text: 'Helicópteros e viaturas foram vistos sobre a cidade durante uma perseguição. A polícia pede que os motoristas mantenham a calma e respeitem as leis de trânsito.' },
+  { kind: 'escape', text: 'A polícia admite que um suspeito conseguiu escapar após uma perseguição pela cidade. As buscas continuam.' },
+  { kind: 'escape', text: 'Fugiu. É o que dizem as autoridades sobre o motorista perseguido mais cedo. O caso segue em aberto.' },
+  { kind: 'arrest', text: 'Um suspeito foi detido pela polícia após uma ocorrência agitada na cidade. Ele foi levado para a delegacia central.' },
+  { kind: 'arrest', text: 'Terminou com uma prisão a confusão registrada mais cedo em Neon City. A polícia agradeceu a colaboração dos moradores.' },
+  { kind: 'gunshot', text: 'Disparos foram ouvidos na cidade. A polícia reforçou o patrulhamento e pede que testemunhas entrem em contato.' },
+  { kind: 'gunshot', text: 'Moradores relatam barulho de tiros. Não há informações sobre feridos. A investigação está em andamento.' },
+  { kind: 'accident', text: 'Um atropelamento foi registrado nas ruas da cidade. A polícia lembra: atenção redobrada perto das calçadas.' },
+  { kind: 'accident', text: 'Acidente de trânsito em Neon City. Equipes de emergência foram acionadas. Dirija com cuidado.' },
+  { kind: 'vandalism', text: 'Postes, bancos e placas danificados. A prefeitura contabiliza os estragos de uma noite agitada e promete reparos.' },
+  { kind: 'vandalism', text: 'Vandalismo em Neon City. Moradores encontraram mobiliário urbano destruído. A polícia procura os responsáveis.' },
+  { kind: 'sea', text: 'O movimento de barcos aumentou na costa. A capitania lembra os navegadores de respeitar a sinalização perto da marina.' },
+  { kind: 'sea', text: 'Passeios até Coral Island e Hidden Cove estão em alta. A Sunset Marina registra um bom movimento.' },
+  { kind: 'night', text: 'A noite chegou em Neon City, e as boates da orla já estão cheias. A polícia promete fiscalização nas avenidas.' },
+  { kind: 'morning', text: 'Amanhece em Neon City. O trânsito começa a aumentar na Ocean Avenue.' },
+  { kind: 'ambient', text: 'A prefeitura de Neon City anunciou o novo festival de verão na orla. Haverá shows, comida e fogos de artifício.' },
+  { kind: 'ambient', text: 'O campeonato de patins do calçadão de Sunset Beach bateu recorde de inscrições este ano.' },
+  { kind: 'ambient', text: 'O aquário municipal recebeu um novo grupo de golfinhos. As visitas estão abertas ao público.' },
+  { kind: 'ambient', text: 'Lantern Point ganhará novas luminárias até o fim do mês, segundo a prefeitura.' },
+  { kind: 'ambient', text: 'Os pescadores do píer comemoram uma das melhores temporadas dos últimos anos.' },
+  { kind: 'ambient', text: 'A previsão para amanhã é de sol forte, céu limpo e brisa à tarde. Ótimo dia para ir à praia.' },
+  { kind: 'ambient', text: 'O concurso de fliperama do centro de Neon City terá uma final emocionante neste fim de semana.' },
+  { kind: 'ambient', text: 'Uma nova loja de discos abriu perto da Ocean Avenue. Fitas cassete e vinis a preços promocionais.' },
+];
+
+/** Programas de conversa da CITY TALK (falas em sequência, vozes diferentes). */
+export const TALK = [
+  { id: 'talk_traffic', title: 'Debate: o trânsito da orla', lines: [
+    ['frank', 'Hoje na City Talk: o trânsito da orla. Comigo, a urbanista doutora Helena Prado. Doutora, o que está acontecendo?'],
+    ['helena', 'Frank, a cidade cresceu, mas as avenidas continuam as mesmas. Todo mundo quer passar pela Ocean Avenue ao mesmo tempo.'],
+    ['frank', 'E a solução seria?'],
+    ['helena', 'Mais transporte público, mais ciclovias, e menos carros esportivos acelerando às três da manhã.'],
+    ['frank', 'Polêmico. Os ouvintes da Thunder Rock não vão gostar.'] ] },
+  { id: 'talk_nightlife', title: 'Entrevista: a vida noturna', lines: [
+    ['frank', 'Estamos falando sobre a vida noturna de Neon City. Na linha, o empresário Ramos, dono de duas boates na orla.'],
+    ['ramos', 'Boa noite, Frank. A noite de Neon City é a melhor da costa. Luzes, música, gente bonita.'],
+    ['frank', 'E o barulho? Os vizinhos reclamam.'],
+    ['ramos', 'Barulho é sinal de que a cidade está viva. Mas a gente respeita o horário. Quase sempre.'],
+    ['frank', 'Quase sempre. Anotado.'] ] },
+  { id: 'talk_caller_ufo', title: 'Ouvinte: luzes no mar', lines: [
+    ['frank', 'Vamos a mais uma ligação. Alô, você está na City Talk.'],
+    ['caller', 'Frank, eu vi luzes estranhas sobre o mar perto do farol. Piscavam rosa e azul.'],
+    ['frank', 'Senhor, isso provavelmente era o letreiro de um hotel.'],
+    ['caller', 'Um letreiro voando?'],
+    ['frank', 'Próxima ligação, por favor.'] ] },
+  { id: 'talk_caller_parking', title: 'Ouvinte: a vaga', lines: [
+    ['frank', 'Alô, City Talk. Pode falar.'],
+    ['caller', 'Frank, alguém estaciona um carro esportivo branco na minha vaga todo dia. Todo dia!'],
+    ['frank', 'Já tentou deixar um bilhete educado?'],
+    ['caller', 'Deixei vinte. O carro continua lá, brilhando.'],
+    ['frank', 'Neon City, gente. Neon City.'] ] },
+  { id: 'talk_police', title: 'Debate: segurança', lines: [
+    ['frank', 'Segurança pública. Doutora Helena, as perseguições estão aumentando?'],
+    ['helena', 'Os números variam, Frank. Mas cada perseguição coloca pedestres e motoristas em risco.'],
+    ['frank', 'A polícia diz que está preparada.'],
+    ['helena', 'Preparação é importante. Prevenção é mais importante ainda.'] ] },
+  { id: 'talk_beach', title: 'Crônica: domingo na praia', lines: [
+    ['frank', 'Uma crônica para encerrar o bloco. Domingo em Sunset Beach: guarda sóis coloridos, pranchas, patins e o cheiro de protetor solar.'],
+    ['frank', 'No fim da tarde, o céu fica roxo, os letreiros acendem, e a cidade inteira parece prender a respiração. É por isso que a gente mora aqui.'] ] },
+];
+
+/** Assuntos de gancho da CITY TALK antes de cada notícia de evento. */
+export const NEWS_LEAD = [
+  'Atenção, notícia de última hora.',
+  'Interrompemos a programação para uma atualização.',
+  'Acaba de chegar à redação.',
+];

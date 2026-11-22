@@ -43,7 +43,7 @@ export class InteriorAudio {
     this.filter = ctx.createBiquadFilter();
     this.filter.type = 'lowpass';
     this.filter.frequency.value = 18000;
-    this.bus.connect(this.filter).connect(this.am.master);
+    this.bus.connect(this.filter).connect(this.am.bus?.music || this.am.master);
   }
 
   /**

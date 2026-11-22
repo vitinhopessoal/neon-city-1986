@@ -4,10 +4,17 @@
  * passos por superfície e impacto de aterrissagem.
  * Só é iniciado após um gesto do usuário (política dos navegadores).
  */
+/** Canais de volume (Configurações): geral + música, rádio, vozes, efeitos e ambiente. */
+export const AUDIO_CHANNELS = ['master', 'music', 'radio', 'voice', 'sfx', 'ambient'];
+const LEVELS_KEY = 'neoncity.audio.levels';
+
 export class AudioManager {
   constructor(volume = 0.7) {
     this.ctx = null;
     this.volume = volume;
+    // Níveis por canal (0..1), lembrados entre sessões (preferência do jogador, fora do save).
+    this.levels = { master: 1, music: 0.8, radio: 0.8, voice: 0.9, sfx: 1, ambient: 1 };
+    try { Object.assign(this.levels, JSON.parse(localStorage.getItem(LEVELS_KEY) || '{}')); } catch { /* armazenamento indisponível */ }
     this.muted = false;
     this.started = false;
     this._nextCar = 6;
@@ -24,12 +31,24 @@ export class AudioManager {
     if (!AC) return;
     this.ctx = new AC();
     const ctx = this.ctx;
-    this.master = ctx.createGain();
-    this.master.gain.value = this.volume;
+    // Ganho principal (volume geral e mudo) → compressor → saída.
+    this.main = ctx.createGain();
+    this.main.gain.value = this.volume * this.levels.master;
     const comp = ctx.createDynamicsCompressor();
     comp.threshold.value = -18;
     comp.ratio.value = 3;
-    this.master.connect(comp).connect(ctx.destination);
+    this.main.connect(comp).connect(ctx.destination);
+    // Barramentos. "master" continua sendo o destino dos módulos existentes (motores, armas,
+    // sirenes, buzinas, barcos...): é o canal de EFEITOS. Ambiente, música e rádio têm canais próprios.
+    this.bus = {};
+    for (const name of ['sfx', 'ambient', 'music', 'radio', 'voice']) {
+      const g = ctx.createGain();
+      g.gain.value = this.levels[name] ?? 1;
+      g.connect(this.main);
+      this.bus[name] = g;
+    }
+    this.master = this.bus.sfx;
+    this.ambientBus = this.bus.ambient;
 
     this.white = this._noiseBuffer('white', 3);
     this.brown = this._noiseBuffer('brown', 4);
@@ -80,15 +99,27 @@ export class AudioManager {
     g.gain.value = gain;
     const pan = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
     src.connect(filter).connect(g);
-    if (pan) g.connect(pan).connect(this.master); else g.connect(this.master);
+    if (pan) g.connect(pan).connect(this.ambientBus || this.master); else g.connect(this.ambientBus || this.master);
     src.start(0, Math.random() * buffer.duration);
     return { src, filter, gain: g, pan };
   }
 
   toggleMute() {
     this.muted = !this.muted;
-    if (this.master) this.master.gain.setTargetAtTime(this.muted ? 0 : this.volume, this.ctx.currentTime, 0.1);
+    if (this.main) this.main.gain.setTargetAtTime(this.muted ? 0 : this.volume * this.levels.master, this.ctx.currentTime, 0.1);
     return this.muted;
+  }
+
+  /** Ajusta um canal (0..1) e lembra a preferência. */
+  setLevel(name, value) {
+    if (!AUDIO_CHANNELS.includes(name)) return;
+    const v = Math.max(0, Math.min(1, +value || 0));
+    this.levels[name] = v;
+    try { localStorage.setItem(LEVELS_KEY, JSON.stringify(this.levels)); } catch { /* sem armazenamento */ }
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    if (name === 'master') { if (!this.muted) this.main.gain.setTargetAtTime(this.volume * v, t, 0.05); }
+    else if (this.bus[name]) this.bus[name].gain.setTargetAtTime(v, t, 0.05);
   }
 
   /**
@@ -151,7 +182,7 @@ export class AudioManager {
       out = p;
     }
     src.connect(f).connect(g);
-    out.connect(this.master);
+    out.connect(this.ambientBus || this.master); // carros ao longe = ambiente
     src.start(now, Math.random() * 2);
     src.stop(now + dur + 0.1);
   }

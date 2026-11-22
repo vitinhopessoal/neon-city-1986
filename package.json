@@ -23,7 +23,9 @@
     "icon": "node tools/desktop/make-icon.mjs",
     "dist:linux": "vite build && electron-builder --linux AppImage deb",
     "test:neon": "node --test tools/vehicles/neon-motor.test.mjs",
-    "build:vehicles": "blender --background --factory-startup --python tools/blender/neon_motor/run.py -- --all --render"
+    "build:vehicles": "blender --background --factory-startup --python tools/blender/neon_motor/run.py -- --all --render",
+    "test:radio": "node --test tools/radio/radio.test.mjs",
+    "build:radio": "node tools/radio/build-radio.mjs"
   },
   "dependencies": {
     "three": "^0.187.0"
