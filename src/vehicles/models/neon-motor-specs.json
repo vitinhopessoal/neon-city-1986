@@ -1,0 +1,1413 @@
+{
+  "_doc": "NEON MOTOR COMPANY (PROMPT 12). Fonte única de medidas: lida pelo script do Blender (tools/blender/neon_motor) e pelo jogo (src/vehicles/models). Coordenadas do jogo: metros, frente = +Z, motorista = +X, origem no chão sob o centro do carro.",
+  "version": 1,
+  "vehicles": [
+    {
+      "type": "palm_compact",
+      "file": "palm-compact",
+      "model": "Palm Compact",
+      "name": "PALM COMPACT",
+      "category": "popular",
+      "family": "sedan",
+      "year": 1984,
+      "brand": "PALM",
+      "color": "#d9caa5",
+      "plate": "PC 1984",
+      "dims": {
+        "length": 3.95,
+        "width": 1.66,
+        "height": 1.42,
+        "wheelBase": 2.42,
+        "track": 1.4,
+        "wheelRadius": 0.29,
+        "tireWidth": 0.17,
+        "floorY": 0.3
+      },
+      "body": {
+        "bottomY": 0.18,
+        "sillY": 0.27,
+        "creaseY": 0.6,
+        "beltY": 0.86,
+        "beltRear": 0.9,
+        "noseTopY": 0.79,
+        "cowlZ": 0.78,
+        "cowlY": 0.89,
+        "roofFrontZ": 0.04,
+        "roofRearZ": -1.36,
+        "roofY": 1.41,
+        "rear": "hatch",
+        "rearBaseZ": -1.9,
+        "rearBaseY": 0.93,
+        "tailTopY": 0.93,
+        "cornerFront": 0.2,
+        "cornerRear": 0.16,
+        "frontTaper": 0.03,
+        "shoulderInset": 0.05,
+        "tumblehome": 0.15,
+        "crown": 0.02,
+        "bow": 0.06,
+        "pillarA": 0.07,
+        "pillarB": 0.08,
+        "pillarC": 0.3,
+        "doorZ": [
+          [
+            0.7,
+            -0.4
+          ]
+        ],
+        "quarterGlass": true
+      },
+      "style": {
+        "bumper": "black",
+        "grille": "slats",
+        "head": "rect",
+        "headSize": [
+          0.36,
+          0.15
+        ],
+        "tail": "rect",
+        "rim": "hubcap",
+        "trim": "black",
+        "seat": "#8f8270",
+        "interior": "#3b352f",
+        "rubStrip": true,
+        "spoiler": "none",
+        "steering": 2
+      },
+      "seats": [
+        {
+          "id": "driver",
+          "x": 0.36,
+          "hipY": 0.5,
+          "z": 0,
+          "recline": 0.35,
+          "driver": true
+        },
+        {
+          "id": "passenger",
+          "x": -0.36,
+          "hipY": 0.5,
+          "z": 0,
+          "recline": 0.35
+        },
+        {
+          "id": "rearLeft",
+          "x": 0.36,
+          "hipY": 0.52,
+          "z": -0.86,
+          "recline": 0.3,
+          "rear": true
+        },
+        {
+          "id": "rearRight",
+          "x": -0.36,
+          "hipY": 0.52,
+          "z": -0.86,
+          "recline": 0.3,
+          "rear": true
+        }
+      ],
+      "wheel": {
+        "y": 0.98,
+        "z": 0.37,
+        "tilt": 1.15
+      },
+      "handling": {
+        "mass": 890,
+        "engineForce": 3250,
+        "brakeForce": 8200,
+        "handbrakeForce": 3300,
+        "engineBrake": 900,
+        "maxSpeed": 40,
+        "reverseSpeed": 7,
+        "steerMax": 0.6,
+        "steerSpeed": 2.9,
+        "steerReturn": 4.2,
+        "steerSpeedFalloff": 0.04,
+        "grip": 1,
+        "handbrakeGrip": 0.5,
+        "corneringFront": 8.6,
+        "corneringRear": 9.6,
+        "drag": 0.3,
+        "rolling": 8,
+        "inertiaScale": 1,
+        "stability": 0.75,
+        "suspension": {
+          "freq": 1.6,
+          "damping": 0.42,
+          "travel": 0.09
+        },
+        "rollGain": 0.04,
+        "pitchGain": 0.022,
+        "gears": [
+          0,
+          11,
+          19,
+          28,
+          40
+        ],
+        "idleRpm": 850,
+        "redline": 6200,
+        "cylinders": 4,
+        "enginePitch": 1.15
+      },
+      "traffic": {
+        "weight": 0.16,
+        "zones": [
+          "residential",
+          "beach"
+        ]
+      }
+    },
+    {
+      "type": "bay_city_100",
+      "file": "bay-city-100",
+      "model": "Bay City 100",
+      "name": "BAY CITY 100",
+      "category": "popular",
+      "family": "sedan",
+      "year": 1983,
+      "brand": "BAY CITY",
+      "color": "#ece9e1",
+      "plate": "BC 100",
+      "dims": {
+        "length": 4.3,
+        "width": 1.68,
+        "height": 1.43,
+        "wheelBase": 2.48,
+        "track": 1.42,
+        "wheelRadius": 0.29,
+        "tireWidth": 0.175,
+        "floorY": 0.3
+      },
+      "body": {
+        "bottomY": 0.18,
+        "sillY": 0.27,
+        "creaseY": 0.62,
+        "beltY": 0.88,
+        "beltRear": 0.9,
+        "noseTopY": 0.81,
+        "cowlZ": 0.92,
+        "cowlY": 0.91,
+        "roofFrontZ": 0.24,
+        "roofRearZ": -0.98,
+        "roofY": 1.42,
+        "rear": "notch",
+        "rearBaseZ": -1.42,
+        "rearBaseY": 0.94,
+        "deckY": 0.94,
+        "tailTopY": 0.93,
+        "cornerFront": 0.14,
+        "cornerRear": 0.12,
+        "frontTaper": 0.02,
+        "shoulderInset": 0.05,
+        "tumblehome": 0.15,
+        "crown": 0.02,
+        "bow": 0.05,
+        "pillarA": 0.07,
+        "pillarB": 0.09,
+        "pillarC": 0.2,
+        "doorZ": [
+          [
+            0.84,
+            -0.08
+          ],
+          [
+            -0.08,
+            -0.84
+          ]
+        ]
+      },
+      "style": {
+        "bumper": "black",
+        "grille": "mesh",
+        "head": "rect",
+        "headSize": [
+          0.4,
+          0.17
+        ],
+        "tail": "band",
+        "rim": "steel",
+        "trim": "black",
+        "seat": "#5c5e66",
+        "interior": "#2d2e33",
+        "rubStrip": true,
+        "spoiler": "none",
+        "steering": 2
+      },
+      "seats": [
+        {
+          "id": "driver",
+          "x": 0.37,
+          "hipY": 0.5,
+          "z": 0.14,
+          "recline": 0.35,
+          "driver": true
+        },
+        {
+          "id": "passenger",
+          "x": -0.37,
+          "hipY": 0.5,
+          "z": 0.14,
+          "recline": 0.35
+        },
+        {
+          "id": "rearLeft",
+          "x": 0.37,
+          "hipY": 0.53,
+          "z": -0.72,
+          "recline": 0.3,
+          "rear": true
+        },
+        {
+          "id": "rearRight",
+          "x": -0.37,
+          "hipY": 0.53,
+          "z": -0.72,
+          "recline": 0.3,
+          "rear": true
+        }
+      ],
+      "wheel": {
+        "y": 0.98,
+        "z": 0.51,
+        "tilt": 1.15
+      },
+      "handling": {
+        "mass": 1010,
+        "engineForce": 3950,
+        "brakeForce": 9000,
+        "handbrakeForce": 3700,
+        "engineBrake": 1000,
+        "maxSpeed": 42,
+        "reverseSpeed": 7,
+        "steerMax": 0.55,
+        "steerSpeed": 2.5,
+        "steerReturn": 3.9,
+        "steerSpeedFalloff": 0.038,
+        "grip": 1.02,
+        "handbrakeGrip": 0.5,
+        "corneringFront": 8.4,
+        "corneringRear": 10,
+        "drag": 0.32,
+        "rolling": 9,
+        "inertiaScale": 1.1,
+        "stability": 0.88,
+        "suspension": {
+          "freq": 1.5,
+          "damping": 0.4,
+          "travel": 0.09
+        },
+        "rollGain": 0.04,
+        "pitchGain": 0.022,
+        "gears": [
+          0,
+          12,
+          21,
+          31,
+          42
+        ],
+        "idleRpm": 800,
+        "redline": 5800,
+        "cylinders": 4,
+        "enginePitch": 1.05
+      },
+      "traffic": {
+        "weight": 0.18,
+        "zones": [
+          "residential",
+          "commercial",
+          "beach"
+        ]
+      }
+    },
+    {
+      "type": "coast_wagon",
+      "file": "coast-wagon",
+      "model": "Coast Wagon",
+      "name": "COAST WAGON",
+      "category": "popular",
+      "family": "sedan",
+      "year": 1985,
+      "brand": "COAST",
+      "color": "#8ec6e6",
+      "plate": "CW 85",
+      "dims": {
+        "length": 4.36,
+        "width": 1.69,
+        "height": 1.47,
+        "wheelBase": 2.5,
+        "track": 1.42,
+        "wheelRadius": 0.29,
+        "tireWidth": 0.18,
+        "floorY": 0.31
+      },
+      "body": {
+        "bottomY": 0.18,
+        "sillY": 0.28,
+        "creaseY": 0.62,
+        "beltY": 0.89,
+        "beltRear": 0.92,
+        "noseTopY": 0.8,
+        "cowlZ": 0.94,
+        "cowlY": 0.92,
+        "roofFrontZ": 0.26,
+        "roofRearZ": -1.98,
+        "roofY": 1.43,
+        "rear": "wagon",
+        "rearBaseZ": -2.1,
+        "rearBaseY": 0.94,
+        "tailTopY": 0.94,
+        "cornerFront": 0.15,
+        "cornerRear": 0.1,
+        "frontTaper": 0.03,
+        "shoulderInset": 0.05,
+        "tumblehome": 0.13,
+        "crown": 0.02,
+        "bow": 0.05,
+        "pillarA": 0.07,
+        "pillarB": 0.09,
+        "pillarC": 0.09,
+        "pillarD": 0.14,
+        "doorZ": [
+          [
+            0.86,
+            -0.06
+          ],
+          [
+            -0.06,
+            -0.84
+          ]
+        ],
+        "roofRack": true
+      },
+      "style": {
+        "bumper": "black",
+        "grille": "slats",
+        "head": "rect",
+        "headSize": [
+          0.38,
+          0.16
+        ],
+        "tail": "tall",
+        "rim": "hubcap",
+        "trim": "black",
+        "seat": "#4f6f86",
+        "interior": "#2a3138",
+        "rubStrip": true,
+        "spoiler": "none",
+        "steering": 2
+      },
+      "seats": [
+        {
+          "id": "driver",
+          "x": 0.37,
+          "hipY": 0.51,
+          "z": 0.15,
+          "recline": 0.35,
+          "driver": true
+        },
+        {
+          "id": "passenger",
+          "x": -0.37,
+          "hipY": 0.51,
+          "z": 0.15,
+          "recline": 0.35
+        },
+        {
+          "id": "rearLeft",
+          "x": 0.37,
+          "hipY": 0.54,
+          "z": -0.7,
+          "recline": 0.3,
+          "rear": true
+        },
+        {
+          "id": "rearRight",
+          "x": -0.37,
+          "hipY": 0.54,
+          "z": -0.7,
+          "recline": 0.3,
+          "rear": true
+        }
+      ],
+      "wheel": {
+        "y": 0.99,
+        "z": 0.52,
+        "tilt": 1.15
+      },
+      "handling": {
+        "mass": 1150,
+        "engineForce": 4150,
+        "brakeForce": 9600,
+        "handbrakeForce": 3900,
+        "engineBrake": 1050,
+        "maxSpeed": 41,
+        "reverseSpeed": 7,
+        "steerMax": 0.52,
+        "steerSpeed": 2.3,
+        "steerReturn": 3.6,
+        "steerSpeedFalloff": 0.04,
+        "grip": 1,
+        "handbrakeGrip": 0.52,
+        "corneringFront": 7.8,
+        "corneringRear": 9.8,
+        "drag": 0.36,
+        "rolling": 10,
+        "inertiaScale": 1.2,
+        "stability": 0.9,
+        "suspension": {
+          "freq": 1.4,
+          "damping": 0.38,
+          "travel": 0.1
+        },
+        "rollGain": 0.046,
+        "pitchGain": 0.024,
+        "gears": [
+          0,
+          11,
+          20,
+          30,
+          41
+        ],
+        "idleRpm": 780,
+        "redline": 5600,
+        "cylinders": 4,
+        "enginePitch": 0.98
+      },
+      "traffic": {
+        "weight": 0.15,
+        "zones": [
+          "residential",
+          "beach"
+        ]
+      }
+    },
+    {
+      "type": "metro_executive",
+      "file": "metro-executive",
+      "model": "Metro Executive",
+      "name": "METRO EXECUTIVE",
+      "category": "intermediario",
+      "family": "sedan",
+      "year": 1985,
+      "brand": "METRO",
+      "color": "#6d1424",
+      "plate": "EXEC 85",
+      "dims": {
+        "length": 5.2,
+        "width": 1.92,
+        "height": 1.44,
+        "wheelBase": 2.9,
+        "track": 1.58,
+        "wheelRadius": 0.34,
+        "tireWidth": 0.21,
+        "floorY": 0.34
+      },
+      "body": {
+        "bottomY": 0.2,
+        "sillY": 0.3,
+        "creaseY": 0.66,
+        "beltY": 0.9,
+        "beltRear": 0.92,
+        "noseTopY": 0.86,
+        "cowlZ": 1.08,
+        "cowlY": 0.93,
+        "roofFrontZ": 0.44,
+        "roofRearZ": -0.98,
+        "roofY": 1.43,
+        "rear": "notch",
+        "rearBaseZ": -1.46,
+        "rearBaseY": 0.95,
+        "deckY": 0.95,
+        "tailTopY": 0.94,
+        "cornerFront": 0.12,
+        "cornerRear": 0.12,
+        "frontTaper": 0.02,
+        "shoulderInset": 0.05,
+        "tumblehome": 0.17,
+        "crown": 0.025,
+        "bow": 0.05,
+        "pillarA": 0.08,
+        "pillarB": 0.1,
+        "pillarC": 0.26,
+        "doorZ": [
+          [
+            0.98,
+            -0.08
+          ],
+          [
+            -0.08,
+            -1
+          ]
+        ],
+        "vinylRoof": true
+      },
+      "style": {
+        "bumper": "chrome",
+        "grille": "chrome_vertical",
+        "head": "quad",
+        "headSize": [
+          0.19,
+          0.15
+        ],
+        "tail": "wide",
+        "rim": "wire",
+        "trim": "chrome",
+        "seat": "#b8a68a",
+        "interior": "#3a2420",
+        "wood": true,
+        "rubStrip": false,
+        "ornament": true,
+        "spoiler": "none",
+        "steering": 4
+      },
+      "seats": [
+        {
+          "id": "driver",
+          "x": 0.42,
+          "hipY": 0.52,
+          "z": 0.24,
+          "recline": 0.33,
+          "driver": true
+        },
+        {
+          "id": "passenger",
+          "x": -0.42,
+          "hipY": 0.52,
+          "z": 0.24,
+          "recline": 0.33
+        },
+        {
+          "id": "rearLeft",
+          "x": 0.42,
+          "hipY": 0.55,
+          "z": -0.74,
+          "recline": 0.3,
+          "rear": true
+        },
+        {
+          "id": "rearRight",
+          "x": -0.42,
+          "hipY": 0.55,
+          "z": -0.74,
+          "recline": 0.3,
+          "rear": true
+        }
+      ],
+      "wheel": {
+        "y": 1,
+        "z": 0.62,
+        "tilt": 1.12
+      },
+      "handling": {
+        "mass": 1660,
+        "engineForce": 7600,
+        "brakeForce": 12500,
+        "handbrakeForce": 4900,
+        "engineBrake": 1450,
+        "maxSpeed": 48,
+        "reverseSpeed": 7.5,
+        "steerMax": 0.5,
+        "steerSpeed": 2.1,
+        "steerReturn": 3.4,
+        "steerSpeedFalloff": 0.034,
+        "grip": 1.05,
+        "handbrakeGrip": 0.52,
+        "corneringFront": 8,
+        "corneringRear": 10.4,
+        "drag": 0.46,
+        "rolling": 14,
+        "inertiaScale": 1.25,
+        "stability": 0.95,
+        "suspension": {
+          "freq": 1.25,
+          "damping": 0.36,
+          "travel": 0.11
+        },
+        "rollGain": 0.042,
+        "pitchGain": 0.022,
+        "gears": [
+          0,
+          14,
+          26,
+          37,
+          48
+        ],
+        "idleRpm": 650,
+        "redline": 5000,
+        "cylinders": 8,
+        "enginePitch": 0.72
+      },
+      "traffic": {
+        "weight": 0.09,
+        "zones": [
+          "commercial",
+          "rich"
+        ]
+      }
+    },
+    {
+      "type": "ocean_coupe",
+      "file": "ocean-coupe",
+      "model": "Ocean Coupe",
+      "name": "OCEAN COUPE",
+      "category": "intermediario",
+      "family": "sports",
+      "year": 1986,
+      "brand": "OCEAN",
+      "color": "#1d3f8f",
+      "plate": "OCN 86",
+      "dims": {
+        "length": 4.7,
+        "width": 1.84,
+        "height": 1.3,
+        "wheelBase": 2.56,
+        "track": 1.52,
+        "wheelRadius": 0.32,
+        "tireWidth": 0.23,
+        "floorY": 0.28
+      },
+      "body": {
+        "bottomY": 0.16,
+        "sillY": 0.25,
+        "creaseY": 0.56,
+        "beltY": 0.8,
+        "beltRear": 0.86,
+        "noseTopY": 0.62,
+        "cowlZ": 0.92,
+        "cowlY": 0.84,
+        "roofFrontZ": 0.06,
+        "roofRearZ": -0.62,
+        "roofY": 1.29,
+        "rear": "fastback",
+        "rearBaseZ": -1.92,
+        "rearBaseY": 0.9,
+        "tailTopY": 0.9,
+        "cornerFront": 0.22,
+        "cornerRear": 0.18,
+        "frontTaper": 0.1,
+        "shoulderInset": 0.05,
+        "tumblehome": 0.17,
+        "crown": 0.02,
+        "bow": 0.07,
+        "pillarA": 0.07,
+        "pillarB": 0,
+        "pillarC": 0.36,
+        "doorZ": [
+          [
+            0.8,
+            -0.48
+          ]
+        ],
+        "quarterGlass": true
+      },
+      "style": {
+        "bumper": "body",
+        "grille": "slot",
+        "head": "slim",
+        "headSize": [
+          0.4,
+          0.09
+        ],
+        "tail": "band",
+        "rim": "fivespoke",
+        "trim": "black",
+        "seat": "#2b2b31",
+        "interior": "#1c1c21",
+        "rubStrip": false,
+        "spoiler": "lip",
+        "steering": 3,
+        "sideStripe": true
+      },
+      "seats": [
+        {
+          "id": "driver",
+          "x": 0.38,
+          "hipY": 0.41,
+          "z": -0.1,
+          "recline": 0.5,
+          "driver": true
+        },
+        {
+          "id": "passenger",
+          "x": -0.38,
+          "hipY": 0.41,
+          "z": -0.1,
+          "recline": 0.5
+        },
+        {
+          "id": "rearLeft",
+          "x": 0.34,
+          "hipY": 0.45,
+          "z": -0.92,
+          "recline": 0.45,
+          "rear": true
+        },
+        {
+          "id": "rearRight",
+          "x": -0.34,
+          "hipY": 0.45,
+          "z": -0.92,
+          "recline": 0.45,
+          "rear": true
+        }
+      ],
+      "wheel": {
+        "y": 0.89,
+        "z": 0.3,
+        "tilt": 1.15
+      },
+      "handling": {
+        "mass": 1360,
+        "engineForce": 7900,
+        "brakeForce": 13000,
+        "handbrakeForce": 5000,
+        "engineBrake": 1350,
+        "maxSpeed": 55,
+        "reverseSpeed": 8,
+        "steerMax": 0.56,
+        "steerSpeed": 3,
+        "steerReturn": 4.6,
+        "steerSpeedFalloff": 0.042,
+        "grip": 1.08,
+        "handbrakeGrip": 0.44,
+        "corneringFront": 9,
+        "corneringRear": 10.2,
+        "drag": 0.4,
+        "rolling": 11,
+        "inertiaScale": 1.05,
+        "stability": 0.7,
+        "suspension": {
+          "freq": 2.1,
+          "damping": 0.55,
+          "travel": 0.07
+        },
+        "rollGain": 0.024,
+        "pitchGain": 0.014,
+        "gears": [
+          0,
+          13,
+          23,
+          33,
+          44,
+          55
+        ],
+        "idleRpm": 800,
+        "redline": 6200,
+        "cylinders": 8,
+        "enginePitch": 0.92
+      },
+      "traffic": {
+        "weight": 0.08,
+        "zones": [
+          "commercial",
+          "beach"
+        ]
+      }
+    },
+    {
+      "type": "sunset_touring",
+      "file": "sunset-touring",
+      "model": "Sunset Touring",
+      "name": "SUNSET TOURING",
+      "category": "intermediario",
+      "family": "sedan",
+      "year": 1984,
+      "brand": "SUNSET",
+      "color": "#b9bec6",
+      "plate": "TOUR 84",
+      "dims": {
+        "length": 5.35,
+        "width": 1.94,
+        "height": 1.47,
+        "wheelBase": 2.95,
+        "track": 1.58,
+        "wheelRadius": 0.34,
+        "tireWidth": 0.21,
+        "floorY": 0.35
+      },
+      "body": {
+        "bottomY": 0.2,
+        "sillY": 0.31,
+        "creaseY": 0.66,
+        "beltY": 0.92,
+        "beltRear": 0.94,
+        "noseTopY": 0.86,
+        "cowlZ": 1.12,
+        "cowlY": 0.95,
+        "roofFrontZ": 0.48,
+        "roofRearZ": -2.42,
+        "roofY": 1.46,
+        "rear": "wagon",
+        "rearBaseZ": -2.56,
+        "rearBaseY": 0.96,
+        "tailTopY": 0.96,
+        "cornerFront": 0.12,
+        "cornerRear": 0.1,
+        "frontTaper": 0.02,
+        "shoulderInset": 0.05,
+        "tumblehome": 0.16,
+        "crown": 0.025,
+        "bow": 0.05,
+        "pillarA": 0.08,
+        "pillarB": 0.1,
+        "pillarC": 0.1,
+        "pillarD": 0.16,
+        "doorZ": [
+          [
+            1.02,
+            -0.06
+          ],
+          [
+            -0.06,
+            -1.02
+          ]
+        ],
+        "roofRack": true
+      },
+      "style": {
+        "bumper": "chrome",
+        "grille": "chrome_egg",
+        "head": "quad",
+        "headSize": [
+          0.19,
+          0.15
+        ],
+        "tail": "tall",
+        "rim": "turbine",
+        "trim": "chrome",
+        "seat": "#7a5a43",
+        "interior": "#3a2a22",
+        "wood": true,
+        "woodPanels": true,
+        "rubStrip": false,
+        "ornament": true,
+        "spoiler": "none",
+        "steering": 4
+      },
+      "seats": [
+        {
+          "id": "driver",
+          "x": 0.42,
+          "hipY": 0.53,
+          "z": 0.28,
+          "recline": 0.33,
+          "driver": true
+        },
+        {
+          "id": "passenger",
+          "x": -0.42,
+          "hipY": 0.53,
+          "z": 0.28,
+          "recline": 0.33
+        },
+        {
+          "id": "rearLeft",
+          "x": 0.42,
+          "hipY": 0.56,
+          "z": -0.72,
+          "recline": 0.3,
+          "rear": true
+        },
+        {
+          "id": "rearRight",
+          "x": -0.42,
+          "hipY": 0.56,
+          "z": -0.72,
+          "recline": 0.3,
+          "rear": true
+        }
+      ],
+      "wheel": {
+        "y": 1.01,
+        "z": 0.66,
+        "tilt": 1.12
+      },
+      "handling": {
+        "mass": 1780,
+        "engineForce": 7700,
+        "brakeForce": 12800,
+        "handbrakeForce": 5000,
+        "engineBrake": 1500,
+        "maxSpeed": 47,
+        "reverseSpeed": 7.5,
+        "steerMax": 0.49,
+        "steerSpeed": 2,
+        "steerReturn": 3.3,
+        "steerSpeedFalloff": 0.034,
+        "grip": 1.04,
+        "handbrakeGrip": 0.52,
+        "corneringFront": 7.6,
+        "corneringRear": 10.4,
+        "drag": 0.48,
+        "rolling": 15,
+        "inertiaScale": 1.3,
+        "stability": 0.97,
+        "suspension": {
+          "freq": 1.25,
+          "damping": 0.36,
+          "travel": 0.11
+        },
+        "rollGain": 0.044,
+        "pitchGain": 0.022,
+        "gears": [
+          0,
+          14,
+          25,
+          36,
+          47
+        ],
+        "idleRpm": 650,
+        "redline": 5000,
+        "cylinders": 8,
+        "enginePitch": 0.7
+      },
+      "traffic": {
+        "weight": 0.08,
+        "zones": [
+          "commercial",
+          "rich",
+          "residential"
+        ]
+      }
+    },
+    {
+      "type": "neon_phantom",
+      "file": "neon-phantom",
+      "model": "Neon Phantom",
+      "name": "NEON PHANTOM",
+      "category": "luxo",
+      "family": "sports",
+      "year": 1986,
+      "brand": "NEON",
+      "color": "#e8473f",
+      "plate": "PHNTM",
+      "dims": {
+        "length": 4.42,
+        "width": 1.98,
+        "height": 1.17,
+        "wheelBase": 2.56,
+        "track": 1.62,
+        "wheelRadius": 0.33,
+        "tireWidth": 0.26,
+        "floorY": 0.22
+      },
+      "body": {
+        "bottomY": 0.13,
+        "sillY": 0.21,
+        "creaseY": 0.5,
+        "beltY": 0.74,
+        "beltRear": 0.86,
+        "noseTopY": 0.5,
+        "cowlZ": 0.62,
+        "cowlY": 0.72,
+        "roofFrontZ": -0.24,
+        "roofRearZ": -0.8,
+        "roofY": 1.16,
+        "rear": "mid",
+        "rearBaseZ": -1.38,
+        "rearBaseY": 0.86,
+        "deckY": 0.86,
+        "tailTopY": 0.86,
+        "cornerFront": 0.24,
+        "cornerRear": 0.12,
+        "frontTaper": 0.16,
+        "shoulderInset": 0.05,
+        "tumblehome": 0.22,
+        "crown": 0.015,
+        "bow": 0.08,
+        "pillarA": 0.07,
+        "pillarB": 0,
+        "pillarC": 0.3,
+        "doorZ": [
+          [
+            0.56,
+            -0.68
+          ]
+        ],
+        "sideIntake": true,
+        "louvers": true
+      },
+      "style": {
+        "bumper": "body",
+        "grille": "slot",
+        "head": "popup",
+        "headSize": [
+          0.4,
+          0.08
+        ],
+        "tail": "band_full",
+        "rim": "dish",
+        "rimColor": "gold",
+        "trim": "black",
+        "seat": "#d8d0c4",
+        "interior": "#202024",
+        "rubStrip": false,
+        "spoiler": "wing_low",
+        "steering": 3
+      },
+      "seats": [
+        {
+          "id": "driver",
+          "x": 0.4,
+          "hipY": 0.31,
+          "z": -0.3,
+          "recline": 0.62,
+          "driver": true
+        },
+        {
+          "id": "passenger",
+          "x": -0.4,
+          "hipY": 0.31,
+          "z": -0.3,
+          "recline": 0.62
+        }
+      ],
+      "wheel": {
+        "y": 0.77,
+        "z": 0.1,
+        "tilt": 1.2
+      },
+      "handling": {
+        "mass": 1290,
+        "engineForce": 10600,
+        "brakeForce": 15500,
+        "handbrakeForce": 5400,
+        "engineBrake": 1600,
+        "maxSpeed": 68,
+        "reverseSpeed": 9,
+        "steerMax": 0.58,
+        "steerSpeed": 3.6,
+        "steerReturn": 5.2,
+        "steerSpeedFalloff": 0.05,
+        "grip": 1.14,
+        "handbrakeGrip": 0.4,
+        "corneringFront": 10,
+        "corneringRear": 10.4,
+        "drag": 0.34,
+        "rolling": 11,
+        "inertiaScale": 0.95,
+        "stability": 0.5,
+        "suspension": {
+          "freq": 2.7,
+          "damping": 0.65,
+          "travel": 0.05
+        },
+        "rollGain": 0.015,
+        "pitchGain": 0.009,
+        "gears": [
+          0,
+          15,
+          26,
+          37,
+          48,
+          58,
+          68
+        ],
+        "idleRpm": 950,
+        "redline": 7800,
+        "cylinders": 12,
+        "enginePitch": 1.12
+      },
+      "traffic": {
+        "weight": 0.025,
+        "zones": [
+          "rich",
+          "nightlife"
+        ]
+      }
+    },
+    {
+      "type": "azure_gtr",
+      "file": "azure-gtr",
+      "model": "Azure GT-R",
+      "name": "AZURE GT-R",
+      "category": "luxo",
+      "family": "sports",
+      "year": 1986,
+      "brand": "AZURE",
+      "color": "#f1efe8",
+      "plate": "GT-R 86",
+      "dims": {
+        "length": 4.56,
+        "width": 1.88,
+        "height": 1.22,
+        "wheelBase": 2.52,
+        "track": 1.56,
+        "wheelRadius": 0.33,
+        "tireWidth": 0.24,
+        "floorY": 0.25
+      },
+      "body": {
+        "bottomY": 0.15,
+        "sillY": 0.24,
+        "creaseY": 0.54,
+        "beltY": 0.78,
+        "beltRear": 0.84,
+        "noseTopY": 0.58,
+        "cowlZ": 0.78,
+        "cowlY": 0.8,
+        "roofFrontZ": 0.02,
+        "roofRearZ": -0.56,
+        "roofY": 1.21,
+        "rear": "fastback",
+        "rearBaseZ": -1.72,
+        "rearBaseY": 0.88,
+        "tailTopY": 0.89,
+        "cornerFront": 0.24,
+        "cornerRear": 0.14,
+        "frontTaper": 0.12,
+        "shoulderInset": 0.05,
+        "tumblehome": 0.18,
+        "crown": 0.02,
+        "bow": 0.08,
+        "pillarA": 0.07,
+        "pillarB": 0,
+        "pillarC": 0.34,
+        "doorZ": [
+          [
+            0.66,
+            -0.56
+          ]
+        ],
+        "quarterGlass": true
+      },
+      "style": {
+        "bumper": "body",
+        "grille": "slot",
+        "head": "popup",
+        "headSize": [
+          0.42,
+          0.09
+        ],
+        "tail": "louver",
+        "rim": "dial",
+        "trim": "black",
+        "seat": "#8a2f3c",
+        "interior": "#1e1e22",
+        "rubStrip": false,
+        "spoiler": "ducktail",
+        "steering": 3,
+        "sideStripe": true
+      },
+      "seats": [
+        {
+          "id": "driver",
+          "x": 0.38,
+          "hipY": 0.35,
+          "z": -0.18,
+          "recline": 0.58,
+          "driver": true
+        },
+        {
+          "id": "passenger",
+          "x": -0.38,
+          "hipY": 0.35,
+          "z": -0.18,
+          "recline": 0.58
+        }
+      ],
+      "wheel": {
+        "y": 0.82,
+        "z": 0.2,
+        "tilt": 1.18
+      },
+      "handling": {
+        "mass": 1400,
+        "engineForce": 10200,
+        "brakeForce": 15000,
+        "handbrakeForce": 5300,
+        "engineBrake": 1550,
+        "maxSpeed": 65,
+        "reverseSpeed": 9,
+        "steerMax": 0.56,
+        "steerSpeed": 3.3,
+        "steerReturn": 5,
+        "steerSpeedFalloff": 0.046,
+        "grip": 1.12,
+        "handbrakeGrip": 0.42,
+        "corneringFront": 9.6,
+        "corneringRear": 10.8,
+        "drag": 0.35,
+        "rolling": 11,
+        "inertiaScale": 1,
+        "stability": 0.72,
+        "suspension": {
+          "freq": 2.4,
+          "damping": 0.6,
+          "travel": 0.06
+        },
+        "rollGain": 0.018,
+        "pitchGain": 0.011,
+        "gears": [
+          0,
+          14,
+          25,
+          36,
+          47,
+          57,
+          65
+        ],
+        "idleRpm": 900,
+        "redline": 7400,
+        "cylinders": 6,
+        "enginePitch": 1.05
+      },
+      "traffic": {
+        "weight": 0.03,
+        "zones": [
+          "rich",
+          "nightlife",
+          "commercial"
+        ]
+      }
+    },
+    {
+      "type": "midnight_vortex",
+      "file": "midnight-vortex",
+      "model": "Midnight Vortex",
+      "name": "MIDNIGHT VORTEX",
+      "category": "luxo",
+      "family": "convertible",
+      "year": 1986,
+      "brand": "VORTEX",
+      "color": "#111116",
+      "plate": "VRTX 1",
+      "dims": {
+        "length": 4.3,
+        "width": 1.94,
+        "height": 1.1,
+        "wheelBase": 2.46,
+        "track": 1.6,
+        "wheelRadius": 0.33,
+        "tireWidth": 0.26,
+        "floorY": 0.26
+      },
+      "body": {
+        "bottomY": 0.13,
+        "sillY": 0.22,
+        "creaseY": 0.5,
+        "beltY": 0.76,
+        "beltRear": 0.84,
+        "noseTopY": 0.54,
+        "cowlZ": 0.5,
+        "cowlY": 0.77,
+        "roofFrontZ": 0.08,
+        "roofRearZ": 0.08,
+        "roofY": 1.08,
+        "rear": "roadster",
+        "rearBaseZ": -0.95,
+        "rearBaseY": 0.84,
+        "deckY": 0.84,
+        "tailTopY": 0.86,
+        "cornerFront": 0.22,
+        "cornerRear": 0.16,
+        "frontTaper": 0.14,
+        "shoulderInset": 0.05,
+        "tumblehome": 0.2,
+        "crown": 0,
+        "bow": 0.07,
+        "pillarA": 0.06,
+        "pillarB": 0,
+        "pillarC": 0,
+        "doorZ": [
+          [
+            0.46,
+            -0.66
+          ]
+        ],
+        "sideIntake": true,
+        "rollHoops": true
+      },
+      "style": {
+        "bumper": "body",
+        "grille": "slot",
+        "head": "slim",
+        "headSize": [
+          0.36,
+          0.07
+        ],
+        "tail": "band_full",
+        "rim": "blade",
+        "trim": "black",
+        "seat": "#b7322f",
+        "interior": "#18181c",
+        "rubStrip": false,
+        "spoiler": "none",
+        "steering": 3
+      },
+      "seats": [
+        {
+          "id": "driver",
+          "x": 0.4,
+          "hipY": 0.4,
+          "z": -0.32,
+          "recline": 0.45,
+          "driver": true
+        },
+        {
+          "id": "passenger",
+          "x": -0.4,
+          "hipY": 0.4,
+          "z": -0.32,
+          "recline": 0.45
+        }
+      ],
+      "wheel": {
+        "y": 0.8,
+        "z": 0.04,
+        "tilt": 1.15
+      },
+      "handling": {
+        "mass": 1150,
+        "engineForce": 9900,
+        "brakeForce": 15000,
+        "handbrakeForce": 5200,
+        "engineBrake": 1500,
+        "maxSpeed": 64,
+        "reverseSpeed": 9,
+        "steerMax": 0.6,
+        "steerSpeed": 3.8,
+        "steerReturn": 5.4,
+        "steerSpeedFalloff": 0.05,
+        "grip": 1.12,
+        "handbrakeGrip": 0.38,
+        "corneringFront": 10.4,
+        "corneringRear": 9.8,
+        "drag": 0.38,
+        "rolling": 10,
+        "inertiaScale": 0.9,
+        "stability": 0.45,
+        "suspension": {
+          "freq": 2.6,
+          "damping": 0.6,
+          "travel": 0.05
+        },
+        "rollGain": 0.017,
+        "pitchGain": 0.01,
+        "gears": [
+          0,
+          15,
+          26,
+          37,
+          48,
+          57,
+          64
+        ],
+        "idleRpm": 900,
+        "redline": 7600,
+        "cylinders": 8,
+        "enginePitch": 1.08
+      },
+      "traffic": {
+        "weight": 0.022,
+        "zones": [
+          "rich",
+          "nightlife",
+          "beach"
+        ]
+      }
+    }
+  ]
+}

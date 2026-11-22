@@ -21,7 +21,9 @@
     "desktop:dev": "node tools/desktop/dev.mjs",
     "dist:win": "vite build && electron-builder --win nsis portable",
     "icon": "node tools/desktop/make-icon.mjs",
-    "dist:linux": "vite build && electron-builder --linux AppImage deb"
+    "dist:linux": "vite build && electron-builder --linux AppImage deb",
+    "test:neon": "node --test tools/vehicles/neon-motor.test.mjs",
+    "build:vehicles": "blender --background --factory-startup --python tools/blender/neon_motor/run.py -- --all --render"
   },
   "dependencies": {
     "three": "^0.187.0"

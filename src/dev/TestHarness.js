@@ -243,6 +243,11 @@ export function createTestHarness(game) {
       const { runOceanSuite } = await import('./OceanSuite.js');
       return runOceanSuite(T);
     },
+    /** PROMPT 12: validação dos nove carros da NEON MOTOR COMPANY no jogo real. */
+    async neonMotorSuite(opts) {
+      const { runNeonMotorSuite } = await import('./NeonMotorSuite.js');
+      return runNeonMotorSuite(T, opts);
+    },
     async boot() {
       for (let i = 0; i < 60 && game.state !== 'title'; i++) await new Promise((r) => setTimeout(r, 250));
       game.start();

@@ -1,0 +1,177 @@
+{
+ "bbox": {
+  "min": [
+   -1.135,
+   0.178,
+   -2.64
+  ],
+  "max": [
+   1.135,
+   1.465,
+   2.612
+  ]
+ },
+ "size": {
+  "length": 5.252,
+  "width": 2.27,
+  "height": 1.465
+ },
+ "checks": [
+  {
+   "check": "comprimento",
+   "ok": true,
+   "info": "5.252 vs 5.2"
+  },
+  {
+   "check": "largura (com retrovisores)",
+   "ok": true,
+   "info": "2.27 vs 1.92"
+  },
+  {
+   "check": "altura",
+   "ok": true,
+   "info": "1.465 vs 1.44"
+  },
+  {
+   "check": "roda FL alinhada",
+   "ok": true,
+   "info": "centro (0.790,0.340,1.450) chão 0.000"
+  },
+  {
+   "check": "roda FR alinhada",
+   "ok": true,
+   "info": "centro (-0.790,0.340,1.450) chão 0.000"
+  },
+  {
+   "check": "roda RL alinhada",
+   "ok": true,
+   "info": "centro (0.790,0.340,-1.450) chão 0.000"
+  },
+  {
+   "check": "roda RR alinhada",
+   "ok": true,
+   "info": "centro (-0.790,0.340,-1.450) chão 0.000"
+  },
+  {
+   "check": "dobradiça Door_FL",
+   "ok": true,
+   "info": "(0.960,0.660,0.980)"
+  },
+  {
+   "check": "dobradiça Door_FR",
+   "ok": true,
+   "info": "(-0.960,0.660,0.980)"
+  },
+  {
+   "check": "dobradiça Door_RL",
+   "ok": true,
+   "info": "(0.960,0.660,-0.080)"
+  },
+  {
+   "check": "dobradiça Door_RR",
+   "ok": true,
+   "info": "(-0.960,0.660,-0.080)"
+  },
+  {
+   "check": "cabeça do motorista abaixo do teto",
+   "ok": true,
+   "info": "cabeça≈1.31 teto interno 1.40"
+  }
+ ],
+ "triangles": 30300,
+ "trianglesByObject": {
+  "Body": 11782,
+  "Interior": 2448,
+  "Lights": 1380,
+  "SteeringWheel": 1128,
+  "Rim_FL": 1112,
+  "Rim_FR": 1112,
+  "Rim_RL": 1112,
+  "Rim_RR": 1112,
+  "Tire_FL": 1008,
+  "Tire_FR": 1008,
+  "Tire_RL": 1008,
+  "Tire_RR": 1008,
+  "Door_FL": 812,
+  "Door_FR": 812,
+  "Door_RL": 528,
+  "Door_RR": 528,
+  "Hood": 528,
+  "Chassis": 396,
+  "Trunk": 322,
+  "DoorCard_FL": 228
+ },
+ "materials": [
+  "Amber",
+  "Black_Trim",
+  "Carpet",
+  "Chassis",
+  "Chrome",
+  "Gauge",
+  "Glass",
+  "Grille",
+  "Headlight",
+  "Headliner",
+  "Interior",
+  "Paint",
+  "Plate",
+  "Reverse",
+  "Rim",
+  "Rubber",
+  "Seat",
+  "Taillight",
+  "Vinyl",
+  "Wood"
+ ],
+ "nonManifoldBodyEdges": 2772,
+ "hierarchy": [
+  "VehicleRoot",
+  "  Body",
+  "  Chassis",
+  "  Door_FL",
+  "    DoorCard_FL",
+  "    Glass_Door_F_L",
+  "  Door_FR",
+  "    DoorCard_FR",
+  "    Glass_Door_F_R",
+  "  Door_RL",
+  "    DoorCard_RL",
+  "    Glass_Door_R_L",
+  "  Door_RR",
+  "    DoorCard_RR",
+  "    Glass_Door_R_R",
+  "  Hood",
+  "  Interior",
+  "  Lights",
+  "  Plate_F",
+  "  Plate_R",
+  "  SteeringWheel",
+  "  Trunk",
+  "  Wheel_FL",
+  "    Rim_FL",
+  "    Tire_FL",
+  "  Wheel_FR",
+  "    Rim_FR",
+  "    Tire_FR",
+  "  Wheel_RL",
+  "    Rim_RL",
+  "    Tire_RL",
+  "  Wheel_RR",
+  "    Rim_RR",
+  "    Tire_RR",
+  "  Windows"
+ ],
+ "animations": [
+  "Hood_Open",
+  "Trunk_Open",
+  "Door_FL_Open",
+  "Door_FR_Open",
+  "Door_RL_Open",
+  "Door_RR_Open"
+ ],
+ "buildSeconds": 1.9,
+ "render": "C:\\Users\\Vitin Hacker\\Downloads\\MIAMI VICE FABLE 5.2\\docs\\screenshots\\neon-motor\\metro-executive.png",
+ "blend": "assets-src/vehicles/metro-executive.blend",
+ "glb": "public/models/vehicles/metro-executive.glb",
+ "glbBytes": 1238704
+}

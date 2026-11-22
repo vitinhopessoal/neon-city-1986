@@ -1,0 +1,33 @@
+{
+  "bateria": "PROMPT 12 · NEON MOTOR COMPANY · 17 testes por carro × 9 modelos (src/dev/NeonMotorSuite.js, jogo real em desenvolvimento)",
+  "data": "2026-11-22",
+  "execucoes": ["153/153", "153/153", "153/153"],
+  "observacao": "Três execuções consecutivas na mesma sessão, sem recarregar a página. Cada execução inclui salvar no slot3 e carregar com os nove carros personalizados no mundo.",
+  "testes_por_carro": ["Carregamento", "Surgimento", "Entrada", "Câmeras", "Aceleração", "Frenagem", "Curvas", "Rodas", "Faróis", "Colisões", "Danos", "Saída", "Personalização", "Garagem", "Trânsito IA", "Salvamento", "Console sem erros"],
+  "medidas": {
+    "colunas": ["triângulos", "topo da cabeça (m)", "teto (m)", "km/h em 5 s", "km/h em 9 s", "frenagem 1 s (m/s)", "giro 2 s (rad)", "impacto na parede (m/s)", "integridade após batida", "trânsito: metros em 6 s", "vmax fábrica→preparado (m/s)", "câmera de perseguição (m)"],
+    "PALM COMPACT":    [24228, 1.354, 1.41, 58, 91, 9.9, 1.77, 11.9, 86.6, 65.3, "40→43.2", 6.1],
+    "BAY CITY 100":    [27942, 1.361, 1.42, 62, 97, 9.6, 1.68, 11.4, 85.9, 72.0, "42→45.4", 6.3],
+    "COAST WAGON":     [28306, 1.371, 1.43, 58, 91, 9.0, 1.71, 11.7, 83.2, 65.2, "41→44.3", 6.3],
+    "METRO EXECUTIVE": [30300, 1.374, 1.43, 73, 113, 8.3, 1.31, 11.3, 77.1, 65.1, "48→51.8", 6.8],
+    "OCEAN COUPE":     [28516, 1.244, 1.29, 91, 137, 10.4, 1.40, 10.7, 83.1, 72.0, "55→59.4", 6.5],
+    "SUNSET TOURING":  [33534, 1.398, 1.46, 69, 108, 7.9, 1.48, 11.5, 75.0, 76.0, "47→50.8", 6.9],
+    "NEON PHANTOM":    [26752, 1.123, 1.16, 125, 182, 13.2, 1.38, 10.1, 85.8, 71.7, "68→73.4", 6.4],
+    "AZURE GT-R":      [27898, 1.170, 1.21, 113, 168, 11.8, 1.36, 10.3, 83.9, 71.9, "65→70.2", 6.5],
+    "MIDNIGHT VORTEX": [29224, 1.335, null, 127, 179, 14.4, 1.38, 9.7, 88.9, 71.8, "64→69.1", 6.3]
+  },
+  "transito_percentual_por_zona": {
+    "residencial": { "populares NEON": 59.8, "intermediarios NEON": 19.2, "esportivos NEON": 4.3, "procedurais (sedan/conversivel/esportivo)": 16.7 },
+    "comercial":   { "populares NEON": 42.3, "intermediarios NEON": 32.9, "esportivos NEON": 6.8, "procedurais (sedan/conversivel/esportivo)": 18.0 },
+    "boates":      { "populares NEON": 40.5, "intermediarios NEON": 20.6, "esportivos NEON": 14.0, "procedurais (sedan/conversivel/esportivo)": 24.8 },
+    "nobre":       { "populares NEON": 34.6, "intermediarios NEON": 32.2, "esportivos NEON": 12.0, "procedurais (sedan/conversivel/esportivo)": 21.3 }
+  },
+  "node": { "test:neon": "4/4", "regressao": { "city": "8/8", "assets": "2/2", "hud": "6/6", "police": "20/20", "ai": "9/9", "ocean": "5/5", "customs": "3/3", "destruction": "10/10" } },
+  "ocean_suite_no_jogo": "45/45 (com os carros NEON no trânsito)",
+  "desempenho": {
+    "chamadas_de_desenho_por_carro": { "antes_da_otimizacao": 129, "depois": 82.7, "carro_procedural_referencia": 46.7 },
+    "tempo_de_quadro_9_carros_proximos_ms_mediana": { "sem_carros": 36.0, "9_NEON": 42.3, "9_procedurais": 38.9, "observacao": "medido com renderer.render + gl.finish sob automação (variação alta entre amostras: 26–46 ms)" },
+    "carregamento_dos_9_glb_ms": "1667–2273 (paralelo à inicialização)"
+  },
+  "memoria": { "geometrias_apos_criar_e_descartar_30_carros": "1725 → 1725", "texturas": "163 → 163" }
+}

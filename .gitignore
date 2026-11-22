@@ -16,3 +16,7 @@ tools/review-temp/
 assets-src/protagonist/.cache/
 __pycache__/
 .claude/
+# Backups automáticos do Blender e saídas temporárias do pipeline de veículos.
+*.blend1
+tools/blender/neon_motor/out/tmp/
+__pycache__/

@@ -5,6 +5,7 @@ import { LaneGraph, Path } from './LaneGraph.js';
 import { TrafficVehicleAI, PERSONALITIES, STATES } from './TrafficVehicleAI.js';
 import { buildImpostor, setImpostor } from './VehicleImpostor.js';
 import { laneRoute } from '../city/Navigation.js';
+import { TRAFFIC_BASE, trafficWeights } from '../vehicles/models/NeonMotor.js';
 
 /**
  * Trânsito de Sunset Beach (e de mapas com metadados de ruas).
@@ -20,7 +21,8 @@ import { laneRoute } from '../city/Navigation.js';
  * - Estacionamento nas vagas do RoadNetwork; o jogador pode usar um carro
  *   estacionado (ele sai do controle do trânsito, sem duplicação).
  */
-const TYPES = [['sedan', 0.45], ['convertible', 0.3], ['sports', 0.25]];
+// Modelos e pesos (PROMPT 12): os três procedurais + nove da NEON MOTOR COMPANY, com peso por zona.
+const TYPES = TRAFFIC_BASE;
 const COLORS = [0xf2eee6, 0xff6fa8, 0x3fd8d0, 0x8fd3ff, 0xd6c29a, 0xe8e2d0, 0x2b2d42, 0xc0392b, 0xf4d35e, 0x6a4c93, 0x1b998b, 0xfafafa, 0x1a1a1e, 0xff9a4a];
 const _v = new THREE.Vector3();
 const _f = new THREE.Vector3();
@@ -243,7 +245,7 @@ export class TrafficManager {
       if (dist < R.min || dist > R.max) continue;
       if (this._visible(_v, dist)) continue;
       if (this.game.vehicles.list.some((v) => (v.root.position.x - _v.x) ** 2 + (v.root.position.z - _v.z) ** 2 < 16 * 16)) continue;
-      const v = this._acquire();
+      const v = this._acquire(_v.x, _v.z);
       if (!v) return;
       const pk = pickWeighted(Object.entries(PERSONALITIES), ([, p]) => p.weight)[0];
       const a = new TrafficVehicleAI(this, v, pk);
@@ -266,11 +268,16 @@ export class TrafficManager {
     return null;
   }
 
-  _acquire() {
-    if (this.pool.length) return this.pool.pop();
+  _acquire(x, z) {
+    // Modelo sorteado pelos pesos da zona; reaproveita um carro do mesmo modelo
+    // do pool (ou qualquer um, se o pool já estiver grande) antes de criar outro.
+    const want = pickWeighted(Number.isFinite(x) ? trafficWeights(x, z) : TYPES)[0];
+    const same = this.pool.findIndex((p) => p.type === want);
+    if (same >= 0) return this.pool.splice(same, 1)[0];
+    if (this.pool.length >= 6) return this.pool.pop();
     // Cria um veículo novo (no máximo um por ciclo de população).
     const factory = this.game.world.vehicleFactory;
-    const type = pickWeighted(TYPES)[0];
+    const type = want;
     const color = COLORS[Math.floor(Math.random() * COLORS.length)];
     const id = `traffic_${this._serial++}`;
     const plate = `SB ${String(1000 + Math.floor(Math.random() * 8999))}`;

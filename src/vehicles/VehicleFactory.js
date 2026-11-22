@@ -3,6 +3,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { Vehicle } from './Vehicle.js';
 import { licensePlateTexture } from '../render/ProceduralTextures.js';
 import { composeMatrix } from '../render/StaticBatcher.js';
+import { NEON_SPECS, NeonModelLibrary, buildNeonVehicle } from './models/NeonMotor.js';
 
 /**
  * Modelos procedurais de carros dos anos 80 (originais):
@@ -160,6 +161,8 @@ export const SPECS = {
     },
   },
 };
+// PROMPT 12 — NEON MOTOR COMPANY: nove modelos GLB adicionais (mesmo formato de especificação).
+Object.assign(SPECS, NEON_SPECS);
 
 /**
  * Perfil com o "cockpit" aberto: a borda superior desce até o assoalho entre
@@ -282,6 +285,8 @@ export class VehicleFactory {
     for (const mat of Object.values(this.m)) mat.userData.shared = true;
     this._plateCount = 0;
     this._paintCache = new Map();
+    // Modelos GLB da NEON MOTOR COMPANY (carregados de forma assíncrona antes do mapa).
+    this.neon = new NeonModelLibrary();
   }
 
   /** Pintura compartilhada (detalhes como faixas). */
@@ -313,7 +318,22 @@ export class VehicleFactory {
     if (vehicle.collision && vehicle.colliderId) vehicle.collision.remove(vehicle.colliderId);
   }
 
+  /** Carrega os GLBs da NEON MOTOR COMPANY (uma vez; o jogo aguarda antes de montar o mapa). */
+  preloadNeon() {
+    return this.neon.preload();
+  }
+
   create(type, { id, color, stripe = null, plate = null } = {}) {
+    if (SPECS[type]?.neon) {
+      const nb = SPECS[type];
+      if (this.neon.has(type)) {
+        const spec = { ...nb, type, handling: structuredClone(nb.handling), seats: nb.seats.map((x) => ({ ...x })) };
+        return buildNeonVehicle(this, this.neon, type, spec, { id, color: color ?? nb.color, stripe, plate, Vehicle, plateTexture: licensePlateTexture });
+      }
+      // GLB indisponível (falha de rede/arquivo): usa o carro procedural da mesma família.
+      console.warn(`[NEON MOTOR] modelo ${type} não carregado; usando ${nb.family}`);
+      type = nb.family;
+    }
     const base = SPECS[type];
     const spec = { ...base, type, handling: { ...base.handling } };
     const root = new THREE.Group();

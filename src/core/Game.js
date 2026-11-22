@@ -28,6 +28,7 @@ import { GameMenu } from '../ui/GameMenu.js';
 import { VehicleCustomizationManager } from '../vehicles/customization/VehicleCustomizationManager.js';
 import { WaterManager } from '../water/WaterManager.js';
 import { BoatManager } from '../boats/BoatManager.js';
+import { placeNeonShowcase } from '../vehicles/models/NeonShowcase.js';
 
 const QUALITY_KEY = 'neoncity.quality';
 
@@ -118,6 +119,8 @@ export class Game {
       this.weapons?.audio.impact(record.profile.material, distance);
     };
     this.world.build();
+    // NEON MOTOR COMPANY (PROMPT 12): os nove GLBs carregam em paralelo com o restante da inicialização.
+    this._neonLoad = this.world.vehicleFactory.preloadNeon();
     // Horário inicial: ?time=morning|sunset|night (padrão: pôr do sol).
     const t = new URLSearchParams(location.search).get('time');
     if (t && t !== 'sunset' && TIME_PRESETS[t]) this.world.setTimeOfDay(t);
@@ -184,6 +187,14 @@ export class Game {
     this._loop = this._loop.bind(this);
     this._rafId = requestAnimationFrame(this._loop);
 
+    // Modelos GLB prontos antes de montar o mapa: um exemplar de cada no Sunset Beach (veículos do mapa).
+    await this._neonLoad;
+    const neonLib = this.world.vehicleFactory.neon;
+    if (neonLib.errors.length) console.warn('[NEON MOTOR]', neonLib.errors);
+    // Estaciona um exemplar de cada modelo assim que o Sunset Beach (e suas vagas) for montado,
+    // antes de os sistemas receberem o mapa: os carros contam como veículos do mapa.
+    (this.world.afterDistrictBuild ||= []).push((w) => placeNeonShowcase(w));
+    this.loadStats = { ...(this.loadStats || {}), neonMotorMs: neonLib.loadMs, neonMotorModels: neonLib.templates.size };
     // Mapa inicial: ?map=<id> (apenas dev) ou Sunset Beach. Falhas voltam ao Sunset Beach.
     const requested = CONFIG.dev.mapSwitching ? new URLSearchParams(location.search).get('map') : null;
     let ok = false;

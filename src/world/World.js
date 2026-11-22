@@ -129,6 +129,8 @@ export class World {
       this.scene.add(this.ocean.mesh);
       this.loadDistrict(createCoastalCity());
       this.sunsetBuilt = true;
+      // Ganchos pós-montagem (ex.: NEON MOTOR COMPANY estaciona seus modelos nas vagas recém-criadas).
+      for (const fn of this.afterDistrictBuild || []) fn(this);
       this.applyTimeOfDay();
       this.applyQuality(this.quality);
     }

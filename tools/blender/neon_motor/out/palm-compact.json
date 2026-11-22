@@ -1,0 +1,158 @@
+{
+ "bbox": {
+  "min": [
+   -1.005,
+   0.158,
+   -2.015
+  ],
+  "max": [
+   1.005,
+   1.43,
+   1.975
+  ]
+ },
+ "size": {
+  "length": 3.99,
+  "width": 2.01,
+  "height": 1.43
+ },
+ "checks": [
+  {
+   "check": "comprimento",
+   "ok": true,
+   "info": "3.99 vs 3.95"
+  },
+  {
+   "check": "largura (com retrovisores)",
+   "ok": true,
+   "info": "2.01 vs 1.66"
+  },
+  {
+   "check": "altura",
+   "ok": true,
+   "info": "1.43 vs 1.42"
+  },
+  {
+   "check": "roda FL alinhada",
+   "ok": true,
+   "info": "centro (0.700,0.290,1.210) chão 0.000"
+  },
+  {
+   "check": "roda FR alinhada",
+   "ok": true,
+   "info": "centro (-0.700,0.290,1.210) chão 0.000"
+  },
+  {
+   "check": "roda RL alinhada",
+   "ok": true,
+   "info": "centro (0.700,0.290,-1.210) chão 0.000"
+  },
+  {
+   "check": "roda RR alinhada",
+   "ok": true,
+   "info": "centro (-0.700,0.290,-1.210) chão 0.000"
+  },
+  {
+   "check": "dobradiça Door_FL",
+   "ok": true,
+   "info": "(0.830,0.600,0.700)"
+  },
+  {
+   "check": "dobradiça Door_FR",
+   "ok": true,
+   "info": "(-0.830,0.600,0.700)"
+  },
+  {
+   "check": "cabeça do motorista abaixo do teto",
+   "ok": true,
+   "info": "cabeça≈1.29 teto interno 1.38"
+  }
+ ],
+ "triangles": 24228,
+ "trianglesByObject": {
+  "Body": 8994,
+  "Interior": 2448,
+  "Lights": 1176,
+  "Tire_FL": 1008,
+  "Tire_FR": 1008,
+  "Tire_RL": 1008,
+  "Tire_RR": 1008,
+  "SteeringWheel": 912,
+  "Door_FL": 886,
+  "Door_FR": 886,
+  "Rim_FL": 764,
+  "Rim_FR": 764,
+  "Rim_RL": 764,
+  "Rim_RR": 764,
+  "Tailgate": 410,
+  "Chassis": 396,
+  "Hood": 332,
+  "DoorCard_FL": 228,
+  "DoorCard_FR": 228,
+  "Windows": 128
+ },
+ "materials": [
+  "Amber",
+  "Black_Trim",
+  "Carpet",
+  "Chassis",
+  "Chrome",
+  "Gauge",
+  "Glass",
+  "Grille",
+  "Headlight",
+  "Headliner",
+  "Interior",
+  "Paint",
+  "Plate",
+  "Reverse",
+  "Rim",
+  "Rubber",
+  "Seat",
+  "Taillight"
+ ],
+ "nonManifoldBodyEdges": 2232,
+ "hierarchy": [
+  "VehicleRoot",
+  "  Body",
+  "  Chassis",
+  "  Door_FL",
+  "    DoorCard_FL",
+  "    Glass_Door_F_L",
+  "  Door_FR",
+  "    DoorCard_FR",
+  "    Glass_Door_F_R",
+  "  Hood",
+  "  Interior",
+  "  Lights",
+  "  Plate_F",
+  "  Plate_R",
+  "  SteeringWheel",
+  "  Tailgate",
+  "    Glass_Rear",
+  "  Wheel_FL",
+  "    Rim_FL",
+  "    Tire_FL",
+  "  Wheel_FR",
+  "    Rim_FR",
+  "    Tire_FR",
+  "  Wheel_RL",
+  "    Rim_RL",
+  "    Tire_RL",
+  "  Wheel_RR",
+  "    Rim_RR",
+  "    Tire_RR",
+  "  Windows"
+ ],
+ "animations": [
+  "Hood_Open",
+  "Tailgate_Open",
+  "Door_FL_Open",
+  "Door_FR_Open"
+ ],
+ "buildSeconds": 1.1,
+ "render": "C:\\Users\\Vitin Hacker\\Downloads\\MIAMI VICE FABLE 5.2\\docs\\screenshots\\neon-motor\\palm-compact.png",
+ "blend": "assets-src/vehicles/palm-compact.blend",
+ "glb": "public/models/vehicles/palm-compact.glb",
+ "glbBytes": 935460
+}

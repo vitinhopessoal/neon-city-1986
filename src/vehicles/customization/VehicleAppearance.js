@@ -251,9 +251,10 @@ function capture(v, factory) {
   v.root.traverse((o) => {
     if (!o.isMesh) return;
     const m = o.material;
+    const role = m?.userData?.role;
     if (m === fm.glass) { o.material = m.clone(); o.material.userData = {}; stock.glass.push({ mesh: o, color: m.color.getHex(), opacity: m.opacity }); }
-    else if (m === fm.seat || m === fm.seatDark) { o.material = m.clone(); o.material.userData = { noShadow: true }; stock.seats.push({ mesh: o, color: m.color.getHex() }); }
-    else if (m === fm.interior) { o.material = m.clone(); o.material.userData = { noShadow: true }; stock.dash.push({ mesh: o, color: m.color.getHex() }); }
+    else if (m === fm.seat || m === fm.seatDark || role === 'seat') { o.material = m.clone(); o.material.userData = { noShadow: true }; stock.seats.push({ mesh: o, color: m.color.getHex() }); }
+    else if (m === fm.interior || role === 'interior') { o.material = m.clone(); o.material.userData = { noShadow: true }; stock.dash.push({ mesh: o, color: m.color.getHex() }); }
     else if (paintMats.has(m) && m !== v.mats.paint) { o.material = m.clone(); o.material.userData = {}; stock.stripes.push({ mesh: o, color: m.color.getHex() }); }
   });
   v._stock = stock;

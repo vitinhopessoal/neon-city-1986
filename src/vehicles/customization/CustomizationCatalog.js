@@ -6,7 +6,11 @@
  *
  * Tipos de veículo existentes: sports (NEON GT), convertible (SUNSET CLASSIC),
  * sedan (PALM SEDAN). Peças sem `types` servem a todos (e a modelos futuros).
+ * Os nove modelos da NEON MOTOR COMPANY (PROMPT 12) herdam a compatibilidade
+ * da sua família (sports / sedan / convertible) definida em neon-motor-specs.json.
  */
+import { NEON_FAMILY } from '../models/NeonMotor.js';
+
 export const PAINTS = [
   { id: 'miami_white', name: 'Branco Miami', hex: 0xf2eee6 },
   { id: 'ocean_blue', name: 'Azul Oceano', hex: 0x1f5fa8 },
@@ -175,7 +179,7 @@ export function isCompatible(cat, id, type, cfg = {}) {
   if (cat === 'paint2') return type !== undefined; // faixas: todos (posição se adapta ao modelo)
   const o = partOption(cat, id);
   if (!o) return false;
-  if (o.types && !o.types.includes(type)) return false;
+  if (o.types && !o.types.includes(type) && !o.types.includes(NEON_FAMILY[type])) return false;
   // Asa alta exige para-choque esportivo/aero (estética coerente) — regra simples documentada.
   if (cat === 'spoiler' && id === 'wing' && cfg.bumper === 'retro') return false;
   if (cat === 'bumper' && id === 'retro' && cfg.spoiler === 'wing') return false;

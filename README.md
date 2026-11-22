@@ -10,6 +10,17 @@ npm run desktop
 Para gerar o instalador e a versão portátil em `release/`: `npm run dist:win`.
 Detalhes em [docs/DESKTOP.md](docs/DESKTOP.md). A versão web continua com `npm run dev`.
 
+## NEON MOTOR COMPANY — nove carros modelados no Blender
+
+PALM COMPACT, BAY CITY 100, COAST WAGON (populares), METRO EXECUTIVE, OCEAN COUPE,
+SUNSET TOURING (intermediários), NEON PHANTOM, AZURE GT-R e MIDNIGHT VORTEX (esportivos
+de luxo). Um exemplar de cada fica estacionado em Sunset Beach, e os modelos circulam no
+trânsito conforme a zona. Todos podem ser dirigidos, personalizados na NEON CUSTOMS e
+guardados nas garagens. Fontes `.blend` em `assets-src/vehicles/`, GLBs em
+`public/models/vehicles/`, gerador em `tools/blender/neon_motor/` (`npm run build:vehicles`).
+Testes: `npm run test:neon` e, no jogo, `__NEON_TEST__.neonMotorSuite()`.
+Detalhes em [docs/NEON_MOTOR.md](docs/NEON_MOTOR.md).
+
 ## IA de cidadãos, motoristas e passageiros
 
 Pedestres possuem perfis, memória recente de perigos e decisões de caminhar,

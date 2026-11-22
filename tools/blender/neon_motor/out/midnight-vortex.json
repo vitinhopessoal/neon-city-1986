@@ -1,0 +1,150 @@
+{
+ "bbox": {
+  "min": [
+   -1.145,
+   0.108,
+   -2.19
+  ],
+  "max": [
+   1.145,
+   1.122,
+   2.164
+  ]
+ },
+ "size": {
+  "length": 4.354,
+  "width": 2.29,
+  "height": 1.122
+ },
+ "checks": [
+  {
+   "check": "comprimento",
+   "ok": true,
+   "info": "4.354 vs 4.3"
+  },
+  {
+   "check": "largura (com retrovisores)",
+   "ok": true,
+   "info": "2.29 vs 1.94"
+  },
+  {
+   "check": "altura",
+   "ok": true,
+   "info": "1.122 vs 1.1"
+  },
+  {
+   "check": "roda FL alinhada",
+   "ok": true,
+   "info": "centro (0.800,0.330,1.230) chão 0.000"
+  },
+  {
+   "check": "roda FR alinhada",
+   "ok": true,
+   "info": "centro (-0.800,0.330,1.230) chão 0.000"
+  },
+  {
+   "check": "roda RL alinhada",
+   "ok": true,
+   "info": "centro (0.800,0.330,-1.230) chão 0.000"
+  },
+  {
+   "check": "roda RR alinhada",
+   "ok": true,
+   "info": "centro (-0.800,0.330,-1.230) chão 0.000"
+  },
+  {
+   "check": "dobradiça Door_FL",
+   "ok": true,
+   "info": "(0.970,0.500,0.460)"
+  },
+  {
+   "check": "dobradiça Door_FR",
+   "ok": true,
+   "info": "(-0.970,0.500,0.460)"
+  }
+ ],
+ "triangles": 29224,
+ "trianglesByObject": {
+  "Body": 9544,
+  "Interior": 2500,
+  "Rim_FL": 1856,
+  "Rim_FR": 1856,
+  "Rim_RL": 1856,
+  "Rim_RR": 1856,
+  "Lights": 1068,
+  "SteeringWheel": 1020,
+  "Tire_FL": 1008,
+  "Tire_FR": 1008,
+  "Tire_RL": 1008,
+  "Tire_RR": 1008,
+  "Door_FL": 846,
+  "Door_FR": 846,
+  "Hood": 606,
+  "Chassis": 456,
+  "Trunk": 358,
+  "DoorCard_FL": 228,
+  "DoorCard_FR": 228,
+  "Windows": 64
+ },
+ "materials": [
+  "Amber",
+  "Black_Trim",
+  "Carpet",
+  "Chassis",
+  "Chrome",
+  "Gauge",
+  "Glass",
+  "Grille",
+  "Headlight",
+  "Headliner",
+  "Interior",
+  "Paint",
+  "Plate",
+  "Reverse",
+  "Rim",
+  "Rubber",
+  "Seat",
+  "Taillight"
+ ],
+ "nonManifoldBodyEdges": 2668,
+ "hierarchy": [
+  "VehicleRoot",
+  "  Body",
+  "  Chassis",
+  "  Door_FL",
+  "    DoorCard_FL",
+  "  Door_FR",
+  "    DoorCard_FR",
+  "  Hood",
+  "  Interior",
+  "  Lights",
+  "  Plate_F",
+  "  Plate_R",
+  "  SteeringWheel",
+  "  Trunk",
+  "  Wheel_FL",
+  "    Rim_FL",
+  "    Tire_FL",
+  "  Wheel_FR",
+  "    Rim_FR",
+  "    Tire_FR",
+  "  Wheel_RL",
+  "    Rim_RL",
+  "    Tire_RL",
+  "  Wheel_RR",
+  "    Rim_RR",
+  "    Tire_RR",
+  "  Windows"
+ ],
+ "animations": [
+  "Hood_Open",
+  "Trunk_Open",
+  "Door_FL_Open",
+  "Door_FR_Open"
+ ],
+ "buildSeconds": 0.9,
+ "render": "C:\\Users\\Vitin Hacker\\Downloads\\MIAMI VICE FABLE 5.2\\docs\\screenshots\\neon-motor\\midnight-vortex.png",
+ "blend": "assets-src/vehicles/midnight-vortex.blend",
+ "glb": "public/models/vehicles/midnight-vortex.glb",
+ "glbBytes": 1073664
+}

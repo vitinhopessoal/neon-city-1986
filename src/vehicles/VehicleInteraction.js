@@ -131,7 +131,8 @@ export class VehicleInteraction {
     const floorY = vehicle.spec?.floorY;
     this.game.player.animator.seatFloor = floorY !== undefined ? floorY + 0.09 - driverSeat.hipY : null;
     const roof = vehicle.spec?.roof;
-    this.game.player.animator.seatHeadroom = roof ? roof.y - driverSeat.hipY : null;
+    // headroomY (opcional): altura do forro interno nos modelos GLB de teto espesso; sem ele vale o teto.
+    this.game.player.animator.seatHeadroom = roof ? (vehicle.spec.headroomY ?? roof.y) - driverSeat.hipY : null;
     vehicle.root.updateMatrixWorld();
     const entryW = vehicle.localToWorld(door.entry, new THREE.Vector3());
     entryW.y = player.controller.position.y;

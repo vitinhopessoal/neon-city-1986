@@ -1,0 +1,163 @@
+{
+ "bbox": {
+  "min": [
+   -1.115,
+   0.128,
+   -2.32
+  ],
+  "max": [
+   1.115,
+   1.23,
+   2.294
+  ]
+ },
+ "size": {
+  "length": 4.614,
+  "width": 2.23,
+  "height": 1.23
+ },
+ "checks": [
+  {
+   "check": "comprimento",
+   "ok": true,
+   "info": "4.614 vs 4.56"
+  },
+  {
+   "check": "largura (com retrovisores)",
+   "ok": true,
+   "info": "2.23 vs 1.88"
+  },
+  {
+   "check": "altura",
+   "ok": true,
+   "info": "1.23 vs 1.22"
+  },
+  {
+   "check": "roda FL alinhada",
+   "ok": true,
+   "info": "centro (0.780,0.330,1.260) chão 0.000"
+  },
+  {
+   "check": "roda FR alinhada",
+   "ok": true,
+   "info": "centro (-0.780,0.330,1.260) chão 0.000"
+  },
+  {
+   "check": "roda RL alinhada",
+   "ok": true,
+   "info": "centro (0.780,0.330,-1.260) chão 0.000"
+  },
+  {
+   "check": "roda RR alinhada",
+   "ok": true,
+   "info": "centro (-0.780,0.330,-1.260) chão 0.000"
+  },
+  {
+   "check": "dobradiça Door_FL",
+   "ok": true,
+   "info": "(0.940,0.540,0.660)"
+  },
+  {
+   "check": "dobradiça Door_FR",
+   "ok": true,
+   "info": "(-0.940,0.540,0.660)"
+  },
+  {
+   "check": "cabeça do motorista abaixo do teto",
+   "ok": true,
+   "info": "cabeça≈1.11 teto interno 1.18"
+  }
+ ],
+ "triangles": 27898,
+ "trianglesByObject": {
+  "Body": 9552,
+  "Interior": 2824,
+  "Rim_FL": 1192,
+  "Rim_FR": 1192,
+  "Rim_RL": 1192,
+  "Rim_RR": 1192,
+  "SteeringWheel": 1020,
+  "Tire_FL": 1008,
+  "Tire_FR": 1008,
+  "Tire_RL": 1008,
+  "Tire_RR": 1008,
+  "Hood": 988,
+  "Door_FL": 816,
+  "Door_FR": 816,
+  "Lights": 756,
+  "Tailgate": 484,
+  "Chassis": 456,
+  "Popup_R": 344,
+  "Popup_L": 342,
+  "DoorCard_FL": 228
+ },
+ "materials": [
+  "Amber",
+  "Black_Trim",
+  "Carpet",
+  "Chassis",
+  "Chrome",
+  "Gauge",
+  "Glass",
+  "Grille",
+  "Headlight",
+  "Headliner",
+  "Interior",
+  "Paint",
+  "Plate",
+  "Reverse",
+  "Rim",
+  "Rubber",
+  "Seat",
+  "Stripe",
+  "Taillight"
+ ],
+ "nonManifoldBodyEdges": 2456,
+ "hierarchy": [
+  "VehicleRoot",
+  "  Body",
+  "  Chassis",
+  "  Door_FL",
+  "    DoorCard_FL",
+  "    Glass_Door_F_L",
+  "  Door_FR",
+  "    DoorCard_FR",
+  "    Glass_Door_F_R",
+  "  Hood",
+  "  Interior",
+  "  Lights",
+  "  Plate_F",
+  "  Plate_R",
+  "  Popup_L",
+  "  Popup_R",
+  "  SteeringWheel",
+  "  Tailgate",
+  "    Glass_Rear",
+  "  Wheel_FL",
+  "    Rim_FL",
+  "    Tire_FL",
+  "  Wheel_FR",
+  "    Rim_FR",
+  "    Tire_FR",
+  "  Wheel_RL",
+  "    Rim_RL",
+  "    Tire_RL",
+  "  Wheel_RR",
+  "    Rim_RR",
+  "    Tire_RR",
+  "  Windows"
+ ],
+ "animations": [
+  "Popup_L_Open",
+  "Popup_R_Open",
+  "Hood_Open",
+  "Tailgate_Open",
+  "Door_FL_Open",
+  "Door_FR_Open"
+ ],
+ "buildSeconds": 1.0,
+ "render": "C:\\Users\\Vitin Hacker\\Downloads\\MIAMI VICE FABLE 5.2\\docs\\screenshots\\neon-motor\\azure-gtr.png",
+ "blend": "assets-src/vehicles/azure-gtr.blend",
+ "glb": "public/models/vehicles/azure-gtr.glb",
+ "glbBytes": 1060400
+}
