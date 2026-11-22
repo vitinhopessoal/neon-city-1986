@@ -419,7 +419,8 @@ kbd {
 /* Avoid covering the radar when the extra panels are restored with F3. */
 .wpn-hud { left: calc(4.7% + clamp(112px, 13.3vw, 190px) + 22px); bottom: 7.6%; }
 .hud-camera { top: auto; bottom: 22px; left: 22px; right: auto; }
-.hud-extras-hidden > :is(.hud-logo, .hud-district, .hud-camera, .hud-help, .hud-toast, .hud-prompt, .hud-location, .hud-stats, .hud-lock, .veh-hud, .hud-city-debug),
+/* O painel do carro (velocímetro, marcha, nitro) fica fora desta lista: aparece sempre ao dirigir. */
+.hud-extras-hidden > :is(.hud-logo, .hud-district, .hud-camera, .hud-help, .hud-toast, .hud-prompt, .hud-location, .hud-stats, .hud-lock, .hud-city-debug),
 .hud-extras-hidden .wpn-hud { display: none !important; }
 @media (max-width: 600px) {
   .hud-status { width: 200px; right: 4%; top: 4%; }
