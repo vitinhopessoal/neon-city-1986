@@ -77,7 +77,7 @@ build. O personagem procedural é mantido como fallback de carregamento.
 Os pacotes GTA na raiz e os mapas de desenvolvimento não fazem parte do build.
 
 O arsenal de nove armas continua disponível: **1–8** seleciona e saca,
-**X** saca/guarda e **TAB** mostra a seleção. A tecla **8** alterna as duas
+**X** saca/guarda e **TAB** (segurar) abre a roleta de armas. A tecla **8** alterna as duas
 carabinas. No início a Bren Ten está selecionada e guardada no coldre.
 
 Aventura de ação em mundo aberto ambientada em uma cidade costeira fictícia dos anos 80.

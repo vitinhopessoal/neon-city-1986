@@ -6,6 +6,7 @@ import { WeaponView } from './WeaponView.js';
 import { WeaponEffects } from './WeaponEffects.js';
 import { WeaponAudio } from './WeaponAudio.js';
 import { WeaponHUD } from './WeaponHUD.js';
+import { WeaponWheel } from './WeaponWheel.js';
 import { WeaponBallistics } from './WeaponBallistics.js';
 
 /**
@@ -38,6 +39,8 @@ export class WeaponManager {
     this.effects = new WeaponEffects(game.scene);
     this.audio = new WeaponAudio(game.audio);
     this.hud = new WeaponHUD(game.hud.el, this.inv);
+    // Roleta de armas (segurar TAB) — substitui a lista de cartões da seleção rápida.
+    this.wheel = new WeaponWheel(game.hud.el, this.inv, game.renderer);
     this.ballistics = new WeaponBallistics(game);
 
     this.state = 'holstered'; // holstered | drawing | ready | holstering
@@ -117,6 +120,13 @@ export class WeaponManager {
     return true;
   }
 
+  /** Aplica a escolha da roleta: arma → equipa e saca; "Desarmado" → guarda a arma. */
+  _applyWheel(item) {
+    if (!item) return;
+    if (!item.id) { if (this.drawn) this.holster(); return; }
+    this.select(item.id, { draw: true });
+  }
+
   _setSelected(e) {
     this.selected = e;
     this.view.setWeapon(e.def);
@@ -183,8 +193,33 @@ export class WeaponManager {
       if (this.wasDrawnBeforeVehicle) this.draw();
     }
 
-    if (onFoot) {
-      this.quickOpen = input.isDown('quickSelect');
+    // Roleta de armas: abre segurando TAB (a pé, em jogo); soltar o TAB ou clicar equipa.
+    const tabDown = onFoot && g.state === 'playing' && input.isDown('quickSelect');
+    if (tabDown && !this.wheel.open) this.wheel.show(this.drawn ? this.def?.id : null);
+    let wheelBusy = false;
+    if (this.wheel.open) {
+      wheelBusy = true;
+      if (!onFoot || g.state !== 'playing') this.wheel.hide(); // entrou num carro, menu, prisão...
+      else {
+        for (let i = 0; i < SLOT_ACTIONS.length; i++) {
+          if (!input.wasPressed(SLOT_ACTIONS[i])) continue;
+          const list = this.inv.bySlot(i + 1);
+          if (list.length) this.wheel.pick(list[(list.findIndex((e) => e === this.selected) + 1) % list.length].def.id);
+        }
+        if (input.wasPressed('weaponNext')) this.wheel.step(1);
+        if (input.wasPressed('weaponPrev')) this.wheel.step(-1);
+        if (!tabDown || input.wasPressed('fire')) this._applyWheel(this.wheel.hide());
+      }
+      g.time.timeScale = this.wheel.timeScale;
+    } else if (g.time.timeScale !== 1 && this._wheelSlowed) {
+      g.time.timeScale = 1;
+    }
+    this._wheelSlowed = this.wheel.open;
+    if (onFoot && wheelBusy) {
+      this.quickOpen = true; // bloqueia disparo/mira neste quadro (inclui o clique que confirmou)
+      this.aimHeld = false;
+    } else if (onFoot) {
+      this.quickOpen = false;
       for (let i = 0; i < SLOT_ACTIONS.length; i++) {
         if (!input.wasPressed(SLOT_ACTIONS[i])) continue;
         const list = this.inv.bySlot(i + 1);

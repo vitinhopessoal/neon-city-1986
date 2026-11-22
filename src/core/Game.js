@@ -482,7 +482,12 @@ export class Game {
       this.input.endFrame();
       return;
     }
-    if (this.state === 'playing') { this.cameras.applyLook(this._mouse.x, this._mouse.y); this.playTime += dt; }
+    if (this.state === 'playing') {
+      // Roleta de armas aberta: o mouse aponta a fatia em vez de girar a câmera.
+      if (this.weapons?.wheel?.open) this.weapons.wheel.pointer(this._mouse.x, this._mouse.y);
+      else this.cameras.applyLook(this._mouse.x, this._mouse.y);
+      this.playTime += dt;
+    }
     this._handleGlobalKeys();
 
     // 2) Jogador (física + animação) — controle suspenso durante troca de mapa.

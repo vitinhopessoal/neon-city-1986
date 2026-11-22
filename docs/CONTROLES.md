@@ -21,7 +21,7 @@ O mapeamento de teclas fica centralizado em `src/core/InputManager.js`:
 | Mouse | Olhar / orbitar a câmera |
 | 1–8 | Selecionar arma (8 alterna entre as duas carabinas) |
 | Roda do mouse | Próxima / anterior arma |
-| TAB (segurar) | Seleção rápida de armas |
+| TAB (segurar) | Roleta de armas: mova o mouse até a arma (ou use a roda / 1–8) e solte o TAB (ou clique) para equipar; "Desarmado" guarda a arma. O tempo desacelera enquanto ela está aberta |
 | X | Sacar / guardar arma |
 | Mouse esq. | Disparar (segurar nas automáticas) |
 | Mouse dir. | Mirar (sobre o ombro / alinhar a mira em 1ª pessoa) |
@@ -107,7 +107,7 @@ Na água não há pulo nem armas. O nado começa onde o fundo passa de 1,3 m e t
 - **Espaço** = pular (a pé) e freio de mão (dirigindo). Os contextos são exclusivos: dirigindo, o controle a pé fica bloqueado. Não é conflito real.
 - **Q** (buzina) não é usada por nenhuma outra ação.
 - **R** = recarregar (a pé, com arma sacada) e recuperar veículo (dirigindo). Contextos exclusivos: sem arma sacada, R não recarrega; no carro, o controle de combate fica desativado.
-- **H** continua sendo a ajuda; por isso sacar/guardar arma usa **X**. **TAB** estava livre e virou a seleção rápida (o padrão do navegador é bloqueado só com o jogo ativo).
+- **H** continua sendo a ajuda; por isso sacar/guardar arma usa **X**. **TAB** estava livre e virou a roleta de armas (o padrão do navegador é bloqueado só com o jogo ativo).
 - Atalhos com Win/Alt/Meta são ignorados (não disparam ações do jogo).
 - **E** perto de uma porta de prédio e de uma porta de carro ao mesmo tempo: a mais próxima vence (o aviso na tela mostra qual será acionada). Testado com o carro a 1,44 m × porta a 1,30 m (prédio) e com o carro a 1,46 m × porta a 1,60 m (carro).
 - **P** e **I** estavam livres; com o painel de diálogo de um estabelecimento aberto elas não abrem o menu. Com o menu aberto, **P**/**Esc** o fecham.

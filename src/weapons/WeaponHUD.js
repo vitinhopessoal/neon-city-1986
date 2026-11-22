@@ -3,7 +3,7 @@ import { bindingLabel } from '../core/InputManager.js';
 
 /**
  * HUD de combate (canto inferior esquerdo, longe do velocímetro) + retículo
- * dinâmico + marcador de acerto + seleção rápida (segurar TAB). Identidade
+ * dinâmico + marcador de acerto (a seleção por TAB é a roleta, WeaponWheel). Identidade
  * Neon City: azul, rosa neon, violeta e preto. Oculto dentro de veículos.
  */
 const MODE_LABEL = { semi: 'SEMI', auto: 'AUTO', pump: 'BOMBA' };
@@ -46,10 +46,8 @@ export class WeaponHUD {
     this.cards = [...this.r.quick.querySelectorAll('.wpn-card')];
   }
 
-  /** Mostra a seleção rápida por alguns instantes (troca de arma). */
-  flashQuick(sec = 1.2) {
-    this._quickTimer = sec;
-  }
+  /** Compatibilidade: a lista de cartões foi substituída pela roleta (WeaponWheel); nada pisca na tela. */
+  flashQuick() {}
 
   hitMarker(kill = false) {
     this._hitTimer = 0.18;
@@ -92,19 +90,8 @@ export class WeaponHUD {
     }
     // Marcador de acerto.
     if (this._hitTimer > 0) { this._hitTimer -= dt; r.hit.classList.add('visible'); } else r.hit.classList.remove('visible');
-    // Seleção rápida.
-    if (this._quickTimer > 0) this._quickTimer -= dt;
-    const quick = s.visible && (s.quickOpen || this._quickTimer > 0);
-    r.quick.classList.toggle('hidden', !quick);
-    if (quick) {
-      for (const c of this.cards) {
-        const e = this.inv.get(c.dataset.id);
-        c.classList.toggle('active', c.dataset.id === s.selectedId);
-        const a = c.querySelector('.wpn-card-ammo');
-        const txt = `${e.loaded} · ${this.inv.reserve[e.def.category]}`;
-        if (a.textContent !== txt) a.textContent = txt;
-      }
-    }
+    // A seleção rápida agora é a roleta de armas (WeaponWheel); a lista antiga fica oculta.
+    r.quick.classList.add('hidden');
   }
 
   _set(key, value, html = false) {

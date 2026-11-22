@@ -47,7 +47,7 @@ Integrações:
 |---|---|---|
 | 1–8 | Selecionar e sacar a arma | a pé |
 | Roda do mouse | Próxima / anterior | a pé |
-| TAB (segurar) | Seleção rápida | a pé |
+| TAB (segurar) | Roleta de armas (mouse aponta, soltar TAB ou clicar equipa; tempo a 30%) | a pé |
 | X | Sacar / guardar | a pé |
 | Mouse esq. | Disparar (segurar nas automáticas) | a pé, arma sacada |
 | Mouse dir. | Mirar (câmera sobre o ombro; em 1ª pessoa, alinha a mira) | a pé, arma sacada |
@@ -96,3 +96,15 @@ Integrações:
   levantados, a axila ainda estica um pouco. As "pontes" entre mão e quadril
   foram removidas no pipeline.
 - No modelo original (fallback), a mão de apoio usa só a pose, sem IK.
+
+## Roleta de armas (TAB)
+
+Segurar **TAB** abre uma roleta no centro da tela, com uma fatia para **Desarmado** e uma para cada arma possuída, em ordem de slot. Ela substitui a antiga lista de cartões, que aparecia no canto da tela a cada troca de arma.
+
+- **Escolher:** o movimento do mouse aponta a fatia, e a câmera não gira enquanto a roleta está aberta. A roda do mouse e as teclas **1–8** também escolhem.
+- **Confirmar:** soltar o **TAB** ou clicar equipa a arma e já a saca. Escolher **Desarmado** guarda a arma.
+- **Tempo:** o jogo roda a 30% da velocidade enquanto a roleta está aberta.
+- **Dentro de veículos:** a roleta não abre.
+- **Ícones:** são silhuetas geradas dos próprios modelos 3D das armas do jogo, renderizadas uma vez na inicialização e pintadas com o degradê neon da interface. É arte original, sem nada de outro jogo.
+
+Código: `src/weapons/WeaponWheel.js`. Captura: `docs/screenshots/arsenal/roleta_armas.jpg`.
