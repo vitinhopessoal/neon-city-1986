@@ -7,7 +7,52 @@ export const OCCUPANT_STATES = { SEATED: 'SEATED', EXITING: 'EXITING', WALKING: 
 const _pos = new THREE.Vector3(), _dir = new THREE.Vector3();
 const clamp = x => Math.max(0, Math.min(1, x));
 const smooth = x => { x = clamp(x); return x * x * (3 - 2 * x); };
-const pose = () => ({ thighL: 0, thighR: 0, kneeL: 0, kneeR: 0, armL: 0, armR: 0, elbowL: 0, elbowR: 0, armOut: 0, bob: 0, twist: 0, headYaw: 0, headPitch: 0, lean: 0, sit: 0, lie: 0, footPitch: 0 });
+const pose = () => ({ thighL: 0, thighR: 0, kneeL: 0, kneeR: 0, armL: 0, armR: 0, elbowL: 0, elbowR: 0, armOut: 0, bob: 0, twist: 0, headYaw: 0, headPitch: 0, lean: 0, sit: 0, lie: 0, footPitch: 0, spread: 0 });
+
+/** IK planar de dois ossos (unidades do corpo, altura 1): [ângulo do osso proximal, dobra]. */
+function ik2(dy, dz, L1, L2, out) {
+  const d = Math.min(Math.max(Math.hypot(dy, dz), Math.abs(L1 - L2) + 0.01), L1 + L2 - 0.004);
+  const phi = Math.atan2(dz, -dy);
+  const bend = Math.PI - Math.acos(Math.max(-1, Math.min(1, (L1 * L1 + L2 * L2 - d * d) / (2 * L1 * L2))));
+  const delta = Math.acos(Math.max(-1, Math.min(1, (L1 * L1 + d * d - L2 * L2) / (2 * L1 * d))));
+  out[0] = phi; out[1] = delta; out[2] = bend;
+  return out;
+}
+const _ik = [0, 0, 0];
+
+/**
+ * Pilotos de moto (PROMPT 15): pernas nas pedaleiras, mãos nas manoplas e tronco pelo
+ * estilo, usando os mesmos pontos de apoio do protagonista (seat.ride). A moto inclina
+ * nas curvas e o piloto acompanha (parentMatrix = carroceria da moto).
+ */
+function ridePose(p, seat, v, h, speed = 9) {
+  const R = seat.ride;
+  p.sit = 1;
+  p.lean = -seat.recline;
+  // Pernas (coxa 0,42, canela 0,41 + pé) até a pedaleira.
+  ik2((R.pegY + 0.05 - R.hipY) / h, (R.pegZ - R.hipZ) / h, 0.42, 0.45, _ik);
+  p.thighL = p.thighR = _ik[0] + _ik[1];
+  p.kneeL = p.kneeR = _ik[2];
+  p.spread = R.spread;
+  // Braços: ombro no topo do tronco inclinado (pelve 0,3·lean + tronco lean).
+  const tl = p.lean * 1.3;
+  const sy = 0.05 + 0.42 * Math.cos(tl), sz = 0.42 * Math.sin(tl);
+  const steer = v.physics ? v.physics.steerAngle : 0;
+  const ds = R.gripW * Math.sin(steer);
+  for (const [k, side] of [['L', -1], ['R', 1]]) {
+    ik2((R.gripY - R.hipY) / h - sy, (R.gripZ - R.hipZ + side * ds) / h - sz, 0.28, 0.27, _ik);
+    p['arm' + k] = _ik[0] - _ik[1] - tl;
+    p['elbow' + k] = _ik[2];
+  }
+  p.armOut = Math.asin(Math.max(-0.4, Math.min(0.8, (R.gripW / h - 0.19) / 0.55))) - 0.08;
+  p.footPitch = 0.2;
+  // Parado (semáforo, fila): pé esquerdo no chão.
+  if (speed < 0.4) {
+    ik2((0.05 - R.hipY) / h, 0.12 / h, 0.42, 0.45, _ik);
+    p.thighL = _ik[0] + _ik[1];
+    p.kneeL = _ik[2];
+  }
+}
 
 /** Visible people tied to actual vehicle seats, with walking/return transitions. */
 export class VehicleOccupants {
@@ -208,6 +253,13 @@ export class VehicleOccupants {
         v.body.updateWorldMatrix(true, false);
         actor.parentMatrix = v.body.matrixWorld;
         actor.x = actor.seat.x; actor.y = actor.seat.hipY + 0.47 - 0.95 * actor.look.height; actor.z = actor.seat.z; actor.yaw = 0;
+        if (actor.seat.ride) {
+          ridePose(p, actor.seat, v, actor.look.height, actor.agent ? (actor.agent.mode === 'phys' ? Math.abs(v.physics?.vLong ?? 0) : actor.agent.speed) : 0);
+          p.headYaw = actor.brain.alert > 0.3 ? Math.sin(actor.brain.time * 2) * 0.4 : Math.sin(actor.brain.time * 0.4) * 0.08;
+          if (v._impOn || !v.root.visible) { this.renderer.hide(actor.slot); continue; }
+          this.renderer.write(actor.slot, actor, p);
+          continue;
+        }
         p.sit = 1; p.lean = -actor.seat.recline;
         p.thighL = p.thighR = 1.35; p.kneeL = p.kneeR = 1.45;
         p.armL = actor.seat.driver ? 0.9 + v.controls.steer * 0.2 : 0.1;

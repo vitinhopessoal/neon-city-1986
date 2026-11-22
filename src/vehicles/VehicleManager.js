@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { VehiclePhysics } from './VehiclePhysics.js';
 import { VehicleAnimation } from './VehicleAnimation.js';
+import { MotorcyclePhysics } from './MotorcyclePhysics.js';
+import { MotorcycleAnimation } from './MotorcycleAnimation.js';
 import { VehicleDamage } from './VehicleDamage.js';
 import { VehicleEffects } from './VehicleEffects.js';
 import { VehicleAudio } from './VehicleAudio.js';
@@ -22,6 +24,9 @@ import { clamp } from '../utils/math.js';
  * os recebem; o sistema não presume ruas.
  */
 const _v = new THREE.Vector3();
+/** Física/animação conforme o tipo: motos (spec.bike) usam as extensões de moto. */
+const physicsFor = (v, col, env) => (v.spec.bike ? new MotorcyclePhysics(v, col, env) : new VehiclePhysics(v, col, env));
+const animationFor = (v) => (v.spec.bike ? new MotorcycleAnimation(v) : new VehicleAnimation(v));
 
 export class VehicleManager {
   constructor(game) {
@@ -73,9 +78,9 @@ export class VehicleManager {
     this._byId = new Map(this.list.map((v) => [v.id, v]));
     for (const v of this.list) {
       if (!v.physics) {
-        v.physics = new VehiclePhysics(v, env.collision, env);
+        v.physics = physicsFor(v, env.collision, env);
         v.physics.syncFromRoot();
-        v.animation = new VehicleAnimation(v);
+        v.animation = animationFor(v);
         v.damage = new VehicleDamage(v);
       } else {
         v.physics.setEnvironment(env, env.collision);
@@ -162,8 +167,8 @@ export class VehicleManager {
     const env = this.env;
     if (!env) return;
     if (!v.physics) {
-      v.physics = new VehiclePhysics(v, env.collision, env);
-      v.animation = new VehicleAnimation(v);
+      v.physics = physicsFor(v, env.collision, env);
+      v.animation = animationFor(v);
       v.damage = new VehicleDamage(v);
     } else v.physics.setEnvironment(env, env.collision);
     v.physics.syncFromRoot();
@@ -195,6 +200,7 @@ export class VehicleManager {
     this.audio.start(v);
     this.hud.show(v);
     this.game.hud.setHelpMode('vehicle');
+    this.audio.setVoice(v);
     this.game.hud.toast(`${v.spec.model.toUpperCase()} · motor ligado`, 1.6);
   }
 
@@ -309,8 +315,14 @@ export class VehicleManager {
     this._lodTimer = 0.25;
     const cam = this.game.camera.position;
     for (const v of this.list) {
-      const show = v === pv || cam.distanceToSquared(v.root.position) < 40 * 40;
+      const d2 = cam.distanceToSquared(v.root.position);
+      const show = v === pv || d2 < 40 * 40;
       if (v.detail && v.detail[0] && v.detail[0].visible !== show) for (const o of v.detail) o.visible = show;
+      // Motos: LOD distante (malha única dizimada no Blender) além de 45 m.
+      if (v.lodMesh) {
+        const far = v !== pv && d2 > 45 * 45;
+        if (v.lodMesh.visible !== far) { v.lodMesh.visible = far; v.body.visible = !far; }
+      }
     }
   }
 
@@ -336,8 +348,9 @@ export class VehicleManager {
     const ph = v.physics;
     for (const id of ['rl', 'rr']) {
       const key = `${v.id}:${id}`;
+      const w = v.wheels.find((ww) => ww.id === id);
+      if (!w) continue; // motos: só a roda traseira 'rl'
       if (ph.skid > 0.3) {
-        const w = v.wheels.find((ww) => ww.id === id);
         _v.set(w.local.x * 0.94, 0, w.local.z);
         const s = Math.sin(ph.heading), c = Math.cos(ph.heading);
         const x = ph.x + _v.x * c + _v.z * s, z = ph.z - _v.x * s + _v.z * c;

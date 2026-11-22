@@ -5,7 +5,9 @@ import { LaneGraph, Path } from './LaneGraph.js';
 import { TrafficVehicleAI, PERSONALITIES, STATES } from './TrafficVehicleAI.js';
 import { buildImpostor, setImpostor } from './VehicleImpostor.js';
 import { laneRoute } from '../city/Navigation.js';
-import { TRAFFIC_BASE, trafficWeights } from '../vehicles/models/NeonMotor.js';
+import { TRAFFIC_BASE, trafficWeights, neonZoneAt } from '../vehicles/models/NeonMotor.js';
+import { motoTrafficWeights } from '../vehicles/models/NeonMoto.js';
+import { SPECS } from '../vehicles/VehicleFactory.js';
 
 /**
  * Trânsito de Sunset Beach (e de mapas com metadados de ruas).
@@ -271,19 +273,23 @@ export class TrafficManager {
   _acquire(x, z) {
     // Modelo sorteado pelos pesos da zona; reaproveita um carro do mesmo modelo
     // do pool (ou qualquer um, se o pool já estiver grande) antes de criar outro.
-    const want = pickWeighted(Number.isFinite(x) ? trafficWeights(x, z) : TYPES)[0];
+    // Motos (PROMPT 15) entram no mesmo sorteio: básicas comuns, customs menos, esportivas raras.
+    const factory = this.game.world.vehicleFactory;
+    const motoW = motoTrafficWeights(Number.isFinite(x) ? neonZoneAt(x, z) : null, (t) => factory.moto?.has(t));
+    const want = pickWeighted([...(Number.isFinite(x) ? trafficWeights(x, z) : TYPES), ...motoW])[0];
     const same = this.pool.findIndex((p) => p.type === want);
     if (same >= 0) return this.pool.splice(same, 1)[0];
     if (this.pool.length >= 6) return this.pool.pop();
     // Cria um veículo novo (no máximo um por ciclo de população).
-    const factory = this.game.world.vehicleFactory;
     const type = want;
-    const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+    // Motos mantêm a pintura de fábrica (esquemas de cor do modelo).
+    const color = SPECS[type]?.bike ? undefined : COLORS[Math.floor(Math.random() * COLORS.length)];
     const id = `traffic_${this._serial++}`;
     const plate = `SB ${String(1000 + Math.floor(Math.random() * 8999))}`;
     const v = factory.create(type, { id, color, stripe: Math.random() < 0.3 ? 0xff4fb8 : null, plate });
     this.group.add(v.root);
-    v.impostor = buildImpostor(v);
+    // Motos usam o LOD próprio (VehicleManager); carros, o impostor de malha única.
+    v.impostor = v.bike ? null : buildImpostor(v);
     this.stats.created++;
     return v;
   }

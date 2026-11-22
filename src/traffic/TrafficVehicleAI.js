@@ -344,6 +344,14 @@ export class TrafficVehicleAI {
     v.spinWheels(ds);
     const dh = Math.atan2(Math.sin(heading - prevH), Math.cos(heading - prevH));
     v.setSteer(Math.max(-0.5, Math.min(0.5, (dh / Math.max(1e-3, dt)) * 0.25)));
+    // Motos (PROMPT 15): também no modo cinemático a moto inclina nas curvas (ângulo de equilíbrio).
+    if (v.bike && dt > 0) {
+      const lm = v.spec.handling.leanMax;
+      const target = Math.max(-lm, Math.min(lm, -Math.atan2(this.speed * (dh / dt), 9.81)));
+      v._kinLean = (v._kinLean || 0) + (target - (v._kinLean || 0)) * Math.min(1, dt * 6);
+      v.root.rotation.z = v._kinLean;
+      v.lean = v._kinLean;
+    }
     return r;
   }
 }

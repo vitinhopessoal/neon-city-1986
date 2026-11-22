@@ -1,0 +1,116 @@
+{
+ "size": {
+  "length": 2.037,
+  "width": 0.9,
+  "height": 1.297
+ },
+ "checks": [
+  {
+   "check": "comprimento",
+   "ok": true,
+   "info": "2.037 vs 2.1"
+  },
+  {
+   "check": "altura",
+   "ok": true,
+   "info": "1.297 vs 1.14"
+  },
+  {
+   "check": "roda F alinhada",
+   "ok": true,
+   "info": "centro (0.000,0.310,0.690) chão 0.000"
+  },
+  {
+   "check": "roda R alinhada",
+   "ok": true,
+   "info": "centro (0.000,0.300,-0.690) chão 0.000"
+  },
+  {
+   "check": "pivô do garfo na caixa de direção",
+   "ok": true,
+   "info": "(0.000,0.950,0.357)"
+  },
+  {
+   "check": "pivô da balança",
+   "ok": true,
+   "info": "(0.000,0.420,-0.140)"
+  },
+  {
+   "check": "banco sob o quadril do piloto",
+   "ok": true,
+   "info": "quadril 0.86 banco 0.76"
+  }
+ ],
+ "triangles": 10290,
+ "trianglesByObject": {
+  "FrontForkMesh": 1436,
+  "Engine": 1284,
+  "Frame": 1216,
+  "Rim_R": 936,
+  "Bodywork": 836,
+  "Rim_F": 808,
+  "Exhaust": 784,
+  "Tire_F": 560,
+  "Tire_R": 560,
+  "FuelTank": 548,
+  "Seat": 516,
+  "SwingarmMesh": 416,
+  "Lights": 388,
+  "Plate_R": 2
+ },
+ "materials": [
+  "Amber",
+  "Black_Trim",
+  "Brake_Disc",
+  "Chassis",
+  "Chrome",
+  "EngineMetal",
+  "Gauge",
+  "Headlight",
+  "Paint",
+  "Plate",
+  "Rim",
+  "Rubber",
+  "Seat",
+  "Taillight"
+ ],
+ "hierarchy": [
+  "MotorcycleRoot",
+  "  Bodywork",
+  "  Engine",
+  "  Exhaust",
+  "  Frame",
+  "  FrontFork",
+  "    FrontForkMesh",
+  "    FrontWheel",
+  "      Rim_F",
+  "      Tire_F",
+  "    Grip_L",
+  "    Grip_R",
+  "  FuelTank",
+  "  Lights",
+  "  Peg_L",
+  "  Peg_R",
+  "  Plate_R",
+  "  Rider_Hip",
+  "  Seat",
+  "  Swingarm",
+  "    RearWheel",
+  "      Rim_R",
+  "      Tire_R",
+  "    SwingarmMesh"
+ ],
+ "animations": [
+  "Steer",
+  "Suspension",
+  "FrontWheel_Spin",
+  "RearWheel_Spin"
+ ],
+ "buildSeconds": 0.4,
+ "render": "C:\\Users\\Vitin Hacker\\Downloads\\MIAMI VICE FABLE 5.2\\docs\\screenshots\\neon-moto\\coast-street-250.jpg",
+ "lod1Triangles": 3050,
+ "lod1Bytes": 114040,
+ "glb": "public/models/motorcycles/coast-street-250.glb",
+ "blend": "assets-src/motorcycles/coast-street-250.blend",
+ "glbBytes": 331384
+}

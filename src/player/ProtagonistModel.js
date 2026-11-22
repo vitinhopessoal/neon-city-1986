@@ -98,6 +98,16 @@ export class ProtagonistModel {
     }
     const material = skinned.material;
     material.side = THREE.FrontSide;
+    // Em algumas poses (sentar, montar, passada) vértices com pesos de ossos opostos ficam com
+    // normal nula; normalize(0) gera NaN no pixel e o bloom espalha o NaN pela tela inteira
+    // (quadros pretos). Proteção: normal nula vira "para cima" e NaN no fragmento vira frente.
+    material.onBeforeCompile = (sh) => {
+      sh.vertexShader = sh.vertexShader.replace('#include <skinnormal_vertex>',
+        '#include <skinnormal_vertex>\n\tif ( dot( objectNormal, objectNormal ) < 1e-12 ) objectNormal = vec3( 0.0, 1.0, 0.0 );');
+      sh.fragmentShader = sh.fragmentShader.replace('#include <normal_fragment_begin>',
+        '#include <normal_fragment_begin>\n\tif ( any( isnan( normal ) ) || dot( normal, normal ) < 1e-12 ) normal = vec3( 0.0, 0.0, 1.0 );\n\tnonPerturbedNormal = normal;');
+    };
+    material.customProgramCacheKey = () => 'protagonist-safe-normal';
     this.material = material;
     this.meshes = {};
     this.triangles = index.length / 3;
@@ -133,6 +143,11 @@ export class ProtagonistModel {
     const spineY = this.rig.bindPos[this.rig.bones.indexOf('spine')][1];
     this._spineAbove = spineY - this.rig.hipsY;
     this._torsoToTop = this.rig.headTop - spineY;
+    // Medidas do braço do GLB (pilotagem de moto: o tronco inclina até as mãos alcançarem o guidão).
+    const bp = (n) => new THREE.Vector3().fromArray(this.rig.bindPos[this.rig.bones.indexOf(n)]);
+    const sh = bp('shoulderL'), el = bp('elbowL'), wr = bp('wristL');
+    this.armReach = sh.distanceTo(el) + el.distanceTo(wr) + 0.078;
+    this.shoulderUp = sh.y - this.rig.hipsY;
   }
 
   /**
@@ -173,6 +188,12 @@ export class ProtagonistModel {
       r.updateMatrixWorld(true);
       this._armIK(5, 6, 7, j.arms.L.wrist.getWorldPosition(this._ik.t2 || (this._ik.t2 = new THREE.Vector3())), seat);
       this._armIK(8, 9, 10, j.arms.R.wrist.getWorldPosition(this._ik.t2), seat);
+      // Moto (PROMPT 15): pernas do GLB mais curtas — tornozelos levados aos do provisório
+      // (pedaleiras ou pé no chão). O joelho dobra para o lado oposto ao cotovelo.
+      if (animator.seatRide) {
+        this._armIK(11, 12, 13, j.legs.L.ankle.getWorldPosition(this._ik.t2), seat, 1);
+        this._armIK(14, 15, 16, j.legs.R.ankle.getWorldPosition(this._ik.t2), seat, 1);
+      }
     } else if (this.leftHand.weight > 0.01) {
       // Arma em duas mãos: mão de apoio no guarda-mão/empunhadura (IK).
       r.updateMatrixWorld(true);
@@ -182,8 +203,8 @@ export class ProtagonistModel {
     }
   }
 
-  /** IK de dois ossos (ombro, cotovelo, pulso) até a posição mundial `target`. */
-  _armIK(si, ei, wi, target, weight) {
+  /** IK de dois ossos (ombro, cotovelo, pulso — ou quadril, joelho, tornozelo com bend = +1) até `target`. */
+  _armIK(si, ei, wi, target, weight, bend = -1) {
     const k = this._ik;
     const sh = this.bones[si], el = this.bones[ei], wr = this.bones[wi];
     sh.getWorldPosition(k.s);
@@ -194,7 +215,7 @@ export class ProtagonistModel {
     const c = THREE.MathUtils.clamp(k.s.distanceTo(k.t), Math.abs(a - b) + 1e-3, a + b - 1e-3);
     // Cotovelo: só gira em X local (mesma convenção do personagem provisório).
     const interior = Math.acos(THREE.MathUtils.clamp((a * a + b * b - c * c) / (2 * a * b), -1, 1));
-    k.q.setFromAxisAngle(k.x, -(Math.PI - interior));
+    k.q.setFromAxisAngle(k.x, bend * (Math.PI - interior));
     el.quaternion.slerp(k.q, weight);
     el.updateMatrixWorld(true);
     // Ombro: menor rotação que leva o pulso até o alvo.

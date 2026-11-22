@@ -21,6 +21,16 @@ vozes são originais, geradas pelo projeto (`npm run build:radio`). Volumes por 
 **P → Configurações**. Testes: `npm run test:radio` e `__NEON_TEST__.radioSuite()`.
 Detalhes em [docs/RADIO.md](docs/RADIO.md).
 
+## NEON MOTORCYCLES — seis motos modeladas no Blender
+
+Duas básicas (PALM RIDER 125, COAST STREET 250), duas customs (MIDNIGHT REBEL 750, IRON SERPENT 1100)
+e duas esportivas (NEON BLADE 900R, PHANTOM X1000), geradas por `tools/blender/neon_moto` (.blend + .glb + LOD).
+O protagonista monta com **E**, segura o guidão, apoia os pés nas pedaleiras (ou o pé no chão quando para)
+e inclina o corpo junto com a moto nas curvas. As motos aparecem no trânsito com pilotos NPC, ficam
+estacionadas em Sunset Beach e funcionam com garagens, saves, polícia e NEON CUSTOMS (pintura, luzes e mecânica).
+
+Detalhes em [docs/NEON_MOTOS.md](docs/NEON_MOTOS.md).
+
 ## NEON MOTOR COMPANY — nove carros modelados no Blender
 
 PALM COMPACT, BAY CITY 100, COAST WAGON (populares), METRO EXECUTIVE, OCEAN COUPE,

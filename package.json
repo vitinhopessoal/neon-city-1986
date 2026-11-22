@@ -25,7 +25,9 @@
     "test:neon": "node --test tools/vehicles/neon-motor.test.mjs",
     "build:vehicles": "blender --background --factory-startup --python tools/blender/neon_motor/run.py -- --all --render",
     "test:radio": "node --test tools/radio/radio.test.mjs",
-    "build:radio": "node tools/radio/build-radio.mjs"
+    "build:radio": "node tools/radio/build-radio.mjs",
+    "test:moto": "node --test tools/vehicles/neon-moto.test.mjs",
+    "build:motos": "blender --background --factory-startup --python tools/blender/neon_moto/run_moto.py -- --all --render"
   },
   "dependencies": {
     "three": "^0.187.0"

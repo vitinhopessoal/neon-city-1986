@@ -176,7 +176,8 @@ export class PedestrianRenderer {
     for (const [k, sgn] of [[0, 1], [1, -1]]) {
       const th = k === 0 ? pose.thighL : pose.thighR;
       const kn = k === 0 ? pose.kneeL : pose.kneeR;
-      const thigh = local(sgn * 0.092, -0.04, 0, -th, 0, sgn * 0.03, 1, 1, 1, pelvis);
+      // spread (opcional): abertura lateral das pernas (pilotos de moto contornam o tanque).
+      const thigh = local(sgn * 0.092, -0.04, 0, -th, 0, sgn * (0.03 + (pose.spread || 0)), 1, 1, 1, pelvis);
       put('thigh', slot * 2 + k, thigh);
       const shin = local(0, -0.42, 0, kn, 0, 0, 1, 1, 1, thigh);
       put('shin', slot * 2 + k, shin);

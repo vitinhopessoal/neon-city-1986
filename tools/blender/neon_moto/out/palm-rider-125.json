@@ -1,0 +1,117 @@
+{
+ "size": {
+  "length": 1.948,
+  "width": 0.86,
+  "height": 1.287
+ },
+ "checks": [
+  {
+   "check": "comprimento",
+   "ok": true,
+   "info": "1.948 vs 2"
+  },
+  {
+   "check": "altura",
+   "ok": true,
+   "info": "1.287 vs 1.12"
+  },
+  {
+   "check": "roda F alinhada",
+   "ok": true,
+   "info": "centro (0.000,0.300,0.650) chão 0.000"
+  },
+  {
+   "check": "roda R alinhada",
+   "ok": true,
+   "info": "centro (0.000,0.300,-0.650) chão 0.000"
+  },
+  {
+   "check": "pivô do garfo na caixa de direção",
+   "ok": true,
+   "info": "(0.000,0.920,0.335)"
+  },
+  {
+   "check": "pivô da balança",
+   "ok": true,
+   "info": "(0.000,0.420,-0.120)"
+  },
+  {
+   "check": "banco sob o quadril do piloto",
+   "ok": true,
+   "info": "quadril 0.87 banco 0.77"
+  }
+ ],
+ "triangles": 9354,
+ "trianglesByObject": {
+  "FrontForkMesh": 1436,
+  "Frame": 1160,
+  "Engine": 1040,
+  "Rim_R": 936,
+  "Rim_F": 808,
+  "FuelTank": 572,
+  "Bodywork": 568,
+  "Tire_F": 560,
+  "Tire_R": 560,
+  "Seat": 516,
+  "SwingarmMesh": 416,
+  "Exhaust": 392,
+  "Lights": 388,
+  "Plate_R": 2
+ },
+ "materials": [
+  "Amber",
+  "Black_Trim",
+  "Brake_Disc",
+  "Chassis",
+  "Chrome",
+  "EngineMetal",
+  "Gauge",
+  "Headlight",
+  "Paint",
+  "Plate",
+  "Rim",
+  "Rubber",
+  "Seat",
+  "Stripe",
+  "Taillight"
+ ],
+ "hierarchy": [
+  "MotorcycleRoot",
+  "  Bodywork",
+  "  Engine",
+  "  Exhaust",
+  "  Frame",
+  "  FrontFork",
+  "    FrontForkMesh",
+  "    FrontWheel",
+  "      Rim_F",
+  "      Tire_F",
+  "    Grip_L",
+  "    Grip_R",
+  "  FuelTank",
+  "  Lights",
+  "  Peg_L",
+  "  Peg_R",
+  "  Plate_R",
+  "  Rider_Hip",
+  "  Seat",
+  "  Swingarm",
+  "    RearWheel",
+  "      Rim_R",
+  "      Tire_R",
+  "    SwingarmMesh"
+ ],
+ "animations": [
+  "Steer",
+  "Suspension",
+  "FrontWheel_Spin",
+  "RearWheel_Spin"
+ ],
+ "buildSeconds": 0.4,
+ "render": "C:\\Users\\Vitin Hacker\\Downloads\\MIAMI VICE FABLE 5.2\\docs\\screenshots\\neon-moto\\palm-rider-125.jpg",
+ "lod1Triangles": 2765,
+ "lod1Bytes": 108060,
+ "glb": "public/models/motorcycles/palm-rider-125.glb",
+ "blend": "assets-src/motorcycles/palm-rider-125.blend",
+ "glbBytes": 308224
+}

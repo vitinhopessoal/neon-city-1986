@@ -53,9 +53,12 @@ export class Player {
    * suspensa; o controlador acompanha a posição para os sistemas do mapa.
    * speed: velocidade de caminhada para a animação; seat: 0..1 pose sentada.
    */
-  setExternalPose(position, yaw, speed = 0, seat = 0, recline = 0, steer = 0, duck = 0) {
-    const e = this.external || (this.external = { position: new THREE.Vector3(), yaw: 0, speed: 0, seat: 0, recline: 0, steer: 0, duck: 0 });
+  setExternalPose(position, yaw, speed = 0, seat = 0, recline = 0, steer = 0, duck = 0, roll = 0, pitch = 0) {
+    const e = this.external || (this.external = { position: new THREE.Vector3(), yaw: 0, speed: 0, seat: 0, recline: 0, steer: 0, duck: 0, roll: 0, pitch: 0 });
     e.duck = duck;
+    // Motos: o corpo inteiro acompanha a inclinação (roll) e a arfagem (pitch) da moto.
+    e.roll = roll;
+    e.pitch = pitch;
     e.position.copy(position);
     e.yaw = yaw;
     e.speed = speed;
@@ -177,7 +180,9 @@ export class Player {
   _syncModel() {
     const r = this.model.root;
     r.position.copy(this.visualPosition);
-    r.rotation.y = this.controller.yaw;
+    const e = this.external;
+    if (e && (e.roll || e.pitch)) r.rotation.set(e.pitch, this.controller.yaw, e.roll, 'YXZ');
+    else r.rotation.set(0, this.controller.yaw, 0);
     if (this.visual && this.modelMode === 'glb') this.visual.sync(this.model, this.animator);
   }
 
@@ -211,6 +216,9 @@ export class Player {
     for (const m of this.model.headMeshes) m.visible = !glb;
     for (const m of this.model.bodyMeshes) m.visible = !glb;
     if (this.visual) this.visual.visible = glb;
+    // Alcance dos braços do modelo visível (pose de pilotagem de moto).
+    this.animator.armReach = glb ? this.visual.armReach ?? null : null;
+    this.animator.shoulderUp = glb ? this.visual.shoulderUp ?? null : null;
     this._syncModel();
     return this.modelMode;
   }

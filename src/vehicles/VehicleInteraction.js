@@ -85,6 +85,7 @@ export class VehicleInteraction {
 
   update(dt, input) {
     const S = PLAYER_STATES;
+    this._dt = dt;
     if (this.cooldown > 0) this.cooldown -= dt;
     const pressed = input.wasPressed('interact') && this.game.state === 'playing' && !this.game.mapLoading && !(this.cooldown > 0);
     if (this.state === S.ON_FOOT) {
@@ -93,7 +94,7 @@ export class VehicleInteraction {
       // Interiores (portas de prédios, balcões) têm prioridade quando mais próximos: suppressed é
       // definido a cada quadro pelo InteriorManager; a varredura continua para a comparação de distância.
       if (!this.suppressed) {
-        this.game.hud.setPrompt(this.candidate ? `PRESSIONE <kbd>${bindingLabel('interact')}</kbd> PARA ENTRAR` : null);
+        this.game.hud.setPrompt(this.candidate ? `PRESSIONE <kbd>${bindingLabel('interact')}</kbd> PARA ${this.candidate.vehicle.bike ? 'MONTAR' : 'ENTRAR'}` : null);
         if (pressed && this.candidate) this.beginEnter(this.candidate.vehicle, this.candidate.doorId);
       }
     } else if (this.state === S.ENTERING_VEHICLE) {
@@ -124,6 +125,11 @@ export class VehicleInteraction {
     const driverSeat = vehicle.seats.find((s) => s.driver);
     const viaSeat = vehicle.seat(door.seat) || driverSeat;
     this.seat = driverSeat;
+    // Moto (PROMPT 15): pose de pilotagem pelos pontos de apoio do modelo (pedaleiras, manoplas).
+    const anim = this.game.player.animator;
+    anim.seatRide = vehicle.bike && driverSeat.ride ? driverSeat.ride : null;
+    anim.rideSwing = 0;
+    anim.rideState.footDown = vehicle.bike ? 1 : 0;
     // Centro do volante em relação ao quadril do motorista (IK dos braços).
     const wheel = vehicle.spec?.wheel;
     this.game.player.animator.seatGrip = wheel ? { y: wheel.y - driverSeat.hipY, z: wheel.z - driverSeat.z } : null;
@@ -139,17 +145,21 @@ export class VehicleInteraction {
     this._from.copy(player.controller.position);
     const dist = Math.hypot(entryW.x - this._from.x, entryW.z - this._from.z);
     const approach = 0.15 + dist / 2.6;
+    // Moto: sem porta para abrir; segura o guidão e passa a perna por cima do banco.
+    const bike = !!vehicle.bike;
+    const open = approach + (bike ? 0.15 : 0.42);
     this.seq = {
       t: 0,
       entryW,
       viaSeat,
       approach,
-      open: approach + 0.42,
-      sit: approach + 0.42 + 0.72,
+      open,
+      sit: open + (bike ? 0.8 : 0.72),
       slide: viaSeat !== driverSeat ? 0.45 : 0,
       yaw0: player.controller.yaw,
+      bike,
     };
-    this.seq.close = this.seq.sit + this.seq.slide + 0.4;
+    this.seq.close = this.seq.sit + this.seq.slide + (bike ? 0.25 : 0.4);
     player.setExternalPose(this._from, player.controller.yaw, 0, 0);
     this.game.hud.setPrompt(null);
     this._setState(PLAYER_STATES.ENTERING_VEHICLE);
@@ -197,9 +207,10 @@ export class VehicleInteraction {
       const seatW = this._seatWorld(q.viaSeat, _w);
       // Curva pela soleira da porta (não atravessa a coluna nem a porta aberta).
       this._bezier(q.entryW, this.vehicle.localToWorld(this.door.sill, this._sillW), seatW, smoothstep(0, 1, k), this._pos);
-      this._pos.y += Math.sin(k * Math.PI) * 0.1;
+      this._pos.y += Math.sin(k * Math.PI) * (q.bike ? 0.16 : 0.1);
       const yaw = faceCar + angleDelta(faceCar, heading) * smoothstep(0.25, 0.9, k);
-      player.setExternalPose(this._pos, yaw, 0, smoothstep(0.15, 0.85, k), q.viaSeat.recline, 0, Math.sin(Math.min(1, k * 1.4) * Math.PI));
+      if (q.bike) player.animator.rideSwing = Math.sin(clamp((k - 0.15) / 0.7, 0, 1) * Math.PI);
+      player.setExternalPose(this._pos, yaw, 0, smoothstep(0.15, 0.85, k), q.viaSeat.recline, 0, q.bike ? 0 : Math.sin(Math.min(1, k * 1.4) * Math.PI));
     } else if (t < q.sit + q.slide) {
       // Entrou pelo lado do passageiro: desliza para o volante.
       const k = smoothstep(0, 1, (t - q.sit) / q.slide);
@@ -209,6 +220,7 @@ export class VehicleInteraction {
       player.setExternalPose(this._pos, heading, 0, 1, this.seat.recline);
     } else {
       this.door.target = 0;
+      player.animator.rideSwing = 0;
       this._seatPlayer(dt);
       if (!q.engineStarted && t >= q.sit + q.slide + 0.05) {
         q.engineStarted = true;
@@ -234,6 +246,26 @@ export class VehicleInteraction {
     const v = this.vehicle;
     if (!v) return;
     const pos = this._seatWorld(this.seat, this._pos);
+    if (v.bike) {
+      const ph = v.physics, rs = this.game.player.animator.rideState;
+      const speed = ph ? Math.abs(ph.vLong) : 0;
+      rs.steer = v.animation?.steerVis ?? 0;
+      rs.lean = v.root.rotation.z;
+      rs.speed = speed;
+      // Pé esquerdo no chão quando parada (e ao montar/desmontar); recolhe ao arrancar.
+      const want = speed < 0.9 && !(v.controls.throttle > 0.1) ? 1 : 0;
+      rs.footDown += (want - rs.footDown) * Math.min(1, (this._dt || 0.016) * 8);
+      // Bancos altos: parado, o piloto desliza o quadril para o lado do pé de apoio (e desce um pouco).
+      const ride = this.seat.ride;
+      rs.hipDrop = ride ? Math.min(0.08, Math.max(0, ride.hipY - 0.84)) * rs.footDown : 0;
+      if (rs.hipDrop > 0) {
+        _w.set(this.seat.x + rs.hipDrop * 0.8, this.seat.hipY - 0.95 - rs.hipDrop, this.seat.z);
+        v.body.updateWorldMatrix(true, false);
+        pos.copy(_w).applyMatrix4(v.body.matrixWorld);
+      }
+      this.game.player.setExternalPose(pos, v.root.rotation.y, 0, 1, this.seat.recline, v.controls.steer, 0, v.root.rotation.z, v.root.rotation.x + v.body.rotation.x);
+      return;
+    }
     this.game.player.setExternalPose(pos, v.root.rotation.y, 0, 1, this.seat.recline, v.controls.steer);
   }
 
@@ -278,12 +310,12 @@ export class VehicleInteraction {
     const v = this.vehicle;
     if (!v || this.state !== PLAYER_STATES.DRIVING) return false;
     if (v.physics.speed > EXIT_SPEED) {
-      this.game.hud.toast('Reduza a velocidade para sair do carro', 1.8);
+      this.game.hud.toast(v.bike ? 'Reduza a velocidade para descer da moto' : 'Reduza a velocidade para sair do carro', 1.8);
       return false;
     }
     const exit = this._findExit();
     if (!exit) {
-      this.game.hud.toast('Saída bloqueada — afaste o carro do obstáculo', 2.2);
+      this.game.hud.toast(v.bike ? 'Sem espaço para descer — afaste a moto do obstáculo' : 'Saída bloqueada — afaste o carro do obstáculo', 2.2);
       return false;
     }
     this.door = exit.door;
@@ -296,7 +328,8 @@ export class VehicleInteraction {
       exit,
       viaSeat,
       slide: viaSeat !== this.seat ? 0.45 : 0,
-      open: 0.38,
+      open: v.bike ? 0.15 : 0.38,
+      bike: !!v.bike,
     };
     this.seq.out = this.seq.open + this.seq.slide + 0.65;
     this.seq.close = this.seq.out + 0.35;
@@ -323,14 +356,17 @@ export class VehicleInteraction {
       const k = (t - q.open - q.slide) / (q.out - q.open - q.slide);
       const seatW = this._seatWorld(q.viaSeat, _w);
       this._bezier(seatW, this.vehicle.localToWorld(q.exit.door.sill, this._sillW), q.exit.point, smoothstep(0, 1, k), this._pos);
-      this._pos.y += Math.sin(k * Math.PI) * 0.1;
+      this._pos.y += Math.sin(k * Math.PI) * (q.bike ? 0.16 : 0.1);
       const yaw = heading + angleDelta(heading, faceOut) * smoothstep(0.1, 0.7, k);
-      player.setExternalPose(this._pos, yaw, 0, 1 - smoothstep(0.2, 0.9, k), q.viaSeat.recline, 0, Math.sin(Math.max(0, k * 1.4 - 0.4) * Math.PI));
+      if (q.bike) player.animator.rideSwing = Math.sin(clamp(k / 0.7, 0, 1) * Math.PI);
+      player.setExternalPose(this._pos, yaw, 0, 1 - smoothstep(0.2, 0.9, k), q.viaSeat.recline, 0, q.bike ? 0 : Math.sin(Math.max(0, k * 1.4 - 0.4) * Math.PI));
     } else {
       if (!q.released) {
         // Controle a pé restaurado assim que o personagem está no chão.
         q.released = true;
         player.releaseExternalPose(q.exit.point, faceOut);
+        player.animator.seatRide = null;
+        player.animator.rideSwing = 0;
         this.mgr.setCameraBlend(0);
         this.mgr.onExitDone(v);
         this._setState(PLAYER_STATES.ON_FOOT);
@@ -352,6 +388,8 @@ export class VehicleInteraction {
     for (const d of v.doors) d.target = 0;
     const p = point || this._findExit()?.point || v.root.position.clone().add(new THREE.Vector3(2.5, 0, 0));
     player.releaseExternalPose(p, v.root.rotation.y);
+    player.animator.seatRide = null;
+    player.animator.rideSwing = 0;
     this.mgr.onExitDone(v);
     this.mgr.setCameraBlend(0);
     this.vehicle = null;

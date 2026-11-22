@@ -29,6 +29,7 @@ import { VehicleCustomizationManager } from '../vehicles/customization/VehicleCu
 import { WaterManager } from '../water/WaterManager.js';
 import { BoatManager } from '../boats/BoatManager.js';
 import { placeNeonShowcase } from '../vehicles/models/NeonShowcase.js';
+import { placeMotoShowcase } from '../vehicles/models/MotoShowcase.js';
 import { RadioManager } from '../audio/radio/RadioManager.js';
 
 const QUALITY_KEY = 'neoncity.quality';
@@ -122,6 +123,8 @@ export class Game {
     this.world.build();
     // NEON MOTOR COMPANY (PROMPT 12): os nove GLBs carregam em paralelo com o restante da inicialização.
     this._neonLoad = this.world.vehicleFactory.preloadNeon();
+    // NEON MOTORCYCLES (PROMPT 15): seis GLBs de motos, também em paralelo.
+    this._motoLoad = this.world.vehicleFactory.preloadMotos();
     // Horário inicial: ?time=morning|sunset|night (padrão: pôr do sol).
     const t = new URLSearchParams(location.search).get('time');
     if (t && t !== 'sunset' && TIME_PRESETS[t]) this.world.setTimeOfDay(t);
@@ -198,6 +201,11 @@ export class Game {
     // Estaciona um exemplar de cada modelo assim que o Sunset Beach (e suas vagas) for montado,
     // antes de os sistemas receberem o mapa: os carros contam como veículos do mapa.
     (this.world.afterDistrictBuild ||= []).push((w) => placeNeonShowcase(w));
+    await this._motoLoad;
+    const motoLib = this.world.vehicleFactory.moto;
+    if (motoLib.errors.length) console.warn('[NEON MOTORCYCLES]', motoLib.errors);
+    (this.world.afterDistrictBuild ||= []).push((w) => placeMotoShowcase(w));
+    this.loadStats = { ...(this.loadStats || {}), motoMs: motoLib.loadMs, motoModels: motoLib.templates.size };
     this.loadStats = { ...(this.loadStats || {}), neonMotorMs: neonLib.loadMs, neonMotorModels: neonLib.templates.size };
     // Mapa inicial: ?map=<id> (apenas dev) ou Sunset Beach. Falhas voltam ao Sunset Beach.
     const requested = CONFIG.dev.mapSwitching ? new URLSearchParams(location.search).get('map') : null;

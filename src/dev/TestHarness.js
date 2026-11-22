@@ -253,6 +253,11 @@ export function createTestHarness(game) {
       const { runRadioSuite } = await import('./RadioSuite.js');
       return runRadioSuite(T);
     },
+    /** PROMPT 15: 25 testes por moto + testes globais da NEON MOTORCYCLES no jogo real. */
+    async motoSuite(opts) {
+      const { runMotoSuite } = await import('./MotoSuite.js');
+      return runMotoSuite(T, opts);
+    },
     async boot() {
       for (let i = 0; i < 60 && game.state !== 'title'; i++) await new Promise((r) => setTimeout(r, 250));
       game.start();

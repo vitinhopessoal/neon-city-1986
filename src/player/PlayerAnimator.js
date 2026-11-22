@@ -63,6 +63,15 @@ export class PlayerAnimator {
     /** Altura do teto acima do quadril sentado (null = conversível/sem teto). */
     this.seatHeadroom = null;
     /**
+     * Pilotagem de moto (PROMPT 15): pontos de apoio relativos à moto
+     * ({ hipY, hipZ, pegY, pegZ, pegX, gripY, gripZ, gripW, spread, hang }) ou null.
+     * rideState: { steer (rad do garfo), lean (rad da moto), speed (m/s), footDown 0..1 }.
+     * rideSwing 0..1: perna direita passando sobre o banco (montar/desmontar).
+     */
+    this.seatRide = null;
+    this.rideState = { steer: 0, lean: 0, speed: 0, footDown: 0 };
+    this.rideSwing = 0;
+    /**
      * Camada armada (preenchida pelo WeaponManager): hold 'pistol' | 'long' |
      * null; draw 0..1 (sacar); aim 0..1; pitch (rad, + para cima); kick
      * (recuo, decai); reload 0..1 ou -1 (mão de apoio vai ao carregador).
@@ -77,6 +86,8 @@ export class PlayerAnimator {
     this._foreArm = A.wrist.position.length() + 0.07; // o volante fica na palma, não no pulso
     const Lg = model.joints.legs.L;
     this._hipOffY = Lg.hip.position.y;
+    this._hipOffX = Math.abs(Lg.hip.position.x);
+    this._shoulderX = Math.abs(A.shoulder.position.x) + Math.abs(model.joints.chest.position.x || 0);
     this._thigh = Lg.knee.position.length();
     this._shin = Lg.ankle.position.length();
   }
@@ -100,6 +111,95 @@ export class PlayerAnimator {
     out[1] = knee;
     out[2] = (0.35 - shin) / 0.6; // pé no pedal, ponta levemente para cima
     return out;
+  }
+
+  /**
+   * IK planar das pernas até um ponto (dy, dz) relativo ao quadril (pedaleira da moto
+   * ou chão). Joelho para cima/à frente; pé paralelo à pedaleira. Retorna [quadril, joelho, tornozelo].
+   */
+  _legIKTo(dy, dz, out) {
+    const L1 = this._thigh, L2 = this._shin;
+    const y = dy - this._hipOffY;
+    const d = clamp(Math.hypot(y, dz), Math.abs(L1 - L2) + 0.01, L1 + L2 - 0.004);
+    const phi = Math.atan2(dz, -y);
+    const knee = Math.PI - Math.acos(clamp((L1 * L1 + L2 * L2 - d * d) / (2 * L1 * L2), -1, 1));
+    const delta = Math.acos(clamp((L1 * L1 + d * d - L2 * L2) / (2 * L1 * d), -1, 1));
+    const thigh = phi + delta;
+    const shin = thigh - knee;
+    out[0] = thigh;
+    out[1] = knee;
+    out[2] = (0.15 - shin) / 0.6;
+    return out;
+  }
+
+  /** Pose sentada na moto: pernas nas pedaleiras, mãos nas manoplas, tronco pelo estilo. */
+  _ridePose(sp, rcBase) {
+    const R = this.seatRide, S = this.rideState;
+    // Inclinação mínima do tronco para as mãos alcançarem as manoplas com o braço do
+    // modelo VISÍVEL (o GLB tem braços mais curtos que o esqueleto-guia). Básicas ficam
+    // quase eretas, esportivas deitam sobre o tanque, customs reclinam se alcançarem.
+    const reach = (this.armReach ?? (this._upperArm + this._foreArm)) * 0.94;
+    const pivot = this._spineOff;
+    const arm = (this.shoulderUp ?? (this._spineOff + this._shoulderOff)) - pivot;
+    const lat = Math.max(0, R.gripW - this._shoulderX);
+    const gy0 = R.gripY - R.hipY, gz0 = R.gripZ - R.hipZ;
+    let rc = rcBase;
+    for (let k = 0; k < 60; k++) {
+      const sy = pivot + arm * Math.cos(rc), sz = -arm * Math.sin(rc);
+      if (Math.hypot(gy0 - sy, gz0 - sz, lat) <= reach || rc < -1.1) break;
+      rc -= 0.02;
+    }
+    this.rideRecline = rc;
+    const ik = this._ikOut || (this._ikOut = [0, 0]);
+    const lk = this._legOut || (this._legOut = [0, 0, 0]);
+    // Abertura lateral até a pedaleira (o joelho contorna o tanque).
+    const legLen = this._thigh + this._shin;
+    const pegSpread = Math.asin(clamp((R.pegX - this._hipOffX) / legLen, 0, 0.6));
+    const spread = Math.max(R.spread, pegSpread);
+    const drop = S.hipDrop || 0; // quadril descido para o lado do pé de apoio (bancos altos, parada)
+    this._legIKTo(R.pegY + 0.06 - R.hipY + drop, R.pegZ - R.hipZ, lk);
+    sp.hipL = sp.hipR = lk[0];
+    sp.kneeL = sp.kneeR = lk[1];
+    sp.ankleL = sp.ankleR = lk[2];
+    sp.hipSpreadL = sp.hipSpreadR = spread;
+    // Parada: pé esquerdo apoiado no chão (equilíbrio), um pouco à frente e para fora.
+    const fd = clamp(S.footDown || 0, 0, 1);
+    if (fd > 0.001) {
+      this._legIKTo(0.06 - R.hipY + drop, 0.12, lk);
+      sp.hipL += (lk[0] - sp.hipL) * fd;
+      sp.kneeL += (lk[1] - sp.kneeL) * fd;
+      sp.ankleL += (lk[2] - sp.ankleL) * fd;
+      sp.hipSpreadL += (0.34 - sp.hipSpreadL) * fd;
+    }
+    // Montar/desmontar: perna direita sobe e passa por cima do banco.
+    const sw = this.rideSwing;
+    if (sw > 0.001) {
+      sp.hipR += (1.75 - sp.hipR) * sw;
+      sp.kneeR += (0.5 - sp.kneeR) * sw;
+      sp.hipSpreadR += 0.55 * sw;
+    }
+    // Mãos nas manoplas: o guidão gira no eixo de direção (uma mão avança, a outra recua).
+    const gy = R.gripY - R.hipY, gz = R.gripZ - R.hipZ;
+    const ds = R.gripW * Math.sin(S.steer || 0);
+    const armLen = this._upperArm + this._foreArm;
+    const out = Math.asin(clamp((R.gripW - this._shoulderX) / armLen, -0.4, 0.8)) - 0.1;
+    this._armIK(gy, gz - ds, rc, ik);
+    sp.shoulderL = ik[0];
+    sp.elbowL = ik[1];
+    this._armIK(gy, gz + ds, rc, ik);
+    sp.shoulderR = ik[0];
+    sp.elbowR = ik[1];
+    sp.armOutL = sp.armOutR = out;
+    // Tronco: inclinação pelo estilo (esportiva deitada, básica ereta, custom relaxada);
+    // nas curvas o tronco acompanha a moto ("pendura" mais nas esportivas) e a cabeça
+    // compensa parte da inclinação, mantendo o olhar no horizonte.
+    sp.spinePitch = -rc;
+    sp.headPitch = rc * 0.75;
+    const lean = S.lean || 0;
+    sp.spineRoll = lean * R.hang;
+    sp.headRoll = -lean * 0.45;
+    sp.spineYaw = -(S.steer || 0) * 0.15;
+    sp.headYaw = (S.steer || 0) * 0.25;
   }
 
   /**
@@ -271,7 +371,9 @@ export class PlayerAnimator {
       const rc = this.seatRecline;
       const sp = this._seatPose;
       for (const k of POSE_KEYS) sp[k] = 0;
-      if (this.seatFloor !== null) {
+      if (this.seatRide) {
+        this._ridePose(sp, rc);
+      } else if (this.seatFloor !== null) {
         const lk = this._legOut || (this._legOut = [0, 0, 0]);
         this._legIK(this.seatFloor, lk);
         sp.hipL = sp.hipR = lk[0];
@@ -282,15 +384,19 @@ export class PlayerAnimator {
         sp.kneeL = sp.kneeR = 1.25 - rc * 0.35;
         sp.ankleL = sp.ankleR = -0.25;
       }
-      sp.hipSpreadL = sp.hipSpreadR = 0.1;
-      sp.spinePitch = -rc;
-      sp.headPitch = rc * 0.75;
+      if (!this.seatRide) {
+        sp.hipSpreadL = sp.hipSpreadR = 0.1;
+        sp.spinePitch = -rc;
+        sp.headPitch = rc * 0.75;
+      }
       // Mãos no volante (IK); o esterçamento sobe uma mão e desce a outra.
       const steer = this.seatSteer;
       const g = this.seatGrip || { y: 0.42, z: 0.42 };
       const ik = this._ikOut || (this._ikOut = [0, 0]);
       // Curva à direita: mão esquerda sobe, mão direita desce (e vice-versa).
-      if (this.seatHands === 'lap') {
+      if (this.seatRide) {
+        // Braços e tronco já resolvidos por _ridePose (manoplas e estilo).
+      } else if (this.seatHands === 'lap') {
         // Cadeiras e sofás dos interiores: mãos apoiadas sobre as coxas.
         this._armIK(0.1, 0.3, rc, ik);
         sp.shoulderL = sp.shoulderR = ik[0];
@@ -307,9 +413,11 @@ export class PlayerAnimator {
       sp.armOutL = -0.17;
       sp.armOutR = -0.17;
       }
-      sp.spineYaw = -steer * 0.05;
-      sp.headYaw = -steer * 0.12;
-      for (const k of POSE_KEYS) t[k] = lerp(t[k], sp[k], st);
+      if (!this.seatRide) {
+        sp.spineYaw = -steer * 0.05;
+        sp.headYaw = -steer * 0.12;
+      }
+      for (const k of POSE_KEYS) t[k] = lerp(t[k], sp[k] ?? 0, st);
     }
     // Abaixar a cabeça e o tronco ao passar pela porta (entrada/saída).
     if (this.seatDuck > 0.001) {

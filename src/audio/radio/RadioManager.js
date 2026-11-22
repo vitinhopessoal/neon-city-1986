@@ -92,7 +92,8 @@ export class RadioManager {
     this.sched.context.timeOfDay = g.world?.timeOfDay === 'morning' ? 'morning' : g.world?.timeOfDay === 'night' ? 'night' : g.world?.timeOfDay === 'sunset' ? 'sunset' : 'afternoon';
     const playing = g.state === 'playing' && !g.mapLoading;
     // --- Veículo atual (carro dirigido ou barco com rádio).
-    const car = g.vehicles?.state === 'DRIVING' ? g.vehicles.playerVehicle : null;
+    // Motos não têm rádio (PROMPT 15): a roleta não aparece e o scroll fica livre.
+    const car = g.vehicles?.state === 'DRIVING' && !g.vehicles.playerVehicle?.spec?.bike ? g.vehicles.playerVehicle : null;
     const boat = !car && g.boats?.aboard && this._boatHasRadio(g.boats.aboard) ? g.boats.aboard : null;
     const veh = playing ? (car || boat) : null;
     if (veh !== this.vehicle) {
@@ -145,7 +146,7 @@ export class RadioManager {
   _nearestNpc(p) {
     let best = null, bd = 12;
     for (const v of this.game.vehicles?.list || []) {
-      if (v.driver !== 'ai' || !v.root.visible) continue;
+      if (v.driver !== 'ai' || !v.root.visible || v.spec?.bike) continue;
       const d = v.root.position.distanceTo(p);
       if (d < bd) { bd = d; best = v; }
     }

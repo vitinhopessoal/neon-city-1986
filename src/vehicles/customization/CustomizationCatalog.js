@@ -10,6 +10,17 @@
  * da sua família (sports / sedan / convertible) definida em neon-motor-specs.json.
  */
 import { NEON_FAMILY } from '../models/NeonMotor.js';
+import { MOTO_TYPES } from '../models/NeonMoto.js';
+
+/**
+ * Motos (PROMPT 15): só o que tem ponto de montagem no modelo — pintura e acabamento
+ * (material próprio), faróis/lanternas (materiais próprios) e as melhorias mecânicas
+ * (motor, freios, transmissão, suspensão, resistência). Rodas, pneus, altura, peças de
+ * carroceria, película, interior e faixas ficam nas opções originais.
+ */
+const MOTO_SET = new Set(MOTO_TYPES);
+export const BIKE_PART_CATS = new Set(['lights']);
+export const isBikeType = (type) => MOTO_SET.has(type);
 
 export const PAINTS = [
   { id: 'miami_white', name: 'Branco Miami', hex: 0xf2eee6 },
@@ -176,9 +187,10 @@ export function partOption(cat, id) {
 
 /** Compatibilidade: tipo de veículo e regras entre peças. */
 export function isCompatible(cat, id, type, cfg = {}) {
-  if (cat === 'paint2') return type !== undefined; // faixas: todos (posição se adapta ao modelo)
+  if (cat === 'paint2') return type !== undefined && !MOTO_SET.has(type); // faixas: todos os carros (posição se adapta ao modelo)
   const o = partOption(cat, id);
   if (!o) return false;
+  if (MOTO_SET.has(type) && !BIKE_PART_CATS.has(cat)) return o === PARTS[cat].options[0];
   if (o.types && !o.types.includes(type) && !o.types.includes(NEON_FAMILY[type])) return false;
   // Asa alta exige para-choque esportivo/aero (estética coerente) — regra simples documentada.
   if (cat === 'spoiler' && id === 'wing' && cfg.bumper === 'retro') return false;
@@ -195,7 +207,7 @@ export function sanitizeConfig(raw, vehicle) {
   if (PAINTS.some((p) => p.id === raw.paint)) out.paint = raw.paint;
   if (Number.isSafeInteger(raw.paintHex) && raw.paintHex >= 0 && raw.paintHex <= 0xffffff) out.paintHex = raw.paintHex;
   if (FINISHES[raw.finish]) out.finish = raw.finish;
-  out.paint2 = PAINTS.some((p) => p.id === raw.paint2) ? raw.paint2 : null;
+  out.paint2 = PAINTS.some((p) => p.id === raw.paint2) && !MOTO_SET.has(type) ? raw.paint2 : null;
   for (const cat of Object.keys(PARTS)) if (partOption(cat, raw[cat]) && isCompatible(cat, raw[cat], type, raw)) out[cat] = raw[cat];
   for (const [k, u] of Object.entries(UPGRADES)) if (Number.isSafeInteger(raw[k]) && raw[k] >= 0 && raw[k] < u.levels.length) out[k] = raw[k];
   return out;

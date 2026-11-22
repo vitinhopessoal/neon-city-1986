@@ -1,0 +1,117 @@
+{
+ "size": {
+  "length": 2.52,
+  "width": 1.0,
+  "height": 1.497
+ },
+ "checks": [
+  {
+   "check": "comprimento",
+   "ok": true,
+   "info": "2.52 vs 2.62"
+  },
+  {
+   "check": "altura",
+   "ok": true,
+   "info": "1.497 vs 1.42"
+  },
+  {
+   "check": "roda F alinhada",
+   "ok": true,
+   "info": "centro (0.000,0.340,0.930) chão 0.000"
+  },
+  {
+   "check": "roda R alinhada",
+   "ok": true,
+   "info": "centro (0.000,0.310,-0.930) chão 0.000"
+  },
+  {
+   "check": "pivô do garfo na caixa de direção",
+   "ok": true,
+   "info": "(0.000,1.020,0.357)"
+  },
+  {
+   "check": "pivô da balança",
+   "ok": true,
+   "info": "(0.000,0.380,-0.260)"
+  },
+  {
+   "check": "banco sob o quadril do piloto",
+   "ok": true,
+   "info": "quadril 0.74 banco 0.64"
+  }
+ ],
+ "triangles": 15998,
+ "trianglesByObject": {
+  "Engine": 3128,
+  "FrontForkMesh": 2828,
+  "Frame": 1952,
+  "Tire_F": 1152,
+  "Tire_R": 1152,
+  "Exhaust": 1048,
+  "Rim_F": 916,
+  "Bodywork": 900,
+  "Rim_R": 808,
+  "FuelTank": 656,
+  "Seat": 544,
+  "SwingarmMesh": 524,
+  "Lights": 388,
+  "Plate_R": 2
+ },
+ "materials": [
+  "Amber",
+  "Black_Trim",
+  "Brake_Disc",
+  "Chassis",
+  "Chrome",
+  "EngineMetal",
+  "Gauge",
+  "Headlight",
+  "Paint",
+  "Plate",
+  "Rim",
+  "Rubber",
+  "Seat",
+  "Stripe",
+  "Taillight"
+ ],
+ "hierarchy": [
+  "MotorcycleRoot",
+  "  Bodywork",
+  "  Engine",
+  "  Exhaust",
+  "  Frame",
+  "  FrontFork",
+  "    FrontForkMesh",
+  "    FrontWheel",
+  "      Rim_F",
+  "      Tire_F",
+  "    Grip_L",
+  "    Grip_R",
+  "  FuelTank",
+  "  Lights",
+  "  Peg_L",
+  "  Peg_R",
+  "  Plate_R",
+  "  Rider_Hip",
+  "  Seat",
+  "  Swingarm",
+  "    RearWheel",
+  "      Rim_R",
+  "      Tire_R",
+  "    SwingarmMesh"
+ ],
+ "animations": [
+  "Steer",
+  "Suspension",
+  "FrontWheel_Spin",
+  "RearWheel_Spin"
+ ],
+ "buildSeconds": 0.5,
+ "render": "C:\\Users\\Vitin Hacker\\Downloads\\MIAMI VICE FABLE 5.2\\docs\\screenshots\\neon-moto\\iron-serpent-1100.jpg",
+ "lod1Triangles": 4742,
+ "lod1Bytes": 153608,
+ "glb": "public/models/motorcycles/iron-serpent-1100.glb",
+ "blend": "assets-src/motorcycles/iron-serpent-1100.blend",
+ "glbBytes": 443928
+}

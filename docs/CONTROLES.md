@@ -61,6 +61,22 @@ Sentado, em transição de porta/elevador ou com o painel aberto, não é possí
 | E | Sair do veículo (abaixo de 7 km/h) · na vaga rosa da NEON CUSTOMS, parado: personalizar |
 | Mouse | Olhar ao redor (volta sozinho para trás do carro) |
 
+## Pilotando uma moto (NEON MOTORCYCLES)
+
+| Tecla | Ação |
+|---|---|
+| E | Montar (perto do lado esquerdo da moto) · descer (abaixo de 7 km/h) |
+| W / ↑ | Acelerar |
+| S / ↓ | Frear; parada, empurra para trás (ré só a ~1,4 m/s) |
+| A / ← · D / → | Esterçar (a moto e o piloto inclinam na curva) |
+| Espaço | Freio traseiro (a traseira pode derrapar em velocidade) |
+| Q | Buzina (mais aguda que a dos carros) |
+| V | Câmera de perseguição ↔ visão do piloto |
+| R | Recuperar moto presa (mesma regra dos carros) |
+| Mouse | Olhar ao redor |
+
+Motos não têm rádio: o scroll do mouse não abre a roleta enquanto você pilota.
+
 ## Pilotando um barco (OCEAN DRIVE)
 
 | Tecla | Ação |
@@ -131,7 +147,7 @@ Na água não há pulo nem armas. O nado começa onde o fundo passa de 1,3 m e t
 
 | Tecla | Ação | Contexto |
 |---|---|---|
-| Scroll do mouse | Abre a roleta de rádios e passa para a próxima/anterior emissora (inclui RADIO OFF). Após 2 s sem mexer, a roleta some e a emissora destacada toca | dentro de carros e lanchas |
+| Scroll do mouse | Abre a roleta de rádios e passa para a próxima/anterior emissora (inclui RADIO OFF). Após 2 s sem mexer, a roleta some e a emissora destacada toca | dentro de carros e lanchas (motos não têm rádio) |
 | Scroll do mouse | Troca de arma (sem mudança) | a pé |
 
 As setas continuam esterçando, Q continua sendo a buzina e o scroll a pé continua trocando de arma.

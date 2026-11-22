@@ -4,6 +4,7 @@ import { Vehicle } from './Vehicle.js';
 import { licensePlateTexture } from '../render/ProceduralTextures.js';
 import { composeMatrix } from '../render/StaticBatcher.js';
 import { NEON_SPECS, NeonModelLibrary, buildNeonVehicle } from './models/NeonMotor.js';
+import { MOTO_SPECS, MotoModelLibrary, buildMotoVehicle } from './models/NeonMoto.js';
 
 /**
  * Modelos procedurais de carros dos anos 80 (originais):
@@ -163,6 +164,8 @@ export const SPECS = {
 };
 // PROMPT 12 — NEON MOTOR COMPANY: nove modelos GLB adicionais (mesmo formato de especificação).
 Object.assign(SPECS, NEON_SPECS);
+// PROMPT 15 — NEON MOTORCYCLES: seis motos GLB (spec.bike = true).
+Object.assign(SPECS, MOTO_SPECS);
 
 /**
  * Perfil com o "cockpit" aberto: a borda superior desce até o assoalho entre
@@ -287,6 +290,8 @@ export class VehicleFactory {
     this._paintCache = new Map();
     // Modelos GLB da NEON MOTOR COMPANY (carregados de forma assíncrona antes do mapa).
     this.neon = new NeonModelLibrary();
+    // Motos da NEON MOTORCYCLES (GLB + LOD distante).
+    this.moto = new MotoModelLibrary();
   }
 
   /** Pintura compartilhada (detalhes como faixas). */
@@ -323,7 +328,26 @@ export class VehicleFactory {
     return this.neon.preload();
   }
 
+  /** Carrega os GLBs das motos (uma vez). */
+  preloadMotos() {
+    return this.moto.preload();
+  }
+
+  /** O modelo pode ser criado agora? (motos dependem do GLB carregado) */
+  canCreate(type) {
+    const s = SPECS[type];
+    if (!s) return false;
+    return s.bike ? this.moto.has(type) : true;
+  }
+
   create(type, { id, color, stripe = null, plate = null } = {}) {
+    if (SPECS[type]?.bike) {
+      const mb = SPECS[type];
+      // Sem procedural equivalente: a moto só existe com o GLB carregado (quem cria consulta canCreate).
+      if (!this.moto.has(type)) throw new Error(`[NEON MOTORCYCLES] modelo ${type} não carregado`);
+      const spec = { ...mb, type, handling: structuredClone(mb.handling), seats: mb.seats.map((x) => ({ ...x, ride: x.ride ? { ...x.ride } : undefined })), style: { ...mb.style } };
+      return buildMotoVehicle(this, this.moto, type, spec, { id, color: color ?? mb.color, plate, Vehicle, plateTexture: licensePlateTexture });
+    }
     if (SPECS[type]?.neon) {
       const nb = SPECS[type];
       if (this.neon.has(type)) {

@@ -1,0 +1,118 @@
+{
+ "size": {
+  "length": 2.07,
+  "width": 0.794,
+  "height": 1.178
+ },
+ "checks": [
+  {
+   "check": "comprimento",
+   "ok": true,
+   "info": "2.07 vs 2.12"
+  },
+  {
+   "check": "altura",
+   "ok": true,
+   "info": "1.178 vs 1.18"
+  },
+  {
+   "check": "roda F alinhada",
+   "ok": true,
+   "info": "centro (0.000,0.300,0.730) chão 0.000"
+  },
+  {
+   "check": "roda R alinhada",
+   "ok": true,
+   "info": "centro (0.000,0.310,-0.730) chão 0.000"
+  },
+  {
+   "check": "pivô do garfo na caixa de direção",
+   "ok": true,
+   "info": "(0.000,0.960,0.419)"
+  },
+  {
+   "check": "pivô da balança",
+   "ok": true,
+   "info": "(0.000,0.450,-0.120)"
+  },
+  {
+   "check": "banco sob o quadril do piloto",
+   "ok": true,
+   "info": "quadril 0.91 banco 0.81"
+  }
+ ],
+ "triangles": 16090,
+ "trianglesByObject": {
+  "Engine": 4244,
+  "Bodywork": 1952,
+  "Exhaust": 1204,
+  "FrontForkMesh": 1156,
+  "Tire_F": 1152,
+  "Tire_R": 1152,
+  "Rim_F": 984,
+  "Frame": 964,
+  "Rim_R": 876,
+  "Lights": 820,
+  "Seat": 572,
+  "FuelTank": 548,
+  "SwingarmMesh": 464,
+  "Plate_R": 2
+ },
+ "materials": [
+  "Amber",
+  "Black_Trim",
+  "Brake_Disc",
+  "Chassis",
+  "Chrome",
+  "EngineMetal",
+  "Gauge",
+  "Glass",
+  "Headlight",
+  "Paint",
+  "Plate",
+  "Rim",
+  "Rubber",
+  "Seat",
+  "Stripe",
+  "Stripe2",
+  "Taillight"
+ ],
+ "hierarchy": [
+  "MotorcycleRoot",
+  "  Bodywork",
+  "  Engine",
+  "  Exhaust",
+  "  Frame",
+  "  FrontFork",
+  "    FrontForkMesh",
+  "    FrontWheel",
+  "      Rim_F",
+  "      Tire_F",
+  "    Grip_L",
+  "    Grip_R",
+  "  FuelTank",
+  "  Lights",
+  "  Peg_L",
+  "  Peg_R",
+  "  Plate_R",
+  "  Rider_Hip",
+  "  Seat",
+  "  Swingarm",
+  "    RearWheel",
+  "      Rim_R",
+  "      Tire_R",
+  "    SwingarmMesh"
+ ],
+ "animations": [
+  "Steer",
+  "Suspension",
+  "FrontWheel_Spin",
+  "RearWheel_Spin"
+ ],
+ "buildSeconds": 0.5,
+ "lod1Triangles": 4820,
+ "lod1Bytes": 161232,
+ "glb": "public/models/motorcycles/neon-blade-900r.glb",
+ "blend": "assets-src/motorcycles/neon-blade-900r.blend",
+ "glbBytes": 481200
+}
