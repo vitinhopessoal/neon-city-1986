@@ -108,12 +108,27 @@ export async function runMergedWorldSuite(T) {
   v.damage.repair();
   v.setPose(-110, 0, -2.1, -Math.PI / 2); v.physics.syncFromRoot();
   const int0 = v.damage.integrity;
-  T.hold(['KeyW'], 8);
+  // Registra o que o carro atingir (diagnóstico do dano).
+  const hits = [];
+  T.down('KeyW');
+  for (let i = 0; i < 160; i++) {
+    T.fastSim(1 / 20);
+    const ph = v.physics;
+    if (ph.impact > 1) hits.push(`${ph.contacts.slice(0, 2).map((c) => `${c.collider.ownerId || c.collider.id}@${c.px.toFixed(0)},${c.pz.toFixed(0)}`).join('+')} ${ph.impact.toFixed(1)} m/s`);
+  }
+  T.up('KeyW');
   const carX = v.root.position.x, carZ = v.root.position.z, carV = v.physics.speed;
-  T.hold(['KeyS'], 3);
+  T.down('KeyS');
+  for (let i = 0; i < 60; i++) {
+    T.fastSim(1 / 20);
+    const ph = v.physics;
+    if (ph.impact > 1) hits.push(`freando: ${ph.contacts.slice(0, 2).map((c) => `${c.collider.ownerId || c.collider.id}@${c.px.toFixed(0)},${c.pz.toFixed(0)}`).join('+')} ${ph.impact.toFixed(1)} m/s`);
+  }
+  T.up('KeyS');
   const int1 = v.damage.integrity;
+  const hitInfo = hits.length ? ` (bateu em ${hits.slice(0, 3).join('; ')})` : '';
   rec('M10', 'Atravessar de carro', state === 'DRIVING' && carX < -190 && Math.abs(carZ) < 6 && int0 - int1 < 1,
-    `${v.type}: x -110 → ${carX.toFixed(1)} em 8 s (z ${carZ.toFixed(1)}, ${(carV * 3.6).toFixed(0)} km/h) · dano ${(int0 - int1).toFixed(1)} · bairro ${district(carX, carZ)}`);
+    `${v.type}: x -110 → ${carX.toFixed(1)} em 8 s (z ${carZ.toFixed(1)}, ${(carV * 3.6).toFixed(0)} km/h) · dano ${(int0 - int1).toFixed(1)}${hitInfo} · bairro ${district(carX, carZ)}`);
   // M11) Dirigir de volta (leste) até o Sunset Beach.
   v.setPose(-300, 0, 2.1, Math.PI / 2); v.physics.syncFromRoot();
   T.hold(['KeyW'], 11);

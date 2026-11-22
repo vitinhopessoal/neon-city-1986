@@ -86,7 +86,8 @@ export class VehicleAnimation {
     for (let i = 0; i < v.wheels.length; i++) {
       const w = v.wheels[i];
       if (w.steer) w.pivot.rotation.y = steer;
-      if (ph && !(hb && !w.front)) w.spin.rotation.x += (ph.vLong * dt) / w.radius;
+      // Rodas motrizes giram com a patinação calculada pela física (mecânica veicular).
+      if (ph && !(hb && !w.front)) w.spin.rotation.x += ((ph.vLong + (ph.powertrainActive ? (w.front ? ph.spinF : ph.spinR) : 0)) * dt) / w.radius;
       // Curso por roda: desnível do solo naquela roda + compressão da carroceria.
       let travel = 0;
       if (gy && ph) travel = clamp(gy[i] - ph.y, -0.12, 0.12);

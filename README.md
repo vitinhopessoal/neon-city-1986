@@ -10,6 +10,20 @@ npm run desktop
 Para gerar o instalador e a versão portátil em `release/`: `npm run dist:win`.
 Detalhes em [docs/DESKTOP.md](docs/DESKTOP.md). A versão web continua com `npm run dev`.
 
+## Mecânica veicular — motor, câmbio, nitro e tração
+
+Os 12 carros têm motor com curva de torque, RPM, limitador e freio-motor pela marcha. O câmbio pode
+ser automático ou manual (**B**; manual com **X/Z**), com neutro e ré, e as trocas cortam a força.
+Há também:
+
+- largada preparada (**Espaço + W** parado, solte na luz verde) e aviso de troca perfeita;
+- nitro (**Shift**), com kits na NEON CUSTOMS;
+- turbo e temperatura do motor;
+- tração FWD/RWD/AWD com transferência de carga, patinação, controle de tração e ABS.
+
+O trânsito continua no modelo arcade. Testes: `npm run test:mechanics` e `__NEON_TEST__.mechanicsSuite()`.
+Detalhes em [docs/MECANICA_VEICULAR.md](docs/MECANICA_VEICULAR.md).
+
 ## Mundo unificado — Sunset Beach + TEST CITY
 
 Os dois mapas viraram um só: o TEST CITY é o **bairro oeste** de Sunset Beach, ligado pela

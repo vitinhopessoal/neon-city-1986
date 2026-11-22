@@ -263,6 +263,11 @@ export function createTestHarness(game) {
       const { runMergedWorldSuite } = await import('./MergedWorldSuite.js');
       return runMergedWorldSuite(T);
     },
+    /** Mecânica veicular: motor, câmbio, largada, nitro, tração e freios no jogo real. */
+    async mechanicsSuite() {
+      const { runMechanicsSuite } = await import('./MechanicsSuite.js');
+      return runMechanicsSuite(T);
+    },
     async boot() {
       for (let i = 0; i < 60 && game.state !== 'title'; i++) await new Promise((r) => setTimeout(r, 250));
       game.start();

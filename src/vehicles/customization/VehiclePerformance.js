@@ -46,6 +46,9 @@ export function computeHandling(type, cfg) {
   h.pitchGain = base.pitchGain * p.pitch;
   h.enginePitch = base.enginePitch * p.enginePitch;
   h.suspension.travel = base.suspension.travel * (p.roll < 1 ? 0.85 : 1);
+  // Kit de nitro (mecânica veicular): lido pelo câmbio/motor a partir do manuseio vivo.
+  const kit = UPGRADES.nitro?.levels[cfg.nitro | 0]?.nitro || UPGRADES.nitro?.levels[0]?.nitro;
+  if (kit) { h.nitroBoost = kit.boost; h.nitroDrain = kit.drain; }
   return { handling: h, resist: p.resist };
 }
 

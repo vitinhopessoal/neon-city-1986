@@ -55,11 +55,17 @@ Sentado, em transição de porta/elevador ou com o painel aberto, não é possí
 | W / ↑ | Acelerar (freia antes, se estiver em ré) |
 | S / ↓ | Frear; parado, engata a ré |
 | A / ← · D / → | Esterçar |
-| Espaço | Freio de mão |
+| Espaço | Freio de mão · parado, com W: preparar largada (solte o Espaço com a luz LARGADA verde) |
+| Shift | Nitro (segurar, com o acelerador no fundo) |
+| B | Câmbio automático ↔ manual (preferência salva; manual tem controle de tração esportivo) |
+| X / Z | Subir / reduzir marcha (manual). Parado, Z engata N e depois R |
 | Q | Buzina |
 | R | Recuperar veículo preso (só quando necessário; intervalo de 8 s) |
 | E | Sair do veículo (abaixo de 7 km/h) · na vaga rosa da NEON CUSTOMS, parado: personalizar |
 | Mouse | Olhar ao redor (volta sozinho para trás do carro) |
+
+Painel: conta-giros com luz TROCA, marcha e modo (AUT/MAN), nitro, turbo (modelos turbo), temperatura
+do motor e luzes TCS/ABS/LARGADA. Detalhes em [MECANICA_VEICULAR.md](MECANICA_VEICULAR.md).
 
 ## Pilotando uma moto (NEON MOTORCYCLES)
 

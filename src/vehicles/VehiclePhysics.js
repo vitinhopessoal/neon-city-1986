@@ -16,6 +16,14 @@ import { clamp, lerp, angleDelta } from '../utils/math.js';
  * esquerda = (cos h, −sin h); guinada positiva = curva à esquerda.
  * Entradas: vehicle.controls { throttle −1..1, brake 0..1, steer −1..1
  * (+1 = direita), handbrake } — mesma interface para jogador e IA.
+ *
+ * Mecânica veicular (opcional, por veículo — setPowertrain): motor com curva de
+ * torque, câmbio, nitro, turbo e calor (src/vehicles/mechanics) fornecem a força
+ * motriz; este arquivo passa então a resolver também a tração: transferência de
+ * carga longitudinal, limite de aderência por eixo (FWD/RWD/AWD), patinação com
+ * rotação de roda própria, travamento de freio e o círculo de atrito ligando as
+ * forças longitudinais às laterais. Sem módulo (trânsito, polícia, motos), o
+ * caminho arcade original é usado sem alterações.
  */
 export const PHYSICS_STEP = 1 / 120;
 const G = 9.81;
@@ -66,6 +74,24 @@ export class VehiclePhysics {
     this.landing = 0;
     this.rpm = H.idleRpm;
     this.gear = 0;
+    // Optional separated engine/gearbox. Null preserves the original arcade path.
+    this.powertrain = null;
+    this.powertrainError = null;
+    this.powertrainFrame = null;
+    /** Eventos do câmbio/largada/nitro acumulados entre quadros (o HUD/áudio esvazia a fila). */
+    this.powertrainEvents = [];
+    // Estado do modelo de tração (só com o módulo ativo).
+    this.cgHeight = 0.5;
+    this.spinF = 0; this.spinR = 0;      // velocidade de escorregamento das rodas (m/s; + = patinando)
+    this.wheelspin = 0;                  // maior escorregamento atual (m/s)
+    this.brakeLock = { front: false, rear: false };
+    this.absActive = false;
+    this.tcsActive = false;
+    this.axleLoad = { front: 0, rear: 0 };
+    this.tractionLimited = false;
+    this._axPrev = 0;
+    this._FyPrev = [0, 0];
+    this._wheelOmega = [0, 0, 0, 0];
     this._body = { x: 0, z: 0, rot: 0, hx: s.width / 2, hz: s.length / 2 };
     /** Resolve o id de um veículo (colisor com tag 'vehicle') para sua física. */
     this.resolveOther = null;
@@ -85,6 +111,9 @@ export class VehiclePhysics {
     this.vx = this.vz = this.vy = this.yawRate = 0;
     this.vLong = this.vLat = 0;
     this.acc = 0;
+    this.powertrain?.reset({ preserveNitrous: true });
+    this.spinF = this.spinR = this.wheelspin = 0;
+    this._axPrev = 0; this._FyPrev[0] = this._FyPrev[1] = 0;
   }
 
   setEnvironment(env, collision) {
@@ -95,6 +124,112 @@ export class VehiclePhysics {
   wake() {
     this.awake = true;
     this.sleepTimer = 0;
+  }
+
+  /** Opt in explicitly; no vehicle or traffic preset is changed automatically. */
+  setPowertrain(module) {
+    if (module !== null && (!module || typeof module.step !== 'function' || typeof module.reset !== 'function')) {
+      return { ok: false, error: { code: 'INVALID_POWERTRAIN', message: 'Expected step/reset methods or null' } };
+    }
+    this.powertrain = module;
+    this.powertrainError = null;
+    this.powertrainFrame = null;
+    this.powertrainEvents.length = 0;
+    // Centro de gravidade e altura próprios do modelo (diferenças reais entre os carros).
+    const d = module?.drivetrain;
+    this.a = this.L * (d ? 1 - d.frontWeight : 0.48);
+    this.b = this.L - this.a;
+    this.cgHeight = d?.cgHeight ?? 0.5;
+    this.spinF = this.spinR = this.wheelspin = 0;
+    module?.reset({ preserveNitrous: true });
+    return { ok: true };
+  }
+
+  /** O módulo só dirige quando o carro é do jogador (trânsito e polícia seguem o modelo arcade). */
+  get powertrainActive() {
+    const d = this.v.driver;
+    return !!this.powertrain && d !== 'ai' && d !== 'police';
+  }
+
+  /**
+   * Tração (autoral): divide a força do motor entre os eixos motrizes, limita cada
+   * eixo pela aderência disponível (μ·carga, menos o que a curva já consome) e
+   * integra a patinação; freios e freio de mão também respeitam o limite e travam.
+   * Devolve a força motriz entregue, a frenagem e os limites laterais por eixo.
+   */
+  _traction(h, demand, vLong, Fzf, Fzr, mu, c, H) {
+    const d = this.powertrain.drivetrain, m = H.mass;
+    const absV = Math.abs(vLong);
+    const shareF = d.layout === 'FWD' ? 1 : d.layout === 'RWD' ? 0 : d.awdFront;
+    const hbGrip = c.handbrake && absV > 6 ? H.handbrakeGrip : 1;
+    const capF = mu * Fzf, capR = mu * Fzr * hbGrip;
+    // Parte longitudinal ainda disponível depois da força lateral do passo anterior (círculo de atrito).
+    const longCap = (cap, fy) => Math.max(cap * 0.3, Math.sqrt(Math.max(0, cap * cap - fy * fy)));
+    const lcF = longCap(capF, this._FyPrev[0]), lcR = longCap(capR, this._FyPrev[1]);
+    let dF = demand * shareF;
+    let dR = demand * (1 - shareF);
+    if (c.handbrake) dR *= 0.15; // rodas traseiras travadas: quase nada do motor passa
+    // Controle de tração (assistência autoral): 'full' (câmbio automático) corta o excesso
+    // antes que a roda patine; 'sport' (manual) deixa escorregar até ~1,5 m/s — marca o
+    // asfalto e chia, mas a patinação não dispara; false desliga.
+    this.tcsActive = false;
+    const tcs = this.powertrain.tractionControl;
+    if (tcs && demand > 0) {
+      const lim = (dAx, cap, slip) => {
+        if (tcs === 'sport' && Math.abs(slip) < 1.5) return dAx;
+        const max = tcs === 'sport' ? cap * 0.88 : cap * 0.99; // abaixo do atrito cinético: a roda volta a agarrar
+        if (Math.abs(dAx) <= max) return dAx;
+        this.tcsActive = true;
+        return Math.sign(dAx) * max;
+      };
+      dF = lim(dF, lcF, this.spinF); dR = lim(dR, lcR, this.spinR);
+    }
+    // Massa equivalente que a roda motriz precisa girar: inércia das rodas + motor visto
+    // através da relação (I·i²/r²). Em marcha curta a patinação cresce e cede devagar.
+    const r = this.v.spec.wheelRadius, ratio = this.powertrain.currentRatio ?? 0;
+    const axleInertia = 2.4 + 0.18 * ratio * ratio * 0.9;
+    const axle = (dAx, cap, key, share) => {
+      let slip = this[key], out;
+      const mEq = (share > 0 ? 2.4 + (axleInertia - 2.4) * share : 2.4) / (r * r);
+      if (Math.abs(slip) > 0.05) {
+        // Patinando: o pneu transmite o atrito cinético; a sobra (ou falta) de força gira (ou freia) a roda.
+        const tire = Math.sign(slip) * cap * 0.9;
+        const next = slip + ((dAx - tire) / mEq) * h;
+        if (Math.sign(next) !== Math.sign(slip)) { slip = 0; out = clamp(dAx, -cap, cap); } else { slip = next; out = tire; }
+      } else if (Math.abs(dAx) > cap) {
+        slip = Math.sign(dAx) * ((Math.abs(dAx) - cap) / mEq) * h;
+        out = Math.sign(dAx) * cap * 0.9;
+      } else {
+        slip = 0;
+        out = dAx;
+      }
+      this[key] = clamp(slip, -12, 25);
+      return out;
+    };
+    let outF = 0, outR = 0;
+    if (shareF > 0) outF = axle(dF, lcF, 'spinF', shareF); else this.spinF = 0;
+    if (shareF < 1) outR = axle(dR, lcR, 'spinR', 1 - shareF); else this.spinR = 0;
+    // Freios: viés por modelo. O pedal tem ABS (assistência autoral): a força de cada eixo
+    // fica no limite de aderência restante, sem travar — frear forte ainda consome a
+    // aderência lateral (o carro esterça menos). O freio de mão trava as traseiras de verdade.
+    const bF = c.brake * H.brakeForce * d.brakeBias;
+    const bRfoot = c.brake * H.brakeForce * (1 - d.brakeBias);
+    const remF = Math.max(0, lcF - Math.abs(outF)), remR = Math.max(0, lcR - Math.abs(outR));
+    const lockF = false;
+    const lockR = !!c.handbrake && absV > 1.5;
+    const brakeF = absV > 1.5 ? Math.min(bF, remF) : bF;
+    const brakeR = lockR ? Math.max(Math.min(bRfoot, remR), remR * 0.85) : (absV > 1.5 ? Math.min(bRfoot, remR) : bRfoot + (c.handbrake ? H.handbrakeForce : 0));
+    this.absActive = absV > 1.5 && (bF > remF + 1 || bRfoot > remR + 1);
+    // Limites laterais: o que sobra do círculo depois das forças longitudinais deste passo.
+    const spinningF = Math.abs(this.spinF) > 1.5, spinningR = Math.abs(this.spinR) > 1.5;
+    const latCap = (cap, used, locked, spinning) => Math.max(cap * 0.25, Math.sqrt(Math.max(0, cap * cap - used * used)))
+      * (locked ? 0.45 : 1) * (spinning ? 0.8 : 1);
+    const latF = latCap(capF, Math.abs(outF) + brakeF, lockF, spinningF);
+    const latR = latCap(capR, Math.abs(outR) + brakeR, lockR && !c.handbrake, spinningR);
+    this.wheelspin = Math.max(Math.abs(this.spinF), Math.abs(this.spinR));
+    this.brakeLock.front = lockF; this.brakeLock.rear = lockR;
+    this.tractionLimited = Math.abs(outF + outR) + 1 < Math.abs(dF + dR);
+    return { drive: outF + outR, brakeResist: brakeF + brakeR, latF, latR };
   }
 
   get speed() {
@@ -173,8 +308,43 @@ export class VehiclePhysics {
 
     // --- Longitudinal.
     let drive = 0;
+    let powertrainResistance = 0;
     const thr = c.throttle * (this.inWater ? 0.2 : 1);
-    if (thr !== 0) {
+    const pt = this.powertrainActive ? this.powertrain : null;
+    const mu = H.grip * sp.grip;
+    let Fzf = m * G * b / L, Fzr = m * G * a / L;
+    let brakeResist = c.brake * H.brakeForce + (c.handbrake ? H.handbrakeForce : 0);
+    let latF = Infinity, latR = Infinity;
+    if (pt) {
+      // Transferência de carga: acelerar alivia a frente e carrega a traseira; frear faz o contrário.
+      const dT = m * this._axPrev * this.cgHeight / L;
+      Fzf = clamp(Fzf - dT, 0.15 * m * G, 0.85 * m * G);
+      Fzr = m * G - Fzf;
+      this.axleLoad.front = Fzf; this.axleLoad.rear = Fzr;
+      const r = v.spec.wheelRadius, wo = this._wheelOmega;
+      wo[0] = wo[1] = (vLong + this.spinF) / r;
+      wo[2] = wo[3] = (vLong + this.spinR) / r;
+      const result = pt.step({ controls: c, forwardSpeedMps: vLong, performance: perf,
+        surfaceGrip: sp.grip, inWater: this.inWater, engineOn: v.engineOn,
+        wheelOmegaRadS: wo, tractionByPhysics: true, skid: this.skid }, h);
+      this.powertrainError = result.ok ? null : result.error;
+      this.powertrainFrame = result.ok ? result.value : null;
+      if (result.ok) {
+        const fr = result.value;
+        powertrainResistance = fr.extraResistanceN;
+        this.rpm = fr.rpm;
+        this.gear = fr.gear;
+        if (fr.events.length) {
+          this.powertrainEvents.push(...fr.events);
+          if (this.powertrainEvents.length > 60) this.powertrainEvents.splice(0, this.powertrainEvents.length - 60);
+        }
+        const t = this._traction(h, fr.driveForceN, vLong, Fzf, Fzr, mu, c, H);
+        drive = t.drive; brakeResist = t.brakeResist; latF = t.latF; latR = t.latR;
+      } else {
+        const t = this._traction(h, 0, vLong, Fzf, Fzr, mu, c, H);
+        brakeResist = t.brakeResist; latF = t.latF; latR = t.latR;
+      }
+    } else if (thr !== 0) {
       const dir = Math.sign(thr);
       const vmax = (dir > 0 ? H.maxSpeed : H.reverseSpeed) * (0.75 + 0.25 * perf);
       const along = Math.max(0, dir * vLong);
@@ -184,9 +354,10 @@ export class VehiclePhysics {
       if (c.handbrake) drive *= 0.15;
     }
     // Forças resistivas (opostas ao movimento; nunca invertem o sentido).
-    let resist = H.drag * vLong * vLong + H.rolling * sp.roll * absV + (thr === 0 ? H.engineBrake * Math.min(1, absV / 2) : 0);
-    resist += c.brake * H.brakeForce;
-    if (c.handbrake) resist += H.handbrakeForce;
+    // Com o módulo, o freio-motor vem pela marcha (powertrain) e não é somado aqui.
+    let resist = H.drag * vLong * vLong + H.rolling * sp.roll * absV + (!pt && thr === 0 ? H.engineBrake * Math.min(1, absV / 2) : 0);
+    resist += brakeResist;
+    resist += powertrainResistance;
     if (this.inWater) resist += m * 3;
     // Gravidade ao longo do terreno: nariz para cima puxa para trás; lateral
     // mais alta empurra para o lado mais baixo (pneus resistem pela deriva).
@@ -197,17 +368,16 @@ export class VehiclePhysics {
     if (Math.abs(vLong) <= dv) vLong = 0; else vLong -= Math.sign(vLong) * dv;
 
     // --- Lateral (modelo de bicicleta).
-    const mu = H.grip * sp.grip;
     const hbActive = c.handbrake && absV > 6;
     const muR = mu * (hbActive ? H.handbrakeGrip : 1);
-    const Fzf = m * G * b / L, Fzr = m * G * a / L;
     let Fyf = 0, Fyr = 0;
     if (absV > 0.5) {
       const sgn = vLong >= 0 ? 1 : -1;
       const af = Math.atan2(vLat + a * w, absV) - delta * sgn;
       const ar = Math.atan2(vLat - b * w, absV);
-      Fyf = clamp(-H.corneringFront * Fzf * af, -mu * Fzf, mu * Fzf);
-      Fyr = clamp(-H.corneringRear * Fzr * ar, -muR * Fzr, muR * Fzr);
+      const capF = Math.min(mu * Fzf, latF), capR = Math.min(muR * Fzr, latR);
+      Fyf = clamp(-H.corneringFront * Fzf * af, -capF, capF);
+      Fyr = clamp(-H.corneringRear * Fzr * ar, -capR, capR);
       this.slipFront = af;
       this.slipRear = ar;
     } else {
@@ -234,12 +404,18 @@ export class VehiclePhysics {
     }
 
     this.aLong = (drive - Math.sign(vLong) * resist) / m;
+    if (pt) {
+      this._axPrev = clamp(this.aLong, -14, 14);
+      this._FyPrev[0] = Fyf; this._FyPrev[1] = Fyr;
+    }
     this.aLat = vLong * w;
     this.vLong = vLong;
     this.vLat = vLat;
 
     // Derrapagem: deriva traseira, freio de mão ou travamento.
-    const slide = Math.max(0, Math.abs(this.slipRear) - 0.1) * 3 + (hbActive ? 0.5 : 0) + (c.brake > 0.9 && absV > 14 ? 0.35 : 0);
+    let slide = Math.max(0, Math.abs(this.slipRear) - 0.1) * 3 + (hbActive ? 0.5 : 0) + (c.brake > 0.9 && absV > 14 ? 0.35 : 0);
+    // Patinação e rodas travadas (módulo de tração) também marcam o asfalto e chiam.
+    if (pt) slide = Math.max(slide, this.wheelspin > 2 ? clamp((this.wheelspin - 2) / 6, 0, 0.85) : 0, this.brakeLock.front || (this.brakeLock.rear && !c.handbrake) ? 0.6 : 0);
     this.skid = absV > 4 && !this.inWater && this.surface !== 'grass' && this.surface !== 'sand' ? clamp(slide, 0, 1) : 0;
 
     // --- Integração.
@@ -348,6 +524,9 @@ export class VehiclePhysics {
 
   /** Marcha automática e rotação estimada (HUD e áudio). */
   _updateDrivetrain(dt) {
+    // The injected module already advanced with each PHYSICS_STEP. A display
+    // frame must not advance shift timers or nitrous for a second time.
+    if (this.powertrainActive) return;
     const H = this.H, c = this.v.controls;
     const v = Math.abs(this.vLong);
     const gears = H.gears;

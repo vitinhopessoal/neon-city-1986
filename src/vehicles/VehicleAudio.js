@@ -9,6 +9,8 @@ import { clamp } from '../utils/math.js';
  *  - derrapagem/frenagem: ruído rosa filtrado proporcional ao escorregamento
  *  - colisão: estalo grave + ruído, volume pela intensidade
  *  - buzina: dois tons quadrados filtrados
+ *  - mecânica veicular: chiado do nitro, assobio do turbo (pressão), alívio
+ *    ("blow-off") ao soltar o pedal com pressão e o corte de giro na troca (via rpm)
  * Volumes moderados (o compressor do AudioManager limita picos).
  */
 export class VehicleAudio {
@@ -65,7 +67,16 @@ export class VehicleAudio {
     const horn = ctx.createGain(); horn.gain.value = 0;
     h1.connect(hf); h2.connect(hf); hf.connect(horn).connect(out);
     h1.start(); h2.start();
-    this.n = { out, o1, o2, o3, filter, engine, skid, skidF, horn, h1, h2, lfo, lfoDepth };
+    // Nitro: ruído agudo (chiado do gás) — volume pelo estado do nitro.
+    const nSrc = ctx.createBufferSource(); nSrc.buffer = this.audio.pink; nSrc.loop = true;
+    const nF = ctx.createBiquadFilter(); nF.type = 'highpass'; nF.frequency.value = 3200;
+    const nitro = ctx.createGain(); nitro.gain.value = 0;
+    nSrc.connect(nF).connect(nitro).connect(out); nSrc.start();
+    // Turbo: assobio senoidal cuja frequência e volume seguem a pressão.
+    const tOsc = ctx.createOscillator(); tOsc.type = 'sine'; tOsc.frequency.value = 1800;
+    const turbo = ctx.createGain(); turbo.gain.value = 0;
+    tOsc.connect(turbo).connect(out); tOsc.start();
+    this.n = { out, o1, o2, o3, filter, engine, skid, skidF, horn, h1, h2, lfo, lfoDepth, nitro, turbo, tOsc };
     return true;
   }
 
@@ -119,6 +130,8 @@ export class VehicleAudio {
     this.n.engine.gain.setTargetAtTime(0, t, 0.25);
     this.n.skid.gain.setTargetAtTime(0, t, 0.1);
     this.n.horn.gain.setTargetAtTime(0, t, 0.03);
+    this.n.nitro.gain.setTargetAtTime(0, t, 0.08);
+    this.n.turbo.gain.setTargetAtTime(0, t, 0.08);
     this.hornOn = false;
   }
 
@@ -167,8 +180,32 @@ export class VehicleAudio {
     const skid = ph.skid + (c.brake > 0.6 && Math.abs(ph.vLong) > 8 ? 0.15 : 0);
     this.n.skid.gain.setTargetAtTime(clamp(skid, 0, 1) * 0.16, t, 0.05);
     this.n.skidF.frequency.setTargetAtTime(1500 + Math.abs(ph.vLong) * 25, t, 0.1);
+    // Mecânica veicular: nitro e turbo (zero quando o carro não tem o módulo).
+    const fr = ph.powertrainActive ? ph.powertrainFrame : null;
+    const nitroOn = fr?.nitrousActive ? 1 : 0, boost = fr?.boost ?? 0;
+    this.n.nitro.gain.setTargetAtTime(nitroOn * 0.09, t, nitroOn ? 0.03 : 0.12);
+    this.n.turbo.gain.setTargetAtTime(boost * 0.025, t, 0.06);
+    this.n.tOsc.frequency.setTargetAtTime(1400 + boost * 2600 + rpmK * 600, t, 0.08);
     // Alvos solicitados (o contexto pode estar suspenso sem gesto do usuário).
-    this.target = { engineHz: fire, filterHz: 260 + load * 1700 + rpmK * 900, skid: clamp(skid, 0, 1), lope: this.voice?.lope ?? 0, hornHz: this.voice?.horn?.[0] ?? 370 };
+    this.target = { engineHz: fire, filterHz: 260 + load * 1700 + rpmK * 900, skid: clamp(skid, 0, 1), lope: this.voice?.lope ?? 0, hornHz: this.voice?.horn?.[0] ?? 370, nitro: nitroOn, boost };
+  }
+
+  /** Eventos do câmbio/motor: alívio do turbo e estalo curto do corte na troca. */
+  powertrainEvent(e) {
+    if (!this.n || !this.running) return;
+    this.lastEvent = e.type;
+    const ctx = this.ctx, t = ctx.currentTime;
+    if (e.type === 'blowoff') {
+      const src = ctx.createBufferSource(); src.buffer = this.audio.pink;
+      const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.setValueAtTime(2600, t); f.frequency.exponentialRampToValueAtTime(900, t + 0.35); f.Q.value = 1.2;
+      const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.12 * clamp(e.boost, 0.3, 1), t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
+      src.connect(f).connect(g).connect(this.n.out); src.start(t); src.stop(t + 0.45);
+    } else if (e.type === 'shift_start') {
+      const src = ctx.createBufferSource(); src.buffer = this.audio.brown;
+      const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 500;
+      const g = ctx.createGain(); g.gain.setValueAtTime(0.06, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.09);
+      src.connect(f).connect(g).connect(this.n.out); src.start(t); src.stop(t + 0.12);
+    }
   }
 
   /** Parâmetros atuais (para testes automatizados). */

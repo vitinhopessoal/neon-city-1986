@@ -28,6 +28,7 @@
     "test:radio": "node --test tools/radio/radio.test.mjs",
     "build:radio": "node tools/radio/build-radio.mjs",
     "test:moto": "node --test tools/vehicles/neon-moto.test.mjs",
+    "test:mechanics": "node --test tools/vehicles/mechanics-core.test.mjs tools/vehicles/powertrain-integration.test.mjs tools/vehicles/mechanics-neon.test.mjs",
     "build:motos": "blender --background --factory-startup --python tools/blender/neon_moto/run_moto.py -- --all --render"
   },
   "dependencies": {

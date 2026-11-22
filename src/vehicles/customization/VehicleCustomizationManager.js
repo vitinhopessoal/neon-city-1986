@@ -195,6 +195,8 @@ export class VehicleCustomizationManager {
       const pose = y !== null ? { x: e.x, y, z: e.z, heading: e.heading } : vm._findRecoverySpot({ id: v.id, spec: v.spec, physics: { x: e.x, z: e.z, heading: e.heading } }) || S.pose;
       v.setPose(pose.x, pose.y ?? S.pose.y, pose.z, pose.heading);
       v.physics.syncFromRoot();
+      // Mecânica veicular: a oficina enche o tanque de nitro.
+      v.physics.powertrain?.awardNitrous(1);
       // A física foi posta para dormir na baia: acorda para o jogador voltar a dirigir.
       v.physics.wake?.();
       v.engineOn = true;
@@ -243,7 +245,8 @@ export class VehicleCustomizationManager {
 
   compatible(cat, value, cfg = this.session?.preview) {
     const type = this.session?.v.type;
-    if (cat in UPGRADES || cat === 'paint' || cat === 'repair') return true;
+    if (cat in UPGRADES) return !UPGRADES[cat].carsOnly || !this.session?.v.spec.bike || value === 0;
+    if (cat === 'paint' || cat === 'repair') return true;
     if (cat === 'paint2') return value === null || PAINTS.some((p) => p.id === value);
     return isCompatible(cat, value, type, cfg || {});
   }

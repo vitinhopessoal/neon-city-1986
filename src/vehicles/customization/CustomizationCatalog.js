@@ -164,6 +164,13 @@ export const UPGRADES = {
     { name: 'Reforçada', price: 1200, perf: { resist: 0.85, mass: 40 } },
     { name: 'Blindagem leve', price: 2400, perf: { resist: 0.7, mass: 90 } },
   ] },
+  // Mecânica veicular: o kit muda o ganho de torque e a duração do tanque (o motor e a tração
+  // continuam limitando a força). Comprar ou sair da oficina enche o tanque. Só carros.
+  nitro: { label: 'Nitro', carsOnly: true, levels: [
+    { name: 'Garrafa de série', price: 0, nitro: { boost: 0.35, drain: 0.2 }, desc: '+35% de torque por 5 s de tanque cheio.' },
+    { name: 'Kit Street', price: 1400, nitro: { boost: 0.5, drain: 0.16 }, desc: '+50% de torque por 6,3 s de tanque cheio.' },
+    { name: 'Kit Competição', price: 3200, nitro: { boost: 0.7, drain: 0.13 }, desc: '+70% de torque por 7,7 s de tanque cheio; aquece mais o motor.' },
+  ] },
 };
 
 export const REPAIR_PER_POINT = 3;
@@ -177,7 +184,7 @@ export function defaultConfig(vehicle) {
     paint, paintHex: hex, finish: 'gloss', paint2: null,
     wheels: 'stock', tires: 'stock', ride: 'stock', bumper: 'stock', skirts: 'stock', spoiler: 'none',
     hood: 'stock', exhaust: 'stock', lights: 'stock', tint: 'stock', interior: 'stock',
-    engine: 0, brakes: 0, trans: 0, susp: 0, armor: 0,
+    engine: 0, brakes: 0, trans: 0, susp: 0, armor: 0, nitro: 0,
   };
 }
 
@@ -209,6 +216,6 @@ export function sanitizeConfig(raw, vehicle) {
   if (FINISHES[raw.finish]) out.finish = raw.finish;
   out.paint2 = PAINTS.some((p) => p.id === raw.paint2) && !MOTO_SET.has(type) ? raw.paint2 : null;
   for (const cat of Object.keys(PARTS)) if (partOption(cat, raw[cat]) && isCompatible(cat, raw[cat], type, raw)) out[cat] = raw[cat];
-  for (const [k, u] of Object.entries(UPGRADES)) if (Number.isSafeInteger(raw[k]) && raw[k] >= 0 && raw[k] < u.levels.length) out[k] = raw[k];
+  for (const [k, u] of Object.entries(UPGRADES)) if (Number.isSafeInteger(raw[k]) && raw[k] >= 0 && raw[k] < u.levels.length && (!u.carsOnly || !MOTO_SET.has(type) || raw[k] === 0)) out[k] = raw[k];
   return out;
 }

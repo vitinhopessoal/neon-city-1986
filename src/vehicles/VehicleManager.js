@@ -11,6 +11,8 @@ import { VehicleInteraction, PLAYER_STATES } from './VehicleInteraction.js';
 import { PlayerDriver } from './VehicleController.js';
 import { VehicleHUD } from '../ui/VehicleHUD.js';
 import { SPECS } from './VehicleFactory.js';
+import { attachNeonPowertrain } from './mechanics/NeonPowertrain.js';
+import { drivetrainFor } from './mechanics/drivetrains.js';
 import { clamp } from '../utils/math.js';
 
 /**
@@ -27,6 +29,8 @@ const _v = new THREE.Vector3();
 /** Física/animação conforme o tipo: motos (spec.bike) usam as extensões de moto. */
 const physicsFor = (v, col, env) => (v.spec.bike ? new MotorcyclePhysics(v, col, env) : new VehiclePhysics(v, col, env));
 const animationFor = (v) => (v.spec.bike ? new MotorcycleAnimation(v) : new VehicleAnimation(v));
+const TRANSMISSION_KEY = 'neoncity.transmission';
+const loadTransmissionMode = () => { try { return localStorage.getItem(TRANSMISSION_KEY) === 'manual' ? 'manual' : 'automatic'; } catch { return 'automatic'; } };
 
 export class VehicleManager {
   constructor(game) {
@@ -41,6 +45,9 @@ export class VehicleManager {
     this.interaction = new VehicleInteraction(this);
     this.recoverCooldown = 0;
     this.stats = { physicsSteps: 0, awake: 0 };
+    // Mecânica veicular (motor, câmbio, nitro, tração): preferência de câmbio do jogador.
+    this.transmissionMode = loadTransmissionMode();
+    this.powertrainErrors = [];
     // Um único foco de farol (somente o carro do jogador, à noite).
     this.beam = new THREE.SpotLight(0xfff1d8, 0, 38, 0.5, 0.55, 1.6);
     this.beam.castShadow = false;
@@ -194,7 +201,34 @@ export class VehicleManager {
     this.camera.attach(v);
   }
 
+  /**
+   * Mecânica veicular nos carros jogáveis: anexada uma vez por carro, quando o jogador
+   * liga o motor (motos e barcos mantêm a física própria). O estado do câmbio e do nitro
+   * fica com o carro; o trânsito e a polícia continuam no modelo arcade (VehiclePhysics.powertrainActive).
+   */
+  attachPowertrain(v) {
+    const ph = v.physics;
+    if (!ph || v.spec.bike || v.spec.family === 'boat' || !Array.isArray(v.spec.handling?.gears)) return null;
+    if (ph.powertrain) { ph.powertrain.setTransmissionMode(this.transmissionMode); return ph.powertrain; }
+    const r = attachNeonPowertrain(v, { factoryHandling: SPECS[v.type]?.handling || v.spec.handling,
+      drivetrain: drivetrainFor(v.type), mode: this.transmissionMode });
+    if (!r.ok) { this.powertrainErrors.push({ id: v.id, type: v.type, error: r.error }); console.warn('[Mecânica]', v.type, r.error); return null; }
+    return r.value;
+  }
+
+  /** B: alterna câmbio automático ↔ manual (vale para todos os carros; preferência salva). */
+  toggleTransmission(v = this.playerVehicle) {
+    this.transmissionMode = this.transmissionMode === 'manual' ? 'automatic' : 'manual';
+    try { localStorage.setItem(TRANSMISSION_KEY, this.transmissionMode); } catch { /* armazenamento indisponível */ }
+    v?.physics?.powertrain?.setTransmissionMode(this.transmissionMode);
+    this.game.hud.toast(this.transmissionMode === 'manual'
+      ? 'CÂMBIO MANUAL · Z/X trocam · controle de tração desligado'
+      : 'CÂMBIO AUTOMÁTICO · controle de tração ligado', 2.4);
+    return this.transmissionMode;
+  }
+
   startEngine(v) {
+    this.attachPowertrain(v);
     v.engineOn = true;
     v.state = 'driven';
     this.audio.start(v);
@@ -206,7 +240,7 @@ export class VehicleManager {
 
   stopEngine(v) {
     v.engineOn = false;
-    Object.assign(v.controls, { throttle: 0, brake: 0, steer: 0, handbrake: true });
+    Object.assign(v.controls, { throttle: 0, brake: 0, steer: 0, handbrake: true, gearUp: false, gearDown: false, nitrous: false });
     this.audio.stop();
     this.hud.hide();
     this.game.hud.setHelpMode('foot');
@@ -247,6 +281,7 @@ export class VehicleManager {
       if (driving) this.audio.horn(input.isDown('horn'));
       if (driving && input.wasPressed('horn')) this.game.city?.events.emit('horn', { x: pv.root.position.x, z: pv.root.position.z, source: 'player' });
       if (driving && input.wasPressed('recover')) this.tryRecover(pv);
+      if (driving && this.game.state === 'playing' && !this.inputLocked && input.wasPressed('transmissionMode') && pv.physics?.powertrain) this.toggleTransmission(pv);
     }
     if (this.recoverCooldown > 0) this.recoverCooldown -= dt;
 
@@ -292,6 +327,15 @@ export class VehicleManager {
     this._beam(pv, lamps);
     this._lod(dt, pv);
     if (pv) this.audio.update(dt, pv);
+    // Eventos do câmbio, da largada, do nitro e do motor (acumulados nos passos físicos do quadro).
+    const evq = pv?.physics?.powertrainEvents;
+    if (evq?.length) {
+      for (const e of evq) {
+        this.hud.powertrainEvent(e);
+        this.audio.powertrainEvent?.(e);
+      }
+      evq.length = 0;
+    }
     this.hud.update(dt);
   }
 

@@ -19,7 +19,7 @@ export class PlayerDriver {
   reset(vehicle) {
     this.reverseHold = 0;
     this.throttle = this.brake = 0;
-    if (vehicle) Object.assign(vehicle.controls, { throttle: 0, brake: 0, steer: 0, handbrake: false });
+    if (vehicle) Object.assign(vehicle.controls, { throttle: 0, brake: 0, steer: 0, handbrake: false, gearUp: false, gearDown: false, nitrous: false });
   }
 
   update(dt, input, vehicle) {
@@ -46,5 +46,9 @@ export class PlayerDriver {
     c.brake = this.brake < 0.02 ? 0 : this.brake;
     c.steer = (input.isDown('right') ? 1 : 0) - (input.isDown('left') ? 1 : 0);
     c.handbrake = input.isDown('handbrake');
+    // Mecânica veicular: o câmbio detecta a borda (segurar a tecla troca uma vez só).
+    c.gearUp = input.isDown('gearUp');
+    c.gearDown = input.isDown('gearDown');
+    c.nitrous = input.isDown('nitrous');
   }
 }

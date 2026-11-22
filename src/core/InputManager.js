@@ -28,6 +28,12 @@ export const DEFAULT_BINDINGS = {
   handbrake: ['Space'],
   recover: ['KeyR'],
   horn: ['KeyQ'],
+  // Mecânica veicular (carro). SHIFT corre a pé e é nitro no carro; X guarda a arma a pé e
+  // sobe a marcha no carro — contextos exclusivos, como o R (recarregar / recuperar).
+  nitrous: ['ShiftLeft', 'ShiftRight'],
+  gearUp: ['KeyX'],
+  gearDown: ['KeyZ'],
+  transmissionMode: ['KeyB'],
   // Armas (a pé). R também é "recover" no carro: os contextos são exclusivos.
   fire: ['Mouse0'],
   aim: ['Mouse2'],
@@ -67,6 +73,10 @@ export const ACTION_INFO = {
   interact: { context: 'pé/carro', label: 'Entrar / sair do veículo' },
   recover: { context: 'carro', label: 'Recuperar veículo preso' },
   horn: { context: 'carro', label: 'Buzina' },
+  nitrous: { context: 'carro', label: 'Nitro (segurar, com o acelerador)' },
+  gearUp: { context: 'carro', label: 'Subir marcha (câmbio manual)' },
+  gearDown: { context: 'carro', label: 'Reduzir marcha (câmbio manual; parado: N e R)' },
+  transmissionMode: { context: 'carro', label: 'Câmbio automático / manual' },
   toggleCamera: { context: 'global', label: 'Alternar 1ª / 3ª pessoa' },
   toggleHelp: { context: 'global', label: 'Mostrar/ocultar ajuda' },
   toggleStats: { context: 'global', label: 'Estatísticas de desempenho' },

@@ -1,0 +1,45 @@
+{
+  "id": "compact-example",
+  "provenance": "Perfil demonstrativo autoral. Nenhum número foi extraído do Golf, Astra ou da calibração original do NFSU2.",
+  "massKg": 1250,
+  "yawInertiaKgM2": 1800,
+  "wheelbaseM": 2.6,
+  "trackM": 1.5,
+  "wheelRadiusM": 0.31,
+  "frontWeightFraction": 0.6,
+  "centerOfMassHeightM": 0.5,
+  "driveLayout": "FWD",
+  "awdFrontFraction": 0.45,
+  "engine": {
+    "idleRpm": 950,
+    "redlineRpm": 7000,
+    "launchRpm": 3500,
+    "rpmResponsePerSecond": 10,
+    "engineBrakingNm": 35,
+    "torqueCurve": [[950, 85], [2000, 150], [3500, 205], [4500, 220], [6000, 195], [7000, 150]]
+  },
+  "transmission": {
+    "mode": "automatic",
+    "shiftStrategy": "torque_crossover",
+    "forwardRatios": [3.2, 2.1, 1.5, 1.18, 0.94, 0.78],
+    "reverseRatio": 3.1,
+    "finalDrive": 3.8,
+    "efficiency": 0.9,
+    "shiftSeconds": 0.23,
+    "minimumShiftIntervalSeconds": 0.5,
+    "upshiftRpm": 6500,
+    "downshiftRpm": 2200,
+    "reverseSelectionMaxSpeedMps": 0.7
+  },
+  "steering": {
+    "deadzone": 0.03,
+    "rateRadPerSecond": 2.2,
+    "angleBySpeed": [[0, 0.58], [10, 0.44], [25, 0.22], [50, 0.12]]
+  },
+  "tires": {"frictionCoefficient": 1.05, "corneringStiffnessNPerRad": 26000, "handbrakeRearGripFraction": 0.55},
+  "brakes": {"maximumTorqueNmPerWheel": 1650, "frontFraction": 0.65, "handbrakeTorqueNmPerRearWheel": 1800},
+  "aero": {"airDensityKgM3": 1.225, "dragAreaM2": 0.65, "downforceAreaM2": 0, "rollingResistanceCoefficient": 0.014},
+  "nitrous": {"torqueBoostFraction": 0.35, "drainPerSecond": 0.16, "minimumSpeedMps": 2, "minimumThrottle": 0.85},
+  "launch": {"minimumGoodRpm": 2800, "maximumGoodRpm": 4200},
+  "suspension": {"springNPerM": 35000, "damperNsPerM": 3800, "maximumForceN": 18000}
+}

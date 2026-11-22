@@ -6,7 +6,7 @@ const hex = (n) => `#${n.toString(16).padStart(6, '0')}`;
 
 const GROUPS = {
   paint: ['paint', 'paint2'], wheels: ['wheels', 'tires'], body: ['bumper', 'skirts', 'spoiler', 'hood', 'exhaust'],
-  suspension: ['ride', 'susp'], lighting: ['lights', 'tint'], interior: ['interior'], performance: ['engine', 'brakes', 'trans', 'armor'], repair: ['repair'],
+  suspension: ['ride', 'susp'], lighting: ['lights', 'tint'], interior: ['interior'], performance: ['engine', 'brakes', 'trans', 'armor', 'nitro'], repair: ['repair'],
 };
 const STAT_LABELS = { speed: 'Velocidade', accel: 'Aceleração', brake: 'Frenagem', control: 'Controle', resist: 'Resistência' };
 
@@ -108,7 +108,7 @@ export class CustomizationUI {
         const cost = m.repairCost();
         html += `<h4>Reparos</h4><p class="cu-note">Integridade atual: ${Math.round(S.v.damage?.integrity ?? 100)}%. Custo: ${cost ? money(cost) : '—'} ($3 por ponto). As peças personalizadas são preservadas.</p><button class="cu-repair" data-act="repair" ${cost ? '' : 'disabled'}>REPARAR ${cost ? money(cost) : ''}</button>`;
       } else if (UPGRADES[cat]) {
-        html += `<h4>${esc(UPGRADES[cat].label)}</h4><div class="cu-list">${UPGRADES[cat].levels.map((l, i) => this._optionRow(cat, i, `Nível ${i} · ${l.name}`, l.price, l.perf ? Object.entries(l.perf).map(([k, x]) => `${k} ${typeof x === 'number' && x < 3 && k !== 'stability' ? `×${x}` : `+${x}`}`).join(', ') : 'Especificação de fábrica.')).join('')}</div>`;
+        html += `<h4>${esc(UPGRADES[cat].label)}</h4><div class="cu-list">${UPGRADES[cat].levels.map((l, i) => this._optionRow(cat, i, `Nível ${i} · ${l.name}`, l.price, l.desc ? l.desc : l.perf ? Object.entries(l.perf).map(([k, x]) => `${k} ${typeof x === 'number' && x < 3 && k !== 'stability' ? `×${x}` : `+${x}`}`).join(', ') : 'Especificação de fábrica.')).join('')}</div>`;
       } else {
         html += `<h4>${esc(PARTS[cat].label)}</h4><div class="cu-list">${PARTS[cat].options.map((o) => this._optionRow(cat, o.id, o.name, o.price, o.desc)).join('')}</div>`;
       }

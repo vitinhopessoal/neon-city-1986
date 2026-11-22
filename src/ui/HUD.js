@@ -39,6 +39,9 @@ export class HUD {
           <div><kbd>${K('forward')}</kbd> acelerar · <kbd>${K('back')}</kbd> frear / ré</div>
           <div><kbd>${K('left')}</kbd><kbd>${K('right')}</kbd> direção</div>
           <div><kbd>${K('handbrake')}</kbd> freio de mão · <kbd>${K('horn')}</kbd> buzina</div>
+          <div><kbd>${K('nitrous')}</kbd> nitro · <kbd>${K('transmissionMode')}</kbd> câmbio aut./manual</div>
+          <div><kbd>${K('gearDown')}</kbd> reduzir · <kbd>${K('gearUp')}</kbd> subir (manual)</div>
+          <div><kbd>${K('handbrake')}</kbd>+<kbd>${K('forward')}</kbd> parado: preparar largada</div>
           <div><kbd>${K('interact')}</kbd> sair · <kbd>${K('recover')}</kbd> recuperar</div>
         </div>
         <div><kbd>MOUSE</kbd> câmera</div>
