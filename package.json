@@ -10,6 +10,7 @@
     "preview": "vite preview",
     "build:testmap": "node tools/test-map/build-test-map.mjs",
     "test:city": "node --test tools/test-map/coastal-city.test.mjs",
+    "test:merged": "node --test tools/test-map/merged-world.test.mjs",
     "test:assets": "node --test tools/protagonist/assets.test.mjs",
     "test:hud": "node --test tools/hud/status.test.mjs",
     "test:police": "node --test tools/police/police.test.mjs",

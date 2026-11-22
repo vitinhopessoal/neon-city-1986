@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { boundsContains } from '../utils/bounds.js';
 
 /**
  * Grafo de faixas para a IA de trânsito, derivado do RoadNetwork existente
@@ -194,8 +195,7 @@ export class LaneGraph {
   }
 
   _inside(p, margin = 0) {
-    const b = this.bounds;
-    return !b || (p.x > b.minX - margin && p.x < b.maxX + margin && p.z > b.minZ - margin && p.z < b.maxZ + margin);
+    return boundsContains(this.bounds, p.x, p.z, -margin);
   }
 
   _turn(a, b) {

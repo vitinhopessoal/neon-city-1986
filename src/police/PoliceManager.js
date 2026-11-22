@@ -4,6 +4,7 @@ import { PoliceCrimes } from './PoliceCrimes.js';
 import { angleDelta } from '../utils/math.js';
 import { lineOfSight, roadRoute, footRoute, driveTo } from './PoliceNavigation.js';
 import { Path } from '../traffic/LaneGraph.js';
+import { boundsContains } from '../utils/bounds.js';
 import { PoliceOfficers, PoliceAudio, officerPose, officerLook, createPoliceVehicle, disposePoliceVehicle, createHelicopter } from './PoliceVisuals.js';
 
 const p = new THREE.Vector3(), q = new THREE.Vector3(), r = new THREE.Vector3();
@@ -92,7 +93,7 @@ export class PoliceManager {
       if (segment.sink || segment.path.length < 18) continue;
       for (let s = 8; s < segment.path.length - 7; s += 16) {
         const pos = segment.path.sample(s, new THREE.Vector3());
-        if (bounds && (pos.x < bounds.minX + 4 || pos.x > bounds.maxX - 4 || pos.z < bounds.minZ + 4 || pos.z > bounds.maxZ - 4)) continue;
+        if (bounds && !boundsContains(bounds, pos.x, pos.z, 4)) continue;
         const d = dist(pos, center), playerDistance = dist(pos, this.playerPosition);
         if (d < (roadblock ? 55 : 60) || d > 150 || playerDistance < 45 || this._visible(pos)) continue;
         if (this.game.vehicles.list.some(v => v.root.visible && dist(v.root.position, pos) < 9)) continue;

@@ -1,10 +1,11 @@
 import { SUNSET_BEACH } from './SunsetBeach.js';
 import { decorateSunsetBeach } from './SunsetBeachDecor.js';
 import { LANTERN_POINT, decorateLanternPoint } from './LanternPoint.js';
+import { TEST_CITY_LINK } from './TestCityLink.js';
 
 // Build connected districts in one pass: one road graph, one coast and outer
 // boundary, shared vegetation pools. Internal district borders stay traversable.
-export function createCoastalCity() {
+export function createCoastalCity({ testCityLink = false } = {}) {
   const roads = [], intersections = [], crosswalks = [];
   for (const [key, z, name] of [['lantern', -205, 'Lantern Lane'], ['beacon', -290, 'Beacon Street']]) {
     for (const [suffix, startX, endX] of [['e', 18, -64], ['w', -76, -420]]) {
@@ -23,7 +24,7 @@ export function createCoastalCity() {
     slabs.push({ id: `lp_block_e_${i}`, minX: -64, maxX: 18, minZ, maxZ });
     slabs.push({ id: `lp_block_w_${i}`, minX: -420, maxX: -76, minZ, maxZ });
   }
-  return {
+  const district = {
     ...SUNSET_BEACH,
     id: 'coastal_city',
     bounds: { ...SUNSET_BEACH.bounds, minZ: LANTERN_POINT.bounds.minZ },
@@ -46,4 +47,28 @@ export function createCoastalCity() {
       ctx.props.place('stall', 47.2, 0.15, -224);
     },
   };
+  return testCityLink ? withTestCityLink(district) : district;
+}
+
+/**
+ * Prepara Sunset Beach para receber o TEST CITY a oeste: a Flamingo Street
+ * termina na borda do novo bairro, as calçadas de fundo (que antes seguiam
+ * até x = -420, fora da área jogável) param no limite oeste e o corredor
+ * ganha calçadas. Prédios, ruas e decoração dentro do Sunset não mudam.
+ */
+function withTestCityLink(d) {
+  const L = TEST_CITY_LINK;
+  const west = d.bounds.minX;
+  const roads = d.roads.map((r) => (r.id === 'flamingo_w' ? { ...r, end: { x: L.roadEndX, z: r.end.z } } : r));
+  const slabs = d.slabs.map((s) => (s.minX < west && s.maxZ > L.ground.minZ && s.minZ < L.ground.maxZ ? { ...s, minX: west } : s));
+  slabs.push({ id: 'tc_link_n', minX: L.roadEndX, maxX: west, minZ: -L.opening, maxZ: -6 });
+  slabs.push({ id: 'tc_link_s', minX: L.roadEndX, maxX: west, minZ: 6, maxZ: L.opening });
+  // Faixas fora da área jogável, dos dois lados do corredor: canteiros (antes, asfalto nu do chão do GLB).
+  const k = L.corridor;
+  slabs.push({ id: 'tc_link_fill_n', minX: k.minX, maxX: west, minZ: L.ground.minZ, maxZ: -L.opening - 0.5 });
+  slabs.push({ id: 'tc_link_fill_s', minX: k.minX, maxX: west, minZ: L.opening + 0.5, maxZ: L.ground.maxZ });
+  const overlays = [...d.overlays,
+    { minX: k.minX + 1.5, maxX: west - 1.5, minZ: L.ground.minZ + 1.5, maxZ: -L.opening - 2, material: 'overlayGrass', tile: 4, surface: 'grass' },
+    { minX: k.minX + 1.5, maxX: west - 1.5, minZ: L.opening + 2, maxZ: L.ground.maxZ - 1.5, material: 'overlayGrass', tile: 4, surface: 'grass' }];
+  return { ...d, roads, slabs, overlays, link: L };
 }

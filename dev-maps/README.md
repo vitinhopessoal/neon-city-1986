@@ -3,7 +3,9 @@
 Esta pasta é servida em `/dev-maps/` **apenas** pelo `npm run dev` (plugin em `vite.config.js`).
 Ela **não** entra no `dist/` nem no `vite preview`. Conteúdo aqui é tratado como externo ao jogo.
 
-- `test-city/` — mapa de testes original, gerado por `npm run build:testmap`.
+- `test-city/` — mapa de testes original, gerado por `npm run build:testmap`. O mesmo comando grava uma cópia
+  idêntica em `public/maps/test-city/`, carregada pelo jogo como bairro oeste do mundo unificado
+  (`docs/MUNDO_UNIFICADO.md`).
 - Não coloque aqui conteúdo de terceiros sem licença que permita o uso. Mesmo com licença,
   mantenha-o nesta pasta (fora de `src/` e `public/`) até a autorização estar documentada.
 - O `.gitignore` ignora tudo nesta pasta, exceto este README, para evitar redistribuição acidental.

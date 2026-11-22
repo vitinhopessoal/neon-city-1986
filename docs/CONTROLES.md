@@ -113,7 +113,7 @@ Na água não há pulo nem armas. O nado começa onde o fundo passa de 1,3 m e t
 | T | Horário (manhã → pôr do sol → noite) |
 | M | Som liga/desliga |
 | ` | Estatísticas de desempenho |
-| F8 | Alternar mapa de testes (somente em desenvolvimento) |
+| F8 | Ir ao bairro TEST CITY e voltar (a pé; somente em desenvolvimento) |
 | F9 | Alternar protagonista: modelo 3D importado / personagem original (somente em desenvolvimento) |
 | F10 | Depuração do trânsito e pedestres: rede, estados e contadores (somente em desenvolvimento) |
 | Esc | Liberar o mouse (navegador) |

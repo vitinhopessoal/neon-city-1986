@@ -8,6 +8,7 @@ import { laneRoute } from '../city/Navigation.js';
 import { TRAFFIC_BASE, trafficWeights, neonZoneAt } from '../vehicles/models/NeonMotor.js';
 import { motoTrafficWeights } from '../vehicles/models/NeonMoto.js';
 import { SPECS } from '../vehicles/VehicleFactory.js';
+import { boundsContains } from '../utils/bounds.js';
 
 /**
  * Trânsito de Sunset Beach (e de mapas com metadados de ruas).
@@ -89,7 +90,8 @@ export class TrafficManager {
   /** Rede viária: a do mundo procedural ou metadados opcionais do manifesto. */
   _network(env) {
     if (!env.isImported) {
-      const b = env.bounds || env.districts?.[0]?.bounds;
+      // Área jogável completa (Sunset Beach + bairros anexados, como o TEST CITY).
+      const b = env.playBounds || env.bounds || env.districts?.[0]?.bounds;
       return env.roads?.roads?.size ? { net: env.roads, bounds: b } : null;
     }
     const m = env.manifest;
@@ -242,7 +244,7 @@ export class TrafficManager {
       if (seg.path.length < 24) continue;
       const s = 10 + Math.random() * (seg.path.length - 20);
       seg.path.sample(s, _v);
-      if (this.bounds && (_v.x < this.bounds.minX + 3 || _v.x > this.bounds.maxX - 3 || _v.z < this.bounds.minZ + 3 || _v.z > this.bounds.maxZ - 3)) continue;
+      if (this.bounds && !boundsContains(this.bounds, _v.x, _v.z, 3)) continue;
       const dist = Math.hypot(_v.x - player.x, _v.z - player.z);
       if (dist < R.min || dist > R.max) continue;
       if (this._visible(_v, dist)) continue;
@@ -381,7 +383,7 @@ export class TrafficManager {
     const candidates = this.graph.segments.filter(segment => {
       if (segment === start || !segment.out.length || segment.sink || segment.path.length <= 20) return false;
       const p = segment.path.sample(segment.path.length / 2, new THREE.Vector3()), b = this.bounds;
-      return !b || (p.x > b.minX && p.x < b.maxX && p.z > b.minZ && p.z < b.maxZ);
+      return boundsContains(b, p.x, p.z);
     });
     for (let k = 0; k < 12 && candidates.length; k++) {
       const target = candidates[Math.floor(Math.random() * candidates.length)];

@@ -20,7 +20,8 @@ export class Minimap {
 
   setEnvironment(env) {
     this.env = env;
-    this.bounds = env.bounds || env.manifest?.bounds;
+    // Área jogável completa: bairros anexados (TEST CITY) entram no mesmo radar.
+    this.bounds = env.playBounds || env.bounds || env.manifest?.bounds;
     this.roads = env.roads?.roads ? [...env.roads.roads.values()] : (env.manifest?.roads || []);
     this.buildings = env.districts?.flatMap(d => d.buildings || []) || [];
     this.overlays = env.districts?.flatMap(d => d.overlays || []) || [];
@@ -55,8 +56,16 @@ export class Minimap {
     const rotation = this.overview ? 0 : Math.PI + yaw;
     ctx.translate(size / 2, size / 2); ctx.rotate(rotation); ctx.translate(-size / 2, -size / 2);
     ctx.save();
-    ctx.beginPath(); ctx.rect(x(b.minX), y(b.minZ), (b.maxX - b.minX) * scale, (b.maxZ - b.minZ) * scale); ctx.clip();
+    ctx.beginPath();
+    for (const r of b.rects || [b]) ctx.rect(x(r.minX), y(r.minZ), (r.maxX - r.minX) * scale, (r.maxZ - r.minZ) * scale);
+    ctx.clip();
     ctx.fillStyle = '#075537'; ctx.fillRect(-size, -size, size * 3, size * 3);
+    for (const d of this.env.districts || []) {
+      if (!d.annex) continue;
+      // Bairro anexado: quadra de asfalto (o chão do GLB é asfalto entre as calçadas).
+      ctx.fillStyle = '#5f6b6e';
+      ctx.fillRect(x(d.bounds.minX), y(d.bounds.minZ), (d.bounds.maxX - d.bounds.minX) * scale, (d.bounds.maxZ - d.bounds.minZ) * scale);
+    }
     if (!this.env.isImported) {
       ctx.fillStyle = '#d4c78e'; ctx.fillRect(x(54), -size * 3, (110 - 54) * scale, size * 7);
       ctx.fillStyle = '#72b9cf'; ctx.fillRect(x(93), -size * 3, size * 6, size * 7);
@@ -85,7 +94,7 @@ export class Minimap {
       ctx.font = 'bold 8px Arial'; ctx.textAlign = 'center'; ctx.fillStyle = '#f0e8d8';
       for (const region of this.regions) {
         const rb = region.bounds;
-        ctx.fillText(region.name, x(-20), y((rb.minZ + rb.maxZ) / 2));
+        ctx.fillText(region.name, x(region.labelX ?? -20), y((rb.minZ + rb.maxZ) / 2));
       }
     }
     ctx.restore();

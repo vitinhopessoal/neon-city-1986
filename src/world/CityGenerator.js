@@ -115,10 +115,24 @@ export class CityGenerator {
     // Chão de fundo (além das lajes) — termina onde a praia começa, para não
     // cobrir a areia inclinada nem o oceano.
     const groundW = 3000;
-    const ground = groundPlane(groundW, 4000, 20);
-    composeMatrix(BEACH.start - groundW / 2, -0.05, 0, 0, 0, 0, 1, 1, 1, this._m || (this._m = new THREE.Matrix4()));
-    batcher.add(ground, lib.m.ground, this._m, null, { castShadow: false, chunk: 'ground' });
-    ground.dispose();
+    const gm = this._m || (this._m = new THREE.Matrix4());
+    const hole = district.link?.ground;
+    if (!hole) {
+      const ground = groundPlane(groundW, 4000, 20);
+      composeMatrix(BEACH.start - groundW / 2, -0.05, 0, 0, 0, 0, 1, 1, 1, gm);
+      batcher.add(ground, lib.m.ground, gm, null, { castShadow: false, chunk: 'ground' });
+      ground.dispose();
+    } else {
+      // Mesmo chão, com um vão onde fica o chão do bairro anexado (evita duas superfícies sobrepostas).
+      const x0 = BEACH.start - groundW, x1 = BEACH.start, z0 = -2000, z1 = 2000;
+      for (const [a, b, c, e] of [[x0, hole.minX, z0, z1], [hole.maxX, x1, z0, z1], [hole.minX, hole.maxX, z0, hole.minZ], [hole.minX, hole.maxX, hole.maxZ, z1]]) {
+        if (b - a < 0.01 || e - c < 0.01) continue;
+        const piece = groundPlane(b - a, e - c, 20);
+        composeMatrix((a + b) / 2, -0.05, (c + e) / 2, 0, 0, 0, 1, 1, 1, gm);
+        batcher.add(piece, lib.m.ground, gm, null, { castShadow: false, chunk: 'ground' });
+        piece.dispose();
+      }
+    }
 
     mark('ruas_lajes');
     // --- Edifícios ------------------------------------------------------
@@ -284,7 +298,14 @@ export class CityGenerator {
     const wall = (minX, maxX, minZ, maxZ, id) => c.addAABB({ id, minX, maxX, minZ, maxZ, minY: -5, maxY: 60, cameraBlocker: false, walkable: false, tags: ['boundary'] });
     wall(b.minX - 4, BEACH.waterLimitX + 20, b.minZ - 4, b.minZ, 'bound_north');
     wall(b.minX - 4, BEACH.waterLimitX + 20, b.maxZ, b.maxZ + 4, 'bound_south');
-    wall(b.minX - 4, b.minX, b.minZ - 4, b.maxZ + 4, 'bound_west');
+    const link = district.link;
+    if (!link) wall(b.minX - 4, b.minX, b.minZ - 4, b.maxZ + 4, 'bound_west');
+    else {
+      // Passagem para o bairro anexado; 'bound_west_link' fecha o vão até o anexo carregar.
+      wall(b.minX - 4, b.minX, b.minZ - 4, -link.opening, 'bound_west');
+      wall(b.minX - 4, b.minX, link.opening, b.maxZ + 4, 'bound_west_s');
+      wall(b.minX - 4, b.minX, -link.opening, link.opening, 'bound_west_link');
+    }
     wall(BEACH.waterLimitX, BEACH.waterLimitX + 20, b.minZ - 4, b.maxZ + 4, 'bound_water');
 
     // Barreiras visuais "ROAD CLOSED" nas vias que saem do bairro.
@@ -307,9 +328,11 @@ export class CityGenerator {
       props.trafficSign('closed', 17.2, y, z + (z < 0 ? 1.5 : -1.5), z < 0 ? 0 : Math.PI);
       props.trafficSign('closed', -63.2, y, z + (z < 0 ? 1.5 : -1.5), z < 0 ? 0 : Math.PI);
     }
-    // Flamingo Street (oeste).
-    for (let i = 0; i < 4; i++) props.barricade(batcher, b.minX + 1.2, 0, -4.5 + i * 3, Math.PI / 2, 2.7);
-    props.trafficSign('closed', b.minX + 2.5, SIDEWALK_HEIGHT, 7.5, Math.PI / 2);
+    // Flamingo Street (oeste): aberta quando há bairro anexado.
+    if (!link) {
+      for (let i = 0; i < 4; i++) props.barricade(batcher, b.minX + 1.2, 0, -4.5 + i * 3, Math.PI / 2, 2.7);
+      props.trafficSign('closed', b.minX + 2.5, SIDEWALK_HEIGHT, 7.5, Math.PI / 2);
+    }
   }
 
   /** Massas de edifícios distantes para sugerir a cidade além de Sunset Beach. */
@@ -317,10 +340,15 @@ export class CityGenerator {
     const lib = this.lib;
     const palette = [0xf6d2b8, 0xbfe6d8, 0xf3e5ab, 0xd9c8f0, 0xf5f1e6, 0xb9dcf2, 0xf7b9a8, 0xe9d6f2];
     const m = new THREE.Matrix4();
+    // Bairro anexado: sem silhuetas sobre ele (a sequência aleatória é mantida).
+    const hole = district.link?.ground;
+    const covered = (x, z, w, d) => hole && x + w / 2 > hole.minX - 6 && x - w / 2 < hole.maxX + 30 && z + d / 2 > hole.minZ - 20 && z - d / 2 < hole.maxZ + 20;
     const add = (x, z, w, d, h) => {
+      const color = rng.pick(palette);
+      if (covered(x, z, w, d)) return;
       const g = tiledBox(w, h, d, 12, 12.8);
       composeMatrix(x, SIDEWALK_HEIGHT + h / 2, z, 0, 0, 0, 1, 1, 1, m);
-      batcher.add(g, lib.m.distant, m, rng.pick(palette), { castShadow: false, receiveShadow: false, chunk: `bg${Math.floor(x / 200)}_${Math.floor(z / 200)}` });
+      batcher.add(g, lib.m.distant, m, color, { castShadow: false, receiveShadow: false, chunk: `bg${Math.floor(x / 200)}_${Math.floor(z / 200)}` });
       g.dispose();
     };
     const b = district.bounds;

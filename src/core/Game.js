@@ -17,6 +17,7 @@ import { StartScreen } from '../ui/StartScreen.js';
 import { AudioManager } from '../audio/AudioManager.js';
 import { BODY_LAYER, HEAD_LAYER, ARMS_LAYER } from '../player/CharacterModel.js';
 import { MapManager } from '../maps/MapManager.js';
+import { TestCityAnnex } from '../maps/TestCityAnnex.js';
 import { TIME_ORDER, TIME_PRESETS } from '../world/Environment.js';
 import { VehicleManager } from '../vehicles/VehicleManager.js';
 import { InteriorManager } from '../interiors/InteriorManager.js';
@@ -121,6 +122,9 @@ export class Game {
       this.weapons?.audio.impact(record.profile.material, distance);
     };
     this.world.build();
+    // Mundo unificado: o GLB do TEST CITY baixa em paralelo e vira o bairro oeste de Sunset Beach.
+    this.testCity = new TestCityAnnex(this.world);
+    this._testCityLoad = this.testCity.preload();
     // NEON MOTOR COMPANY (PROMPT 12): os nove GLBs carregam em paralelo com o restante da inicialização.
     this._neonLoad = this.world.vehicleFactory.preloadNeon();
     // NEON MOTORCYCLES (PROMPT 15): seis GLBs de motos, também em paralelo.
@@ -207,6 +211,12 @@ export class Game {
     (this.world.afterDistrictBuild ||= []).push((w) => placeMotoShowcase(w));
     this.loadStats = { ...(this.loadStats || {}), motoMs: motoLib.loadMs, motoModels: motoLib.templates.size };
     this.loadStats = { ...(this.loadStats || {}), neonMotorMs: neonLib.loadMs, neonMotorModels: neonLib.templates.size };
+    // TEST CITY anexado logo após a montagem do Sunset Beach (antes de trânsito, polícia, interiores e minimapa).
+    await this._testCityLoad;
+    (this.world.afterDistrictBuild ||= []).push(() => {
+      if (this.testCity.attach()) this.loadStats = { ...(this.loadStats || {}), testCityMs: this.testCity.stats.totalMs, testCityAttachMs: this.testCity.stats.attachMs };
+      else if (this.testCity.error) console.warn('[TEST CITY] bairro oeste indisponível:', this.testCity.error);
+    });
     // Mapa inicial: ?map=<id> (apenas dev) ou Sunset Beach. Falhas voltam ao Sunset Beach.
     const requested = CONFIG.dev.mapSwitching ? new URLSearchParams(location.search).get('map') : null;
     let ok = false;
@@ -290,6 +300,17 @@ export class Game {
     if (this.state === 'playing') {
       this.hud.location(env.label, def.type === 'imported' ? 'MAPA DE TESTE · DESENVOLVIMENTO' : 'NEON CITY · 1986', 3.5);
     }
+  }
+
+  /** Atalho de desenvolvimento: teleporta o protagonista (a pé) entre Sunset Beach e o TEST CITY. */
+  travelBetweenDistricts() {
+    if (this.vehicles?.playerVehicle || this.boats?.aboard || this.interiors?.active) { this.hud.toast('Saia do veículo/interior para usar o F8', 2.5); return false; }
+    const tc = this.world.testCity;
+    const p = this.player.controller.position;
+    const sp = tc.contains(p.x, p.z) ? this.world.spawnPoint : this.world.spawnPoints.get('spawn_test_city');
+    this.player.spawn(sp);
+    this.cameras.yaw = sp.yaw ?? 0;
+    return true;
   }
 
   /**
@@ -471,7 +492,9 @@ export class Game {
     if (i.wasPressed('cycleTime') && this.state !== 'loading') this.cycleTime();
     if (i.wasPressed('toggleMute')) this.hud.toast(this.audio.toggleMute() ? 'Som desativado' : 'Som ativado');
     if (i.wasPressed('toggleMap') && CONFIG.dev.mapSwitching && (this.state === 'playing' || this.state === 'title') && !this.mapLoading) {
-      this.maps.toggle().then(() => this.startScreen?.markMap?.(this.maps.activeId));
+      // Mundo unificado: F8 leva de um bairro ao outro (o mapa isolado continua no seletor da tela inicial e em ?map=test-city).
+      if (this.state === 'playing' && this.maps.activeId === 'sunset-beach' && this.world.testCity?.ready) this.travelBetweenDistricts();
+      else this.maps.toggle().then(() => this.startScreen?.markMap?.(this.maps.activeId));
     }
   }
 

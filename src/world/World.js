@@ -63,6 +63,9 @@ export class World {
     this._lodTimer = 0;
     this._lodCam = new THREE.Vector3(1e9, 0, 1e9);
     this.sunsetBuilt = false;
+    // Bairros anexados ao mundo (ex.: TEST CITY a oeste): limites, dicas e relevo próprios.
+    this.annexes = [];
+    this._playBounds = null;
     this.stats = { staticMeshes: 0, buildMs: 0 };
   }
 
@@ -127,7 +130,8 @@ export class World {
     if (!this.sunsetBuilt) {
       this.ocean = new Ocean(this.environment.palette);
       this.scene.add(this.ocean.mesh);
-      this.loadDistrict(createCoastalCity());
+      // A Flamingo Street segue para oeste até o TEST CITY (anexado por TestCityAnnex).
+      this.loadDistrict(createCoastalCity({ testCityLink: true }));
       this.sunsetBuilt = true;
       // Ganchos pós-montagem (ex.: NEON MOTOR COMPANY estaciona seus modelos nas vagas recém-criadas).
       for (const fn of this.afterDistrictBuild || []) fn(this);
@@ -157,6 +161,11 @@ export class World {
 
   /** Dica de limite: 'water' (água profunda), 'closed' (fim do bairro) ou null. */
   boundaryHint(x, z, radius) {
+    // Bairros anexados respondem pela própria área (undefined = fora dela).
+    for (const a of this.annexes || []) {
+      const h = a.boundaryHint(x, z, radius);
+      if (h !== undefined) return h;
+    }
     if (x > BEACH.waterLimitX - radius - 0.4) return 'water';
     const b = this.bounds;
     if (b && (z < b.minZ + 1.5 || z > b.maxZ - 1.5 || x < b.minX + 1.5)) return 'closed';
@@ -170,6 +179,11 @@ export class World {
 
   get bounds() {
     return this.districts[0]?.bounds;
+  }
+
+  /** Área jogável completa (união dos bairros); sem anexos, igual a bounds. */
+  get playBounds() {
+    return this._playBounds || this.bounds;
   }
 
   registerEntity(entity) {

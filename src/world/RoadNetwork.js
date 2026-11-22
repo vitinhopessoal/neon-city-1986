@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { boundsContains } from '../utils/bounds.js';
 
 /**
  * Rede viária em estruturas de dados reutilizáveis.
@@ -126,7 +127,7 @@ export class RoadNetwork {
         for (let t = spotLength; t < road.length - spotLength; t += spotLength) {
           if (this.isSkipped(road, t, spotLength * 0.5)) continue;
           const p = this.pointAt(road, t, lane.offset);
-          if (bounds && (p.x < bounds.minX || p.x > bounds.maxX || p.z < bounds.minZ || p.z > bounds.maxZ)) continue;
+          if (bounds && !boundsContains(bounds, p.x, p.z)) continue;
           spots.push({
             id: `${lane.id}_${Math.round(t)}`,
             roadId: road.id,

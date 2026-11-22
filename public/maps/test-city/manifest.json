@@ -1,0 +1,698 @@
+{
+  "id": "test-city",
+  "label": "TEST CITY",
+  "file": "test-city.glb",
+  "units": "meters",
+  "scale": 1,
+  "spawn": {
+    "x": 0,
+    "y": 0,
+    "z": 15,
+    "yaw": 0
+  },
+  "bounds": {
+    "minX": -108,
+    "maxX": 108,
+    "minZ": -108,
+    "maxZ": 108
+  },
+  "heightfieldCell": 0.5,
+  "source": "Gerado por tools/test-map/build-test-map.mjs (conteúdo original do Neon City)",
+  "license": "Original — uso interno de testes",
+  "generated": {
+    "nodes": 1214,
+    "meshes": 172,
+    "primitives": 175,
+    "materials": 26,
+    "textures": 7,
+    "triangles": 50568,
+    "bytes": 1460152
+  },
+  "roads": [
+    {
+      "id": "x-100",
+      "name": "X-100",
+      "start": {
+        "x": -104,
+        "z": -100
+      },
+      "end": {
+        "x": 104,
+        "z": -100
+      },
+      "lanesPerDirection": 1,
+      "laneWidth": 3.4,
+      "medianWidth": 0.4,
+      "parkingWidth": 0,
+      "speedLimit": 10
+    },
+    {
+      "id": "z-100",
+      "name": "Z-100",
+      "start": {
+        "x": -100,
+        "z": -104
+      },
+      "end": {
+        "x": -100,
+        "z": 104
+      },
+      "lanesPerDirection": 1,
+      "laneWidth": 3.4,
+      "medianWidth": 0.4,
+      "parkingWidth": 0,
+      "speedLimit": 10
+    },
+    {
+      "id": "x-50",
+      "name": "X-50",
+      "start": {
+        "x": -104,
+        "z": -50
+      },
+      "end": {
+        "x": 104,
+        "z": -50
+      },
+      "lanesPerDirection": 1,
+      "laneWidth": 3.4,
+      "medianWidth": 0.4,
+      "parkingWidth": 0,
+      "speedLimit": 10
+    },
+    {
+      "id": "z-50",
+      "name": "Z-50",
+      "start": {
+        "x": -50,
+        "z": -104
+      },
+      "end": {
+        "x": -50,
+        "z": 104
+      },
+      "lanesPerDirection": 1,
+      "laneWidth": 3.4,
+      "medianWidth": 0.4,
+      "parkingWidth": 0,
+      "speedLimit": 10
+    },
+    {
+      "id": "x0",
+      "name": "X0",
+      "start": {
+        "x": -104,
+        "z": 0
+      },
+      "end": {
+        "x": 104,
+        "z": 0
+      },
+      "lanesPerDirection": 1,
+      "laneWidth": 3.4,
+      "medianWidth": 0.4,
+      "parkingWidth": 0,
+      "speedLimit": 10
+    },
+    {
+      "id": "z0",
+      "name": "Z0",
+      "start": {
+        "x": 0,
+        "z": -104
+      },
+      "end": {
+        "x": 0,
+        "z": 104
+      },
+      "lanesPerDirection": 1,
+      "laneWidth": 3.4,
+      "medianWidth": 0.4,
+      "parkingWidth": 0,
+      "speedLimit": 10
+    },
+    {
+      "id": "x50",
+      "name": "X50",
+      "start": {
+        "x": -104,
+        "z": 50
+      },
+      "end": {
+        "x": 104,
+        "z": 50
+      },
+      "lanesPerDirection": 1,
+      "laneWidth": 3.4,
+      "medianWidth": 0.4,
+      "parkingWidth": 0,
+      "speedLimit": 10
+    },
+    {
+      "id": "z50",
+      "name": "Z50",
+      "start": {
+        "x": 50,
+        "z": -104
+      },
+      "end": {
+        "x": 50,
+        "z": 104
+      },
+      "lanesPerDirection": 1,
+      "laneWidth": 3.4,
+      "medianWidth": 0.4,
+      "parkingWidth": 0,
+      "speedLimit": 10
+    },
+    {
+      "id": "x100",
+      "name": "X100",
+      "start": {
+        "x": -104,
+        "z": 100
+      },
+      "end": {
+        "x": 104,
+        "z": 100
+      },
+      "lanesPerDirection": 1,
+      "laneWidth": 3.4,
+      "medianWidth": 0.4,
+      "parkingWidth": 0,
+      "speedLimit": 10
+    },
+    {
+      "id": "z100",
+      "name": "Z100",
+      "start": {
+        "x": 100,
+        "z": -104
+      },
+      "end": {
+        "x": 100,
+        "z": 104
+      },
+      "lanesPerDirection": 1,
+      "laneWidth": 3.4,
+      "medianWidth": 0.4,
+      "parkingWidth": 0,
+      "speedLimit": 10
+    }
+  ],
+  "intersections": [
+    {
+      "id": "tc_-100_-100",
+      "x": -100,
+      "z": -100,
+      "roads": [
+        "x-100",
+        "z-100"
+      ],
+      "control": "stop",
+      "radius": 6
+    },
+    {
+      "id": "tc_-100_-50",
+      "x": -100,
+      "z": -50,
+      "roads": [
+        "x-50",
+        "z-100"
+      ],
+      "control": "stop",
+      "radius": 6
+    },
+    {
+      "id": "tc_-100_0",
+      "x": -100,
+      "z": 0,
+      "roads": [
+        "x0",
+        "z-100"
+      ],
+      "control": "stop",
+      "radius": 6
+    },
+    {
+      "id": "tc_-100_50",
+      "x": -100,
+      "z": 50,
+      "roads": [
+        "x50",
+        "z-100"
+      ],
+      "control": "stop",
+      "radius": 6
+    },
+    {
+      "id": "tc_-100_100",
+      "x": -100,
+      "z": 100,
+      "roads": [
+        "x100",
+        "z-100"
+      ],
+      "control": "stop",
+      "radius": 6
+    },
+    {
+      "id": "tc_-50_-100",
+      "x": -50,
+      "z": -100,
+      "roads": [
+        "x-100",
+        "z-50"
+      ],
+      "control": "stop",
+      "radius": 6
+    },
+    {
+      "id": "tc_-50_-50",
+      "x": -50,
+      "z": -50,
+      "roads": [
+        "x-50",
+        "z-50"
+      ],
+      "control": "stop",
+      "radius": 6
+    },
+    {
+      "id": "tc_-50_0",
+      "x": -50,
+      "z": 0,
+      "roads": [
+        "x0",
+        "z-50"
+      ],
+      "control": "stop",
+      "radius": 6
+    },
+    {
+      "id": "tc_-50_50",
+      "x": -50,
+      "z": 50,
+      "roads": [
+        "x50",
+        "z-50"
+      ],
+      "control": "stop",
+      "radius": 6
+    },
+    {
+      "id": "tc_-50_100",
+      "x": -50,
+      "z": 100,
+      "roads": [
+        "x100",
+        "z-50"
+      ],
+      "control": "stop",
+      "radius": 6
+    },
+    {
+      "id": "tc_0_-100",
+      "x": 0,
+      "z": -100,
+      "roads": [
+        "x-100",
+        "z0"
+      ],
+      "control": "stop",
+      "radius": 6
+    },
+    {
+      "id": "tc_0_-50",
+      "x": 0,
+      "z": -50,
+      "roads": [
+        "x-50",
+        "z0"
+      ],
+      "control": "stop",
+      "radius": 6
+    },
+    {
+      "id": "tc_0_0",
+      "x": 0,
+      "z": 0,
+      "roads": [
+        "x0",
+        "z0"
+      ],
+      "control": "stop",
+      "radius": 6
+    },
+    {
+      "id": "tc_0_50",
+      "x": 0,
+      "z": 50,
+      "roads": [
+        "x50",
+        "z0"
+      ],
+      "control": "stop",
+      "radius": 6
+    },
+    {
+      "id": "tc_0_100",
+      "x": 0,
+      "z": 100,
+      "roads": [
+        "x100",
+        "z0"
+      ],
+      "control": "stop",
+      "radius": 6
+    },
+    {
+      "id": "tc_50_-100",
+      "x": 50,
+      "z": -100,
+      "roads": [
+        "x-100",
+        "z50"
+      ],
+      "control": "stop",
+      "radius": 6
+    },
+    {
+      "id": "tc_50_-50",
+      "x": 50,
+      "z": -50,
+      "roads": [
+        "x-50",
+        "z50"
+      ],
+      "control": "stop",
+      "radius": 6
+    },
+    {
+      "id": "tc_50_0",
+      "x": 50,
+      "z": 0,
+      "roads": [
+        "x0",
+        "z50"
+      ],
+      "control": "stop",
+      "radius": 6
+    },
+    {
+      "id": "tc_50_50",
+      "x": 50,
+      "z": 50,
+      "roads": [
+        "x50",
+        "z50"
+      ],
+      "control": "stop",
+      "radius": 6
+    },
+    {
+      "id": "tc_50_100",
+      "x": 50,
+      "z": 100,
+      "roads": [
+        "x100",
+        "z50"
+      ],
+      "control": "stop",
+      "radius": 6
+    },
+    {
+      "id": "tc_100_-100",
+      "x": 100,
+      "z": -100,
+      "roads": [
+        "x-100",
+        "z100"
+      ],
+      "control": "stop",
+      "radius": 6
+    },
+    {
+      "id": "tc_100_-50",
+      "x": 100,
+      "z": -50,
+      "roads": [
+        "x-50",
+        "z100"
+      ],
+      "control": "stop",
+      "radius": 6
+    },
+    {
+      "id": "tc_100_0",
+      "x": 100,
+      "z": 0,
+      "roads": [
+        "x0",
+        "z100"
+      ],
+      "control": "stop",
+      "radius": 6
+    },
+    {
+      "id": "tc_100_50",
+      "x": 100,
+      "z": 50,
+      "roads": [
+        "x50",
+        "z100"
+      ],
+      "control": "stop",
+      "radius": 6
+    },
+    {
+      "id": "tc_100_100",
+      "x": 100,
+      "z": 100,
+      "roads": [
+        "x100",
+        "z100"
+      ],
+      "control": "stop",
+      "radius": 6
+    }
+  ],
+  "crosswalks": [
+    {
+      "id": "cw_x-50_-50_w",
+      "roadId": "x-50",
+      "t": 45.5,
+      "length": 3.2
+    },
+    {
+      "id": "cw_z-50_-50_n",
+      "roadId": "z-50",
+      "t": 45.5,
+      "length": 3.2
+    },
+    {
+      "id": "cw_x-50_-50_e",
+      "roadId": "x-50",
+      "t": 62.5,
+      "length": 3.2
+    },
+    {
+      "id": "cw_z-50_-50_s",
+      "roadId": "z-50",
+      "t": 62.5,
+      "length": 3.2
+    },
+    {
+      "id": "cw_x0_-50_w",
+      "roadId": "x0",
+      "t": 45.5,
+      "length": 3.2
+    },
+    {
+      "id": "cw_z-50_0_n",
+      "roadId": "z-50",
+      "t": 95.5,
+      "length": 3.2
+    },
+    {
+      "id": "cw_x0_-50_e",
+      "roadId": "x0",
+      "t": 62.5,
+      "length": 3.2
+    },
+    {
+      "id": "cw_z-50_0_s",
+      "roadId": "z-50",
+      "t": 112.5,
+      "length": 3.2
+    },
+    {
+      "id": "cw_x50_-50_w",
+      "roadId": "x50",
+      "t": 45.5,
+      "length": 3.2
+    },
+    {
+      "id": "cw_z-50_50_n",
+      "roadId": "z-50",
+      "t": 145.5,
+      "length": 3.2
+    },
+    {
+      "id": "cw_x50_-50_e",
+      "roadId": "x50",
+      "t": 62.5,
+      "length": 3.2
+    },
+    {
+      "id": "cw_z-50_50_s",
+      "roadId": "z-50",
+      "t": 162.5,
+      "length": 3.2
+    },
+    {
+      "id": "cw_x-50_0_w",
+      "roadId": "x-50",
+      "t": 95.5,
+      "length": 3.2
+    },
+    {
+      "id": "cw_z0_-50_n",
+      "roadId": "z0",
+      "t": 45.5,
+      "length": 3.2
+    },
+    {
+      "id": "cw_x-50_0_e",
+      "roadId": "x-50",
+      "t": 112.5,
+      "length": 3.2
+    },
+    {
+      "id": "cw_z0_-50_s",
+      "roadId": "z0",
+      "t": 62.5,
+      "length": 3.2
+    },
+    {
+      "id": "cw_x0_0_w",
+      "roadId": "x0",
+      "t": 95.5,
+      "length": 3.2
+    },
+    {
+      "id": "cw_z0_0_n",
+      "roadId": "z0",
+      "t": 95.5,
+      "length": 3.2
+    },
+    {
+      "id": "cw_x0_0_e",
+      "roadId": "x0",
+      "t": 112.5,
+      "length": 3.2
+    },
+    {
+      "id": "cw_z0_0_s",
+      "roadId": "z0",
+      "t": 112.5,
+      "length": 3.2
+    },
+    {
+      "id": "cw_x50_0_w",
+      "roadId": "x50",
+      "t": 95.5,
+      "length": 3.2
+    },
+    {
+      "id": "cw_z0_50_n",
+      "roadId": "z0",
+      "t": 145.5,
+      "length": 3.2
+    },
+    {
+      "id": "cw_x50_0_e",
+      "roadId": "x50",
+      "t": 112.5,
+      "length": 3.2
+    },
+    {
+      "id": "cw_z0_50_s",
+      "roadId": "z0",
+      "t": 162.5,
+      "length": 3.2
+    },
+    {
+      "id": "cw_x-50_50_w",
+      "roadId": "x-50",
+      "t": 145.5,
+      "length": 3.2
+    },
+    {
+      "id": "cw_z50_-50_n",
+      "roadId": "z50",
+      "t": 45.5,
+      "length": 3.2
+    },
+    {
+      "id": "cw_x-50_50_e",
+      "roadId": "x-50",
+      "t": 162.5,
+      "length": 3.2
+    },
+    {
+      "id": "cw_z50_-50_s",
+      "roadId": "z50",
+      "t": 62.5,
+      "length": 3.2
+    },
+    {
+      "id": "cw_x0_50_w",
+      "roadId": "x0",
+      "t": 145.5,
+      "length": 3.2
+    },
+    {
+      "id": "cw_z50_0_n",
+      "roadId": "z50",
+      "t": 95.5,
+      "length": 3.2
+    },
+    {
+      "id": "cw_x0_50_e",
+      "roadId": "x0",
+      "t": 162.5,
+      "length": 3.2
+    },
+    {
+      "id": "cw_z50_0_s",
+      "roadId": "z50",
+      "t": 112.5,
+      "length": 3.2
+    },
+    {
+      "id": "cw_x50_50_w",
+      "roadId": "x50",
+      "t": 145.5,
+      "length": 3.2
+    },
+    {
+      "id": "cw_z50_50_n",
+      "roadId": "z50",
+      "t": 145.5,
+      "length": 3.2
+    },
+    {
+      "id": "cw_x50_50_e",
+      "roadId": "x50",
+      "t": 162.5,
+      "length": 3.2
+    },
+    {
+      "id": "cw_z50_50_s",
+      "roadId": "z50",
+      "t": 162.5,
+      "length": 3.2
+    }
+  ]
+}

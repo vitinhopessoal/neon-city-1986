@@ -258,6 +258,11 @@ export function createTestHarness(game) {
       const { runMotoSuite } = await import('./MotoSuite.js');
       return runMotoSuite(T, opts);
     },
+    /** Mundo unificado (Sunset Beach + TEST CITY): 21 testes no jogo real. */
+    async mergedSuite() {
+      const { runMergedWorldSuite } = await import('./MergedWorldSuite.js');
+      return runMergedWorldSuite(T);
+    },
     async boot() {
       for (let i = 0; i < 60 && game.state !== 'title'; i++) await new Promise((r) => setTimeout(r, 250));
       game.start();

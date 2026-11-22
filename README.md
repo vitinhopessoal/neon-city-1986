@@ -10,6 +10,14 @@ npm run desktop
 Para gerar o instalador e a versão portátil em `release/`: `npm run dist:win`.
 Detalhes em [docs/DESKTOP.md](docs/DESKTOP.md). A versão web continua com `npm run dev`.
 
+## Mundo unificado — Sunset Beach + TEST CITY
+
+Os dois mapas viraram um só: o TEST CITY é o **bairro oeste** de Sunset Beach, ligado pela
+Flamingo Street (pórtico "TEST CITY"), sem tela de carregamento. Trânsito, pedestres, polícia,
+radar, salvamento e a Sala de teste funcionam nos dois bairros. O GLB original é só transladado
+(arquivo intacto). Testes: `npm run test:merged` e `__NEON_TEST__.mergedSuite()`.
+Detalhes em [docs/MUNDO_UNIFICADO.md](docs/MUNDO_UNIFICADO.md).
+
 ## NEON RADIO NETWORK — rádio nos carros, barcos, lojas e casas
 
 Oito emissoras fictícias (NEON FM, GROOVE, THUNDER ROCK, STREET BEAT, OCEAN BREEZE,
@@ -132,7 +140,7 @@ Parâmetro opcional: `?quality=low|medium|high`.
 | M | som liga/desliga |
 | H | ocultar/mostrar ajuda |
 | ` | estatísticas de desenvolvimento (FPS, draw calls, posição) |
-| F8 | (somente `npm run dev`) alterna Sunset Beach ↔ TEST CITY — funciona também na tela inicial |
+| F8 | (somente `npm run dev`) em jogo: leva o protagonista de Sunset Beach ao bairro TEST CITY e de volta; na tela inicial: alterna para o TEST CITY isolado |
 
 Atalhos combinados com Win/Alt (ex.: Win+G, Win+Shift+S) são ignorados pelo jogo.
 
@@ -180,11 +188,11 @@ Sunset Beach continua sendo o mapa do jogo. Para testar o pipeline de importaç�
 npm run build:testmap
 ```
 
-Gera `dev-maps/test-city/` (conteúdo original): 16 quarteirões, praça elevada com escada e rampa,
+Gera `dev-maps/test-city/` e a cópia do jogo em `public/maps/test-city/` (conteúdo original): 16 quarteirões, praça elevada com escada e rampa,
 colina, prédios girados, galeria com pilotis, beco de 3,5 m e objetos de calibração de escala.
 
 - `http://localhost:5173/?map=test-city` inicia direto no mapa de teste.
-- Na tela inicial: seletor "MAPA (DEV)". Em jogo: **F8** alterna Sunset Beach ↔ mapa de teste.
+- Na tela inicial: seletor "MAPA (DEV)" (TEST CITY isolado). Em jogo, o TEST CITY já é o bairro oeste do mundo; **F8** leva até ele.
 - Carregamento com progresso, colisões geradas automaticamente, spawn seguro, descarga completa
   ao sair e mensagens de erro (o mapa atual continua ativo se o novo falhar).
 - Nada disso existe no build de produção. Detalhes e convenções em [dev-maps/README.md](dev-maps/README.md).

@@ -492,5 +492,10 @@ const manifest = {
   generated: { nodes: summary.nodes, meshes: summary.meshes, primitives: summary.primitives, materials: summary.materials, textures: summary.textures, triangles: Math.round(tris), bytes: glb.length },
 };
 writeFileSync(join(OUT_DIR, 'manifest.json'), JSON.stringify(manifest, null, 2));
+// Copia idêntica para o jogo: o TEST CITY é o bairro oeste do mundo unificado (public/maps/test-city).
+const PUBLIC_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'public', 'maps', 'test-city');
+mkdirSync(PUBLIC_DIR, { recursive: true });
+writeFileSync(join(PUBLIC_DIR, 'test-city.glb'), glb);
+writeFileSync(join(PUBLIC_DIR, 'manifest.json'), JSON.stringify(manifest, null, 2));
 console.log(`TEST CITY gerado em ${OUT_DIR}`);
 console.log(JSON.stringify(manifest.generated));

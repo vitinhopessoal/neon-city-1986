@@ -19,6 +19,11 @@ import { HeightField } from './HeightField.js';
  * (collision, waterDepth, getSurface, boundaryHint, distanceToShore,
  * spawnPoint, label, setVisible), então jogador, câmeras e HUD funcionam
  * sem alterações.
+ *
+ * Modo anexado (`attach`): o mesmo GLB vira um bairro de outro mundo. O modelo
+ * é só transladado (attach.offset), as colisões entram no CollisionSystem do
+ * mundo (attach.collision), nós podem ser omitidos (attach.skip) e não há
+ * paredes de limite próprias: quem anexa cuida dos limites e da ligação.
  */
 const nextFrame = () => new Promise((r) => requestAnimationFrame(() => r()));
 
@@ -32,8 +37,12 @@ const _x = new THREE.Vector3();
 const _box = new THREE.Box3();
 
 export class ImportedMap {
-  constructor({ id, manifestUrl, scene, renderer }) {
+  constructor({ id, manifestUrl, scene, renderer, attach = null }) {
     this.id = id;
+    this.attach = attach;
+    this.colliderIds = [];
+    this.footprints = [];
+    this.bounds = null;
     this.manifestUrl = manifestUrl;
     this.scene = scene;
     this.renderer = renderer;
@@ -60,7 +69,14 @@ export class ImportedMap {
 
   /** onProgress(phase, fraction 0..1) */
   async load(onProgress = () => {}) {
+    await this.fetch(onProgress);
+    return this.process(onProgress);
+  }
+
+  /** Etapas assíncronas: manifesto, download e interpretação do glTF (nada entra na cena). */
+  async fetch(onProgress = () => {}) {
     const t0 = performance.now();
+    this._t0 = t0;
     // 1) Manifesto.
     onProgress('manifest', 0);
     let manifest;
@@ -119,19 +135,26 @@ export class ImportedMap {
     }
     const parseMs = performance.now() - tParse;
     this._check();
-
-    // 4) Processamento: colisões, campo de alturas, otimização.
+    this._gltf = gltf;
+    this._timing = { fileBytes: buffer.byteLength, downloadMs, parseMs };
     onProgress('process', 0);
     await nextFrame();
+    return this;
+  }
+
+  /** Etapa síncrona: colisões, campo de alturas, otimização e entrada na cena. */
+  process(onProgress = () => {}) {
+    if (!this._gltf) throw new Error('GLB não carregado (chame fetch antes de process).');
     const tProc = performance.now();
-    this._process(gltf, manifest, onProgress);
+    this._process(this._gltf, this.manifest, onProgress);
+    this._gltf = null;
     const processMs = performance.now() - tProc;
 
-    this.stats.fileBytes = buffer.byteLength;
-    this.stats.downloadMs = Math.round(downloadMs);
-    this.stats.parseMs = Math.round(parseMs);
+    this.stats.fileBytes = this._timing.fileBytes;
+    this.stats.downloadMs = Math.round(this._timing.downloadMs);
+    this.stats.parseMs = Math.round(this._timing.parseMs);
     this.stats.processMs = Math.round(processMs);
-    this.stats.totalMs = Math.round(performance.now() - t0);
+    this.stats.totalMs = Math.round(performance.now() - this._t0);
     onProgress('done', 1);
     return this;
   }
@@ -155,6 +178,9 @@ export class ImportedMap {
     const src = gltf.scene;
     const scale = manifest.scale ?? 1;
     if (scale !== 1) src.scale.setScalar(scale);
+    const attach = this.attach;
+    const off = attach?.offset || { x: 0, y: 0, z: 0 };
+    if (attach) src.position.set(off.x, off.y, off.z);
     src.updateMatrixWorld(true);
 
     const meshes = [];
@@ -168,9 +194,11 @@ export class ImportedMap {
     const ground = [];
     const proxies = [];
     let sourceTriangles = 0;
+    let skippedNodes = 0;
     for (const m of meshes) {
       const f = this._flags(m, src);
       m.userData.__flags = f;
+      if (attach?.skip?.(m, f)) { skippedNodes++; continue; }
       const tri = (m.geometry.index ? m.geometry.index.count : m.geometry.attributes.position.count) / 3;
       if (f.collider) { proxies.push(m); continue; }
       sourceTriangles += tri;
@@ -179,7 +207,9 @@ export class ImportedMap {
     }
 
     // Campo de alturas a partir das malhas de chão.
-    const b = manifest.bounds;
+    const mb = manifest.bounds;
+    const b = { minX: mb.minX * scale + off.x, maxX: mb.maxX * scale + off.x, minZ: mb.minZ * scale + off.z, maxZ: mb.maxZ * scale + off.z };
+    this.bounds = b;
     _box.makeEmpty();
     for (const m of ground) _box.expandByObject(m);
     if (_box.isEmpty()) _box.set(new THREE.Vector3(b.minX, 0, b.minZ), new THREE.Vector3(b.maxX, 0, b.maxZ));
@@ -190,18 +220,22 @@ export class ImportedMap {
     onProgress('process', 0.25);
 
     // Colisões (independentes da geometria visual).
-    const col = new CollisionSystem({ cellSize: 16 });
-    col.setTerrain((x, z) => hf.sample(x, z));
-    const counts = { proxyBox: 0, proxyRamp: 0, auto: 0, skipped: 0, bounds: 0 };
+    const col = attach ? attach.collision : new CollisionSystem({ cellSize: 16 });
+    if (!attach) col.setTerrain((x, z) => hf.sample(x, z));
+    const counts = { proxyBox: 0, proxyRamp: 0, auto: 0, skipped: 0, bounds: 0, omitted: skippedNodes };
+    const ids = this.colliderIds;
+    const track = (c) => { if (c?.id) ids.push(c.id); return c; };
     for (const m of proxies) {
       const f = m.userData.__flags;
       if (f.collider === 'none') continue;
       const o = this._obb(m, false);
       if (f.collider === 'ramp') {
-        col.addRamp({ id: `${this.id}_${m.name}_${counts.proxyRamp}`, ownerId: m.name, cx: o.cx, cz: o.cz, hx: o.hx, hz: o.hz, rotation: o.rotation, y0: o.minY, y1: o.maxY });
+        const rid = `${this.id}_${m.name}_${counts.proxyRamp}`;
+        col.addRamp({ id: rid, ownerId: m.name, cx: o.cx, cz: o.cz, hx: o.hx, hz: o.hz, rotation: o.rotation, y0: o.minY, y1: o.maxY });
+        ids.push(rid);
         counts.proxyRamp++;
       } else {
-        col.addBox({ ownerId: m.name, cx: o.cx, cz: o.cz, hx: o.hx, hz: o.hz, rotation: o.rotation, minY: o.minY, maxY: o.maxY, cameraBlocker: f.cameraBlocker ?? true, surface: f.surface || null });
+        track(col.addBox({ ownerId: m.name, cx: o.cx, cz: o.cz, hx: o.hx, hz: o.hz, rotation: o.rotation, minY: o.minY, maxY: o.maxY, cameraBlocker: f.cameraBlocker ?? true, surface: f.surface || null }));
         counts.proxyBox++;
       }
     }
@@ -215,10 +249,27 @@ export class ImportedMap {
       // ou baixos porém amplos (plataformas, fontes). Postes, lixeiras e bancos não.
       const w = 2 * Math.min(o.hx, o.hz), footprint = 4 * o.hx * o.hz;
       const blocker = f.cameraBlocker ?? ((o.fullHeight >= 1.2 && w >= 0.5) || (h >= 0.5 && footprint >= 4));
-      col.addBox({ ownerId: m.name || m.parent?.name, cx: o.cx, cz: o.cz, hx: o.hx, hz: o.hz, rotation: o.rotation, minY: o.minY, maxY: o.maxY, cameraBlocker: blocker, surface: f.surface || null });
+      track(col.addBox({ ownerId: m.name || m.parent?.name, cx: o.cx, cz: o.cz, hx: o.hx, hz: o.hz, rotation: o.rotation, minY: o.minY, maxY: o.maxY, cameraBlocker: blocker, surface: f.surface || null }));
       counts.auto++;
     }
-    if (manifest.addBoundaryWalls !== false) {
+    // Pegadas dos prédios (minimapa do mundo anexado): grupos BLD_* com a malha "body".
+    src.traverse((o) => {
+      if (!o.name?.startsWith('BLD_')) return;
+      const body = o.children.find((c) => c.isMesh && c.name.startsWith('body'));
+      if (!body) return;
+      const g = body.geometry;
+      if (!g.boundingBox) g.computeBoundingBox();
+      body.matrixWorld.decompose(_p, _q, _s);
+      _x.set(1, 0, 0).applyQuaternion(_q);
+      g.boundingBox.getCenter(_c).applyMatrix4(body.matrixWorld);
+      this.footprints.push({
+        id: `${this.id}_${o.name}`, x: _c.x, z: _c.z, rotY: Math.atan2(-_x.z, _x.x),
+        w: (g.boundingBox.max.x - g.boundingBox.min.x) * Math.abs(_s.x),
+        d: (g.boundingBox.max.z - g.boundingBox.min.z) * Math.abs(_s.z),
+        h: (g.boundingBox.max.y - g.boundingBox.min.y) * Math.abs(_s.y),
+      });
+    });
+    if (!attach && manifest.addBoundaryWalls !== false) {
       const wall = (minX, maxX, minZ, maxZ) => { col.addAABB({ minX, maxX, minZ, maxZ, minY: -20, maxY: 200, cameraBlocker: false, walkable: false, tags: ['boundary'] }); counts.bounds++; };
       wall(b.minX - 5, b.maxX + 5, b.minZ - 5, b.minZ);
       wall(b.minX - 5, b.maxX + 5, b.maxZ, b.maxZ + 5);
@@ -279,12 +330,12 @@ export class ImportedMap {
       if (o.isMesh && o.castShadow && !(o.material.alphaTest > 0) && !o.material.alphaMap) o.customDepthMaterial = this._depthMaterial;
     });
     this.root = root;
-    this.scene.add(root);
+    (attach?.parent || this.scene).add(root);
     onProgress('process', 0.85);
 
     // Ponto de spawn seguro.
     const sp = manifest.spawn;
-    const safe = this._findSafeSpawn(sp.x * scale, sp.z * scale, b);
+    const safe = this._findSafeSpawn(sp.x * scale + off.x, sp.z * scale + off.z, b);
     this.spawnPoint = { id: `${this.id}_spawn`, x: safe.x, y: safe.y, z: safe.z, yaw: sp.yaw ?? 0, adjusted: safe.adjusted };
 
     // Estatísticas.
@@ -427,7 +478,7 @@ export class ImportedMap {
   }
 
   boundaryHint(x, z, radius) {
-    const b = this.manifest.bounds;
+    const b = this.bounds || this.manifest.bounds;
     // Margem maior que a espessura típica de barreiras junto ao limite.
     const m = radius + (this.manifest.boundaryHintMargin ?? 1.6);
     return x < b.minX + m || x > b.maxX - m || z < b.minZ + m || z > b.maxZ - m ? 'closed' : null;
@@ -444,8 +495,12 @@ export class ImportedMap {
   /** Descarrega tudo: geometrias, materiais, texturas, colisões. */
   unload() {
     this.cancel();
+    if (this.attach) {
+      for (const id of this.colliderIds) this.attach.collision.remove(id);
+      this.colliderIds.length = 0;
+    }
     if (this.root) {
-      this.scene.remove(this.root);
+      this.root.removeFromParent();
       const mats = new Set();
       const geos = new Set();
       this.root.traverse((o) => {

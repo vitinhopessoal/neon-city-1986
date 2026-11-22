@@ -3,6 +3,7 @@ import { CONFIG } from '../config.js';
 import { PedestrianRenderer, randomLook } from './PedestrianRenderer.js';
 import { CitizenBrain } from '../city/CitizenBrain.js';
 import { sidewalkPath } from '../city/Navigation.js';
+import { boundsContains } from '../utils/bounds.js';
 
 /**
  * Pedestres: rede de caminhos (calçadas dos dois lados de cada rua, faixas
@@ -156,8 +157,7 @@ export class PedestrianManager {
   }
 
   _inBounds(x, z) {
-    const b = this.bounds;
-    return !b || (x > b.minX + 2 && x < b.maxX - 2 && z > b.minZ + 2 && z < b.maxZ - 2);
+    return boundsContains(this.bounds, x, z, 2);
   }
 
   _nearest(x, z, maxD = 1e9) {

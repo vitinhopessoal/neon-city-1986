@@ -97,6 +97,14 @@ export class InteriorManager {
       const placed = env.isImported ? this._placeTestBuilding(env, def) : this._placeOnBuilding(env, def);
       if (placed) this.exteriors.push(placed);
     }
+    // Mundo unificado: a sala de teste acompanha o TEST CITY no bairro oeste (mesmos pontos, deslocados).
+    const tc = !env.isImported && env.testCity?.ready ? env.testCity : null;
+    if (tc) {
+      const o = tc.link.offset;
+      const def = { ...TEST_INTERIOR, testSpots: TEST_INTERIOR.testSpots.map((s) => ({ ...s, x: s.x + o.x, z: s.z + o.z })) };
+      const placed = this._placeTestBuilding(env, def);
+      if (placed) this.exteriors.push(placed);
+    }
   }
 
   /** Associa a definição a um prédio existente (planta, porta e orientação reais). */

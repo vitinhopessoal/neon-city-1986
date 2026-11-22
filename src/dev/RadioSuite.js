@@ -250,7 +250,7 @@ export async function runRadioSuite(T) {
   await test(29, 'Verificar trânsito (e rádio dos NPCs)', () => {
     leave();
     for (let i = 0; i < 20 && !(g.city.traffic.agents.length); i++) T.fastSim(0.5);
-    const a = g.city.traffic.agents.find((x) => x.v.root.visible);
+    const a = g.city.traffic.agents.find((x) => x.v.root.visible && !x.v.bike); // motos não têm rádio (PROMPT 15)
     if (!a) return { ok: false, detail: 'sem carros de trânsito' };
     for (const x of g.city.traffic.agents) x.v.radioStation = 'street_beat'; // todos com o rádio ligado para o teste
     R.lastVehicle = null;

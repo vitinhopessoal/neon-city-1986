@@ -22,6 +22,18 @@ const smooth = (a, b, v) => {
 export class Terrain {
   constructor() {
     this.zones = [];
+    // Relevos anexados (ex.: campo de alturas do TEST CITY): { minX, maxX, minZ, maxZ, height(x, z), surface(x, z) }.
+    this.overlays = [];
+  }
+
+  /** Anexa um relevo externo numa área retangular (tem prioridade sobre o perfil analítico). */
+  addOverlay(o) {
+    this.overlays.push(o);
+  }
+
+  _overlayAt(x, z) {
+    for (const o of this.overlays) if (x >= o.minX && x <= o.maxX && z >= o.minZ && z <= o.maxZ) return o;
+    return null;
   }
 
   /** Altura da areia (contínua, usada pela malha e pela física). */
@@ -35,6 +47,7 @@ export class Terrain {
   }
 
   getHeight(x, z) {
+    if (this.overlays.length) { const o = this._overlayAt(x, z); if (o) return o.height(x, z); }
     if (x < BEACH.start) return 0;
     return this.sandHeight(x, z);
   }
@@ -54,6 +67,7 @@ export class Terrain {
     for (const zn of this.zones) {
       if (x >= zn.minX && x <= zn.maxX && z >= zn.minZ && z <= zn.maxZ) return zn.type;
     }
+    if (this.overlays.length) { const o = this._overlayAt(x, z); if (o?.surface) return o.surface(x, z); }
     if (x >= BEACH.start) return this.waterDepth(x, z) > 0.04 ? 'water' : 'sand';
     return 'asphalt';
   }
