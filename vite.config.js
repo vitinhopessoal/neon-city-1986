@@ -18,6 +18,16 @@ function devMapsPlugin() {
         try {
           const rel = decodeURIComponent((req.url || '/').split('?')[0]);
           const file = resolve(root, `.${rel}`);
+          // VC resources remain local even when a development tunnel is active.
+          const privateRoot = resolve(root, 'vice-city').toLowerCase();
+          const privatePackage = resolve(root, 'vice-city-converted.zip').toLowerCase();
+          if (file.toLowerCase() === privateRoot || file.toLowerCase().startsWith(privateRoot + sep) || file.toLowerCase() === privatePackage) {
+            const host = new URL(`http://${req.headers.host || 'invalid'}`).hostname;
+            if (!['localhost', '127.0.0.1', '[::1]'].includes(host)) {
+              res.statusCode = 403;
+              return res.end('Local map only');
+            }
+          }
           if (file !== root && !file.startsWith(root + sep)) {
             res.statusCode = 403;
             return res.end('Forbidden');
@@ -69,7 +79,7 @@ export default defineConfig(({ command }) => ({
     fs: {
       // Padrões do Vite + itens que nunca devem ser servidos: pacotes compactados na raiz
       // (ex.: o mod de terceiros) e a configuração local de ferramentas (.claude/).
-      deny: ['.env', '.env.*', '*.{crt,pem}', '**/.git/**', '**/*.{zip,rar,7z}', '**/.claude/**'],
+      deny: ['.env', '.env.*', '*.{crt,pem}', '**/.git/**', '**/*.{zip,rar,7z}', '**/.claude/**', '**/tools/vice-city-local/**', '**/dev-maps/vice-city/**'],
     },
   },
   build: {
