@@ -1,189 +1,110 @@
-/**
- * Painel automotivo compacto (anos 80): velocímetro analógico em arco com
- * ponteiro neon, velocidade digital em km/h, marcha/estado da transmissão,
- * integridade e nome do veículo. Aparece só durante a direção.
- *
- * Com a mecânica veicular ativa (carros): conta-giros em segmentos com luz de
- * troca, marcha + modo do câmbio (AUT/MAN), reserva de nitro, pressão do turbo
- * (modelos turbo), temperatura do motor, luzes de assistência (TCS/ABS) e um
- * aviso curto para troca perfeita/cedo/tarde, largada e superaquecimento.
- */
-import { bindingLabel as K } from '../core/InputManager.js';
+const clamp = value => Math.max(0, Math.min(1, value));
+const polar = (x, y, radius, angle) => { const a = angle * Math.PI / 180; return [x + Math.cos(a) * radius, y + Math.sin(a) * radius]; };
+const arc = (x, y, radius, start, end) => { const a = polar(x,y,radius,start), b = polar(x,y,radius,end); return `M ${a[0]} ${a[1]} A ${radius} ${radius} 0 ${end-start > 180 ? 1 : 0} 1 ${b[0]} ${b[1]}`; };
 
-const RPM_SEGMENTS = 24;
+export function vehicleGaugeReadout(vehicle) {
+  const ph = vehicle.physics, frame = ph.powertrainActive ? ph.powertrainFrame : null;
+  const profile = ph.powertrain?.profile;
+  const redline = profile?.engine.redlineRpm || vehicle.spec.handling.redline || 8000;
+  const maxRpm = Math.max(10000, Math.ceil(redline / 1000) * 1000);
+  const turbo = !!profile?.turbo;
+  return { speedKmh: Math.abs(ph.vLong || 0) * 3.6, rpm: Math.max(0, ph.rpm || 0), maxRpm, redline,
+    gear: ph.gear === 0 || ph.gear === undefined ? 'N' : String(ph.gear), mode: frame?.mode === 'manual' ? 'MAN' : 'AUT',
+    aux: clamp(turbo ? frame?.boost || 0 : Math.abs(vehicle.controls.throttle || 0)), auxLabel: turbo ? 'TURBO %' : 'ACEL. %', turbo,
+    integrity: Math.round(Math.max(0, Math.min(100, vehicle.damage?.integrity ?? 100))),
+    nitro: clamp(frame?.nitrousFraction || 0), nitroActive: !!frame?.nitrousActive,
+    upshift: !!frame && typeof frame.gear === 'number' && Number.isFinite(frame.upshiftRpm) && ph.rpm >= frame.upshiftRpm - 250,
+    staged: !!frame?.staged, launchReady: !!frame?.staged && ph.rpm >= profile.launch.minimumGoodRpm && ph.rpm <= profile.launch.maximumGoodRpm,
+  };
+}
+
 const FEEDBACK = {
-  perfect: ['TROCA PERFEITA', 'good'], early: ['TROCA CEDO', 'warn'], late: ['TROCA TARDE', 'warn'],
-  launch_good: ['LARGADA PERFEITA', 'good'], launch_bog_risk: ['LARGADA FRACA · GIRO BAIXO', 'warn'], launch_wheelspin_risk: ['LARGADA · GIRO ALTO DEMAIS', 'warn'],
-  overheat: ['MOTOR SUPERAQUECIDO', 'bad'], cooled: ['MOTOR NORMALIZADO', 'good'], nitro_empty: ['NITRO VAZIO', 'warn'],
-  rejected_overrev: ['REDUÇÃO RECUSADA · GIRO', 'warn'], rejected_stop: ['PARE PARA ENGATAR N/R', 'warn'],
+  perfect: ['TROCA PERFEITA','good'], early: ['TROCA CEDO','warn'], late: ['TROCA TARDE','warn'],
+  launch_good: ['LARGADA PERFEITA','good'], launch_bog_risk: ['LARGADA FRACA','warn'], launch_wheelspin_risk: ['GIRO ALTO DEMAIS','warn'],
+  overheat: ['MOTOR SUPERAQUECIDO','bad'], cooled: ['MOTOR NORMALIZADO','good'], nitro_empty: ['NITRO VAZIO','warn'],
+  rejected_overrev: ['REDUÇÃO RECUSADA','warn'], rejected_stop: ['PARE PARA ENGATAR RÉ','warn'],
 };
 
+/** Compact, translucent dual dial. Uses the same telemetry for cars and bikes. */
 export class VehicleHUD {
   constructor(root) {
-    this.el = document.createElement('div');
-    this.el.className = 'veh-hud';
-    const ticks = [];
-    for (let i = 0; i <= 12; i++) {
-      const a = (-210 + i * 20) * Math.PI / 180;
-      const r0 = i % 2 === 0 ? 62 : 67, r1 = 74;
-      ticks.push(`<line x1="${(100 + Math.cos(a) * r0).toFixed(1)}" y1="${(92 + Math.sin(a) * r0).toFixed(1)}" x2="${(100 + Math.cos(a) * r1).toFixed(1)}" y2="${(92 + Math.sin(a) * r1).toFixed(1)}" class="${i >= 10 ? 'red' : ''}"/>`);
-    }
-    const segs = Array.from({ length: RPM_SEGMENTS }, (_, i) => `<i data-seg="${i}"></i>`).join('');
-    this.el.innerHTML = `
-      <div class="veh-head"><span class="veh-name" data-ref="name">VEÍCULO</span><span class="veh-cat" data-ref="cat"></span></div>
-      <div class="veh-feedback" data-ref="feedback"></div>
-      <svg class="veh-dial" viewBox="0 0 200 118">
-        <path d="M ${100 + Math.cos(-210 * Math.PI / 180) * 78} ${92 + Math.sin(-210 * Math.PI / 180) * 78} A 78 78 0 1 1 ${100 + Math.cos(30 * Math.PI / 180) * 78} ${92 + Math.sin(30 * Math.PI / 180) * 78}" class="arc"/>
-        <g class="ticks">${ticks.join('')}</g>
+    this.el = document.createElement('div'); this.el.className = 'veh-hud compact-gauge';
+    this.el.innerHTML = `<div class="veh-feedback" data-ref="feedback"></div>
+      <svg class="gauge-cluster" viewBox="0 0 244 208" role="img" aria-label="Velocímetro, conta-giros e marcha">
+        <circle class="gauge-face" cx="151" cy="88" r="78"/>
+        <circle class="gauge-ring" cx="151" cy="88" r="76"/>
+        <circle class="gauge-ring gauge-inner-ring" cx="151" cy="88" r="55"/>
+        <path class="gauge-redline" data-ref="redline"/>
         <g data-ref="labels"></g>
-        <line x1="100" y1="92" x2="100" y2="30" class="needle" data-ref="needle"/>
-        <circle cx="100" cy="92" r="6" class="hub"/>
+        <line class="gauge-needle" data-ref="needle" x1="151" y1="100" x2="151" y2="24"/>
+        <circle class="gauge-hub" cx="151" cy="88" r="5"/>
+        <text class="gauge-rpm-unit" x="143" y="117">RPM × 1000</text>
+        <text class="gauge-speed-number" data-ref="speed" x="189" y="146">0</text><text class="gauge-speed-unit" x="189" y="161">KM/H</text>
+        <polygon class="gauge-shift-arrow" data-ref="shift" points="185,91 190,80 195,91"/>
+        <text class="gauge-gear-number" data-ref="gear" x="209" y="93">N</text><text class="gauge-mode" data-ref="mode" x="208" y="108">AUT</text>
+        <circle class="gauge-face" cx="47" cy="143" r="39"/><circle class="gauge-ring" cx="47" cy="143" r="37"/>
+        <g data-ref="auxTicks"></g>
+        <line class="gauge-needle gauge-aux-needle" data-ref="auxNeedle" x1="47" y1="149" x2="47" y2="113"/>
+        <circle class="gauge-hub" cx="47" cy="143" r="3"/>
+        <text class="gauge-aux-label" data-ref="auxLabel" x="47" y="163">ACEL. %</text>
       </svg>
-      <div class="veh-readout">
-        <div class="veh-speed"><span data-ref="speed">0</span><small>KM/H</small></div>
-        <div class="veh-gear"><small>MARCHA <b data-ref="mode"></b></small><span data-ref="gear">P</span></div>
-      </div>
-      <div class="veh-pt" data-ref="pt">
-        <div class="veh-rpm"><div class="veh-rpm-bar" data-ref="rpmBar">${segs}</div><span class="veh-shift" data-ref="shift">TROCA</span></div>
-        <div class="veh-rpm-label"><small data-ref="rpmText">0 RPM</small><span class="veh-assist"><b data-ref="tcs">TCS</b><b data-ref="abs">ABS</b><b data-ref="launch">LARGADA</b></span></div>
-        <div class="veh-meter veh-nitro"><small>NITRO</small><div class="veh-bar"><div class="veh-fill" data-ref="nitro"></div></div><span data-ref="nitroPct">100%</span></div>
-        <div class="veh-meter veh-turbo" data-ref="turboRow"><small>TURBO</small><div class="veh-bar"><div class="veh-fill" data-ref="turbo"></div></div><span data-ref="turboPct">0.0</span></div>
-        <div class="veh-meter veh-temp"><small>MOTOR</small><div class="veh-bar"><div class="veh-fill" data-ref="temp"></div></div><span data-ref="tempPct">OK</span></div>
-      </div>
-      <div class="veh-integrity"><small>INTEGRIDADE</small><div class="veh-bar"><div class="veh-fill" data-ref="fill"></div></div><span data-ref="integrity">100%</span></div>
-      <div class="veh-keys" data-ref="keys"></div>
-    `;
+      <div class="gauge-caption"><span data-ref="name"></span><span data-ref="launch" class="gauge-launch" title="Largada">L</span></div>
+      <div class="gauge-integrity" aria-label="Integridade do veículo"><div><i data-ref="fill"></i></div><span data-ref="integrity">100%</span></div>
+      <div class="gauge-nitro"><div><i data-ref="nitro"></i></div></div>
+      <span data-ref="turboRow" hidden></span>`;
     root.appendChild(this.el);
-    this.refs = {};
-    for (const n of this.el.querySelectorAll('[data-ref]')) this.refs[n.dataset.ref] = n;
-    this.segs = [...this.el.querySelectorAll('[data-seg]')];
-    this.visible = false;
-    this._timer = 0;
-    this._max = 240;
-    this.speedKmh = 0;
-    this.feedback = null;
-    this._feedbackT = 0;
-    this._blink = 0;
-    this.lastEvents = [];
+    this.refs = {}; for (const node of this.el.querySelectorAll('[data-ref]')) this.refs[node.dataset.ref] = node;
+    this.refs.auxTicks.innerHTML = this._ticks(47,143,35,5,100,8);
+    this.visible = false; this._timer = 0; this._feedbackT = 0; this.lastEvents = []; this.speedKmh = 0;
   }
-
+  _ticks(x, y, radius, count, maximum, fontSize) {
+    const parts = [];
+    for (let i = 0; i <= count * 2; i++) {
+      const angle = 135 + i / (count * 2) * 270;
+      const a = polar(x,y,radius - (i % 2 ? 4 : 7),angle), b = polar(x,y,radius,angle);
+      parts.push(`<line class="gauge-tick" x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}"/>`);
+      if (!(i % 2)) { const p = polar(x,y,radius - 17,angle); parts.push(`<text class="gauge-tick-label" style="font-size:${fontSize}px" x="${p[0]}" y="${p[1]+4}">${Math.round(i / (count * 2) * maximum)}</text>`); }
+    }
+    return parts.join('');
+  }
   show(vehicle) {
     this.vehicle = vehicle;
+    const readout = vehicleGaugeReadout(vehicle);
+    this.refs.labels.innerHTML = this._ticks(151,88,71,readout.maxRpm/1000,readout.maxRpm/1000,13);
+    this.refs.redline.setAttribute('d', arc(151,88,74,135 + clamp(readout.redline/readout.maxRpm)*270,405));
     this.refs.name.textContent = vehicle.spec.model.toUpperCase();
-    this.refs.cat.textContent = vehicle.spec.category || '';
-    // Escala do mostrador conforme a velocidade máxima do modelo.
-    this._max = Math.ceil((vehicle.spec.handling.maxSpeed * 3.6) / 40) * 40;
-    const labels = [];
-    for (let i = 0; i <= 6; i++) {
-      const a = (-210 + i * 40) * Math.PI / 180;
-      labels.push(`<text x="${(100 + Math.cos(a) * 50).toFixed(1)}" y="${(95 + Math.sin(a) * 50).toFixed(1)}">${Math.round((this._max / 6) * i)}</text>`);
-    }
-    this.refs.labels.innerHTML = labels.join('');
-    const pt = !!vehicle.physics?.powertrain;
-    this.el.classList.toggle('has-pt', pt);
-    this.refs.keys.innerHTML = pt
-      ? `<kbd>${K('nitrous')}</kbd> nitro · <kbd>${K('gearDown')}</kbd>/<kbd>${K('gearUp')}</kbd> marchas · <kbd>${K('transmissionMode')}</kbd> câmbio · <kbd>${K('handbrake')}</kbd>+<kbd>${K('forward')}</kbd> largada<br><kbd>${K('handbrake')}</kbd> freio de mão · <kbd>${K('horn')}</kbd> buzina · <kbd>${K('recover')}</kbd> recuperar · <kbd>${K('interact')}</kbd> sair`
-      : `<kbd>${K('handbrake')}</kbd> freio de mão · <kbd>${K('horn')}</kbd> buzina · <kbd>${K('recover')}</kbd> recuperar · <kbd>${K('interact')}</kbd> sair`;
-    this.refs.turboRow.hidden = !vehicle.physics?.powertrain?.profile?.turbo;
-    this.feedback = null;
-    this.refs.feedback.className = 'veh-feedback';
-    this.el.classList.add('visible');
-    this.visible = true;
-    this._timer = 0;
+    this.el.classList.toggle('has-pt', !!vehicle.physics.powertrain);
+    this.refs.turboRow.hidden = !readout.turbo;
+    this.el.classList.add('visible'); this.visible = true; this.feedback = null; this._feedbackT = 0;
+    this.refs.feedback.className = 'veh-feedback'; this._timer = 0; this.update(0);
   }
-
-  hide() {
-    this.el.classList.remove('visible');
-    this.visible = false;
-    this.vehicle = null;
-  }
-
-  /** Aviso curto no topo do painel (troca, largada, motor, nitro). */
+  hide() { this.visible = false; this.vehicle = null; this.el.classList.remove('visible'); }
   flash(key, seconds = 1.3) {
-    const f = FEEDBACK[key];
-    if (!f) return;
-    this.feedback = key;
-    this._feedbackT = seconds;
-    this.refs.feedback.textContent = f[0];
-    this.refs.feedback.className = `veh-feedback show ${f[1]}`;
+    const feedback = FEEDBACK[key]; if (!feedback) return;
+    this.feedback = key; this._feedbackT = seconds; this.refs.feedback.textContent = feedback[0]; this.refs.feedback.className = `veh-feedback show ${feedback[1]}`;
   }
-
-  /** Eventos do câmbio/motor vindos da física (fila esvaziada pelo VehicleManager). */
-  powertrainEvent(e) {
-    this.lastEvents.push(e);
-    if (this.lastEvents.length > 20) this.lastEvents.shift();
-    if (e.type === 'shift_quality') this.flash(e.quality, 1.1);
-    else if (e.type === 'launch') this.flash(`launch_${e.quality}`, 1.8);
-    else if (e.type === 'overheat') this.flash('overheat', 2.4);
-    else if (e.type === 'cooled') this.flash('cooled', 1.4);
-    else if (e.type === 'nitrous_stop' && (this.vehicle?.physics?.powertrainFrame?.nitrousFraction ?? 1) <= 0.001) this.flash('nitro_empty', 1.4);
-    else if (e.type === 'shift_rejected') this.flash(e.reason === 'would_overrev' ? 'rejected_overrev' : 'rejected_stop', 1.2);
+  powertrainEvent(event) {
+    this.lastEvents.push(event); if (this.lastEvents.length > 20) this.lastEvents.shift();
+    if (event.type === 'shift_quality') this.flash(event.quality, 1.1);
+    else if (event.type === 'launch') this.flash(`launch_${event.quality}`, 1.8);
+    else if (event.type === 'overheat') this.flash('overheat',2.4);
+    else if (event.type === 'cooled') this.flash('cooled',1.4);
+    else if (event.type === 'nitrous_stop' && (this.vehicle?.physics.powertrainFrame?.nitrousFraction ?? 1) <= 0.001) this.flash('nitro_empty',1.4);
+    else if (event.type === 'shift_rejected') this.flash(event.reason === 'would_overrev' ? 'rejected_overrev' : 'rejected_stop',1.2);
   }
-
   update(dt) {
     if (!this.visible || !this.vehicle) return;
-    if (this._feedbackT > 0) {
-      this._feedbackT -= dt;
-      if (this._feedbackT <= 0) this.refs.feedback.className = 'veh-feedback';
-    }
-    this._blink += dt;
-    this._timer -= dt;
-    if (this._timer > 0) return;
-    this._timer = 1 / 20;
-    const v = this.vehicle, ph = v.physics;
-    const kmh = Math.abs(ph.vLong) * 3.6;
-    this.speedKmh = kmh;
-    this.refs.speed.textContent = String(Math.round(kmh)).padStart(3, '0');
-    const frac = Math.min(1, kmh / this._max);
-    const ang = -210 + frac * 240;
-    this.refs.needle.setAttribute('transform', `rotate(${(ang + 90).toFixed(1)} 100 92)`);
-    const g = ph.gear;
-    const fr = ph.powertrainActive ? ph.powertrainFrame : null;
-    if (fr) {
-      this.refs.gear.textContent = typeof g === 'number' ? String(g) : g;
-      this.refs.mode.textContent = fr.mode === 'manual' ? 'MAN' : 'AUT';
-      this._powertrain(ph, fr);
-    } else {
-      this.refs.gear.textContent = typeof g === 'number' ? `D${g}` : g;
-      this.refs.mode.textContent = '';
-    }
-    const integ = Math.round(v.damage.integrity);
-    this.refs.integrity.textContent = `${integ}%`;
-    this.refs.fill.style.width = `${integ}%`;
-    this.refs.fill.classList.toggle('low', integ < 30);
-  }
-
-  _powertrain(ph, fr) {
-    const p = ph.powertrain.profile, idle = p.engine.idleRpm, red = p.engine.redlineRpm;
-    const rpm = ph.rpm, k = Math.max(0, Math.min(1, (rpm - idle * 0.6) / (red - idle * 0.6)));
-    const lit = Math.round(k * RPM_SEGMENTS);
-    const redFrom = Math.floor(((p.transmission.upshiftRpm - idle * 0.6) / (red - idle * 0.6)) * RPM_SEGMENTS);
-    for (let i = 0; i < this.segs.length; i++) {
-      const s = this.segs[i];
-      s.className = i < lit ? (i >= redFrom ? 'on red' : i >= redFrom - 4 ? 'on amber' : 'on') : (i >= redFrom ? 'red' : '');
-    }
-    this.refs.rpmText.textContent = `${Math.round(rpm / 10) * 10} RPM`;
-    // Luz de troca: perto do ponto ideal de subida (o mesmo usado pelo automático e pela avaliação da troca).
-    const shiftNow = typeof fr.gear === 'number' && Number.isFinite(fr.upshiftRpm) && rpm >= fr.upshiftRpm - (red - idle) * 0.05;
-    this.refs.shift.classList.toggle('on', shiftNow && (rpm < red - 60 || Math.floor(this._blink * 8) % 2 === 0));
-    const n = Math.max(0, Math.min(1, fr.nitrousFraction ?? 0));
-    this.refs.nitro.style.width = `${(n * 100).toFixed(1)}%`;
-    this.refs.nitroPct.textContent = `${Math.round(n * 100)}%`;
-    this.refs.nitro.parentElement.parentElement.classList.toggle('active', !!fr.nitrousActive);
-    if (!this.refs.turboRow.hidden) {
-      const b = Math.max(0, Math.min(1, fr.boost ?? 0));
-      this.refs.turbo.style.width = `${(b * 100).toFixed(1)}%`;
-      this.refs.turboPct.textContent = `${(b * p.turbo.boostFraction * 2).toFixed(1)}`;
-    }
-    const t = Math.max(0, Math.min(1, fr.temperature ?? 0));
-    this.refs.temp.style.width = `${(t * 100).toFixed(1)}%`;
-    this.refs.temp.classList.toggle('low', !!fr.overheated || t > 0.8);
-    this.refs.tempPct.textContent = fr.overheated ? 'QUENTE' : t > 0.8 ? 'ALTA' : 'OK';
-    this.refs.tcs.classList.toggle('on', !!ph.tcsActive);
-    this.refs.abs.classList.toggle('on', !!ph.absActive);
-    // Largada: acesa ao preparar; verde quando o giro está na faixa boa (soltar o freio de mão agora).
-    const band = p.launch;
-    this.refs.launch.classList.toggle('on', !!fr.staged);
-    this.refs.launch.classList.toggle('ready', !!fr.staged && rpm >= band.minimumGoodRpm && rpm <= band.maximumGoodRpm);
+    if (this._feedbackT > 0 && (this._feedbackT -= dt) <= 0) this.refs.feedback.className = 'veh-feedback';
+    this._timer -= dt; if (this._timer > 0) return; this._timer = 0.05;
+    const value = vehicleGaugeReadout(this.vehicle), refs = this.refs;
+    this.speedKmh = value.speedKmh;
+    refs.speed.textContent = String(Math.round(value.speedKmh)); refs.gear.textContent = value.gear; refs.mode.textContent = value.mode;
+    refs.needle.setAttribute('transform', `rotate(${225 + clamp(value.rpm / value.maxRpm)*270} 151 88)`);
+    refs.auxNeedle.setAttribute('transform', `rotate(${225 + value.aux*270} 47 143)`);
+    refs.auxLabel.textContent = value.auxLabel; refs.shift.classList.toggle('on',value.upshift);
+    refs.launch.classList.toggle('on',value.staged); refs.launch.classList.toggle('ready',value.launchReady);
+    refs.integrity.textContent = `${value.integrity}%`; refs.fill.style.width = `${value.integrity}%`;
+    refs.nitro.style.width = `${value.nitro*100}%`; refs.nitro.parentElement.parentElement.classList.toggle('active',value.nitroActive);
+    this.el.setAttribute('aria-label', `${this.vehicle.spec.model}. ${Math.round(value.speedKmh)} quilômetros por hora. ${Math.round(value.rpm)} RPM. Marcha ${value.gear}.`);
   }
 }

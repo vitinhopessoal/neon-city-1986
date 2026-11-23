@@ -286,9 +286,9 @@ export class VehiclePhysics {
     this.surfaceTimer -= h;
     if (this.surfaceTimer <= 0) {
       this.surfaceTimer = 0.1;
-      const wd = this.env.waterDepth ? this.env.waterDepth(this.x, this.z) : 0;
+      const wd = this.env.waterDepth ? this.env.waterDepth(this.x, this.z, this.y) : 0;
       this.inWater = wd > 0.3;
-      this.surface = this.inWater ? 'water' : (this.env.getSurface?.(this.x, this.z) || 'asphalt');
+      this.surface = this.inWater ? 'water' : (this.env.getSurface?.(this.x, this.z, this.y) || 'asphalt');
       this._waterDepth = wd;
     }
     const sp = this._surfaceProps();

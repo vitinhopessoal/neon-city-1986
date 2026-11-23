@@ -16,7 +16,7 @@ export class StartScreen {
       <div class="start-grid"></div>
       <div class="start-content">
         <h1 class="start-title"><span class="t-neon">NEON CITY</span><span class="t-year">1986</span></h1>
-        <div class="start-subtitle">WELCOME TO SUNSET BEACH</div>
+        <div class="start-subtitle">WELCOME TO VICE CITY</div>
         <button class="start-button" data-ref="start" disabled>CARREGANDO…</button>
         <div class="start-menu-row">
           <button class="start-sub" data-ref="continue" disabled>CONTINUAR</button>
@@ -28,7 +28,7 @@ export class StartScreen {
           <span>CONFIGURAÇÕES · QUALIDADE GRÁFICA</span>
           <div class="q-group">${buttons}</div>
         </div>
-        <div class="start-hint">WASD mover · SHIFT correr · ESPAÇO pular · MOUSE câmera · V alterna 1ª/3ª pessoa · ESC libera o mouse</div>
+        <div class="start-hint">VICE CITY · EDIÇÃO LOCAL</div>
       </div>
     `;
     root.appendChild(this.el);
@@ -51,28 +51,6 @@ export class StartScreen {
         onQuality(b.dataset.q);
       });
     }
-  }
-
-  /** Seletor de mapa (apenas em desenvolvimento). */
-  setMapOptions(maps, activeId, onSelect) {
-    const row = document.createElement('div');
-    row.className = 'start-quality start-maps';
-    row.innerHTML = `<span>MAPA (DEV) · F8 ALTERNA</span><div class="q-group">${maps
-      .map((m) => `<button class="q-btn${m.id === activeId ? ' active' : ''}" data-map="${m.id}">${m.label}</button>`)
-      .join('')}</div>`;
-    this.el.querySelector('.start-quality').after(row);
-    this.mapRow = row;
-    for (const b of row.querySelectorAll('[data-map]')) {
-      b.addEventListener('click', () => {
-        if (this.busy || b.classList.contains('active')) return;
-        onSelect(b.dataset.map);
-      });
-    }
-  }
-
-  markMap(id) {
-    if (!this.mapRow) return;
-    for (const b of this.mapRow.querySelectorAll('[data-map]')) b.classList.toggle('active', b.dataset.map === id);
   }
 
   setBusy(busy) {

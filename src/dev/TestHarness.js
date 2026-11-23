@@ -238,11 +238,6 @@ export function createTestHarness(game) {
       return document.querySelector('.hud-prompt')?.innerText;
     },
     /** Inicia a partida sem clique (sem capturar o mouse) e pausa o loop. */
-    /** PROMPT 11: os 45 testes obrigatórios do OCEAN DRIVE no jogo real. */
-    async oceanSuite() {
-      const { runOceanSuite } = await import('./OceanSuite.js');
-      return runOceanSuite(T);
-    },
     /** PROMPT 12: validação dos nove carros da NEON MOTOR COMPANY no jogo real. */
     async neonMotorSuite(opts) {
       const { runNeonMotorSuite } = await import('./NeonMotorSuite.js');
@@ -257,11 +252,6 @@ export function createTestHarness(game) {
     async motoSuite(opts) {
       const { runMotoSuite } = await import('./MotoSuite.js');
       return runMotoSuite(T, opts);
-    },
-    /** Mundo unificado (Sunset Beach + TEST CITY): 21 testes no jogo real. */
-    async mergedSuite() {
-      const { runMergedWorldSuite } = await import('./MergedWorldSuite.js');
-      return runMergedWorldSuite(T);
     },
     /** Mecânica veicular: motor, câmbio, largada, nitro, tração e freios no jogo real. */
     async mechanicsSuite() {

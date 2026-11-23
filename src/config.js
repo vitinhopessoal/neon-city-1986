@@ -4,6 +4,14 @@
  * ficam aqui para facilitar o balanceamento nas próximas etapas.
  */
 export const CONFIG = {
+  /** Único cenário jogável; os recursos permanecem locais e fora do build. */
+  map: {
+    id: 'vice-city',
+    label: 'VICE CITY',
+    type: 'triangles',
+    manifestUrl: '/dev-maps/vice-city/manifest.json',
+  },
+
   input: {
     /** Radianos por pixel de movimento do mouse. */
     mouseSensitivity: 0.0022,
@@ -74,27 +82,15 @@ export const CONFIG = {
     // Densidade por região (ruas e áreas de pedestres).
     roadWeights: { ocean_ave: 1.0, flamingo_e: 0.55, flamingo_w: 0.45, coral_st: 0.4 },
     pedRegionWeights: { promenade: 1.0, beach: 0.75, ocean_ave: 0.85, flamingo_e: 0.95, flamingo_w: 0.6, coral_st: 0.4, extra: 0.6 },
-    // Caminhos extras de pedestres (calçadão e praia de Sunset Beach).
-    pedestrianPaths: {
-      'sunset-beach': [
-        { from: [45, -320], to: [45, 160], region: 'promenade' },
-        { from: [51, -320], to: [51, 160], region: 'promenade' },
-        { from: [66, -315], to: [66, 150], region: 'beach' },
-        { from: [-131, -275], to: [-131, -220], region: 'extra' },
-        { from: [-144, -248], to: [-114, -248], region: 'extra' },
-      ],
-    },
+    // Navegação do cenário importado vem do próprio manifesto.
+    pedestrianPaths: {},
   },
 
   weapons: {
     grantAll: true,
     startWith: 'brenten',
-    targetRange: import.meta.env.DEV,
-    // Origem da linha de tiro (alvos ao longo de -Z local, até 50 m).
-    rangeSpots: {
-      'sunset-beach': { x: 85, z: 0, yaw: 0 },
-      'test-city': { x: 0, z: 8, yaw: 0 },
-    },
+    targetRange: false,
+    rangeSpots: {},
   },
 
   /** Propriedades e residências (PROMPT 07). */
@@ -213,21 +209,9 @@ export const CONFIG = {
     masterVolume: 0.7,
   },
 
-  /**
-   * Ferramentas de desenvolvimento: alternância de mapas de teste.
-   * Desativado no build de produção; os arquivos ficam em dev-maps/ (fora do dist/).
-   * Uso: ?map=test-city na URL, seletor na tela inicial ou tecla F8 em jogo.
-   */
-  dev: {
-    mapSwitching: import.meta.env.DEV,
-    testMaps: [
-      { id: 'test-city', label: 'TEST CITY (GLB)', manifestUrl: '/dev-maps/test-city/manifest.json' },
-    ],
-  },
-
   debug: {
     /** Exibe FPS e estatísticas (alternar com a tecla ` ). */
-    showStats: import.meta.env.DEV,
+    showStats: false,
     /** Expõe o jogo em window.__NEON__ para inspeção/testes no modo dev. */
     exposeGlobal: import.meta.env.DEV,
   },

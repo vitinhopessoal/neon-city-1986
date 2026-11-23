@@ -1,4 +1,5 @@
 import './styles/main.css';
+import './styles/pause-menu.css';
 import { Game } from './core/Game.js';
 
 const canvas = document.getElementById('game-canvas');

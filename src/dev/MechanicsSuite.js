@@ -58,7 +58,7 @@ export async function runMechanicsSuite(T) {
   // ---------------------------------------------------------------- sedã esportivo (RWD)
   let v = drive('sports', 'mech_sports');
   hudRefresh();
-  rec('X1', 'Módulo ativo no carro do jogador e painel completo', v.physics.powertrain && v.physics.powertrainActive && hud.el.classList.contains('has-pt') && hudText().mode === 'AUT' && refs.keys.textContent.includes('nitro'),
+  rec('X1', 'Módulo ativo e painel mecânico sem guias de controles', v.physics.powertrain && v.physics.powertrainActive && hud.el.classList.contains('has-pt') && hudText().mode === 'AUT' && !hud.el.querySelector('.veh-keys'),
     `powertrain ${!!v.physics.powertrain} · ativo ${v.physics.powertrainActive} · painel ${hud.el.classList.contains('has-pt')} · modo ${hudText().mode} · tração ${v.physics.powertrain?.drivetrain.layout}`);
 
   // Acelerar (W) com trocas automáticas.

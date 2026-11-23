@@ -94,7 +94,7 @@ export class Player {
   get surface() {
     const p = this.controller.position;
     if (this.controller.wading) return 'water';
-    return this.env.getSurface(p.x, p.z);
+    return this.env.getSurface(p.x, p.z, p.y);
   }
 
   /** Troca o mapa ativo sem recriar personagem, animações ou controles. */

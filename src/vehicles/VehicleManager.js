@@ -108,6 +108,7 @@ export class VehicleManager {
     const defs = [
       { type: 'sports', color: 0xf2eee6, stripe: 0xff5fa8, plate: 'TEST 01' },
       { type: 'sedan', color: 0xd6c29a, plate: 'TEST 02' },
+      { type: 'palm_rider_125', color: 0xd8282c, plate: 'PR 125' },
     ];
     const factory = this.game.world.vehicleFactory;
     const group = this._spawnGroup || (this._spawnGroup = new THREE.Group());
@@ -115,20 +116,20 @@ export class VehicleManager {
     const out = [];
     const used = [];
     const manual = env.manifest?.vehicleSpawns;
-    const tryPlace = (spec, x, z, heading) => {
+    const tryPlace = (spec, x, z, heading, referenceY = sp.y) => {
       const s = SPECS[spec.type];
       const dims = { width: s.width, length: s.length, height: s.height };
       if (Math.hypot(x - sp.x, z - sp.z) < 6) return null;
       if (used.some((u) => Math.hypot(u.x - x, u.z - z) < 7)) return null;
-      const base = env.groundAt ? env.groundAt(x, z) : col.getGroundHeight(x, z, 0.5, 0.4);
+      const base = env.groundAt ? env.groundAt(x, z, referenceY) : col.getGroundHeight(x, z, referenceY, 0.4);
       // Plano: as quatro rodas no mesmo nível (±8 cm).
       const c = Math.cos(heading), si = Math.sin(heading);
       for (const [lx, lz] of [[0.8, 1.3], [-0.8, 1.3], [0.8, -1.3], [-0.8, -1.3]]) {
         const wx = x + lx * c + lz * si, wz = z - lx * si + lz * c;
-        const gy = env.groundAt ? env.groundAt(wx, wz) : col.getGroundHeight(wx, wz, base + 0.4, 0.4);
+        const gy = env.groundAt ? env.groundAt(wx, wz, base) : col.getGroundHeight(wx, wz, base + 0.4, 0.4);
         if (Math.abs(gy - base) > 0.08) return null;
       }
-      if (env.waterDepth && env.waterDepth(x, z) > 0.1) return null;
+      if (env.waterDepth && env.waterDepth(x, z, base) > 0.1) return null;
       if (env.boundaryHint && env.boundaryHint(x, z, 3)) return null;
       const body = { x, z, rot: heading, hx: dims.width / 2 + 0.6, hz: dims.length / 2 + 0.8 };
       if (col.resolveOBB(body, base, dims.height, 0.32, null, this._tmpContacts || (this._tmpContacts = []), 1) > 0) return null;
@@ -139,7 +140,7 @@ export class VehicleManager {
       const list = manual ? manual.filter((m) => !m.type || m.type === spec.type) : null;
       if (list?.length) {
         const m = list[i % list.length];
-        const y = tryPlace(spec, m.x, m.z, m.heading ?? 0);
+        const y = tryPlace(spec, m.x, m.z, m.heading ?? 0, m.y ?? sp.y);
         if (y !== null) placed = { x: m.x, y, z: m.z, heading: m.heading ?? 0 };
       }
       for (let r = 8; !placed && r <= 70; r += 4) {
@@ -453,8 +454,8 @@ export class VehicleManager {
 
   _placementFree(v, x, z, heading) {
     const env = this.env, col = env.collision;
-    if (env.waterDepth && env.waterDepth(x, z) > 0.05) return null;
-    const y = col.getGroundHeight(x, z, 0.5, 0.4);
+    const y = col.getGroundHeight(x, z, v.root.position.y, 0.4);
+    if (env.waterDepth && env.waterDepth(x, z, y) > 0.05) return null;
     const body = { x, z, rot: heading, hx: v.spec.width / 2 + 0.25, hz: v.spec.length / 2 + 0.25 };
     const n = col.resolveOBB(body, y, v.spec.height, 0.32, v.id, this._tmpContacts || (this._tmpContacts = []), 1);
     if (n > 0) return null;

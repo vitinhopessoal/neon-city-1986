@@ -1,0 +1,182 @@
+/* Fixed rectangular radar, independent of optional debug overlays. */
+.hud-minimap {
+  position: fixed; left: 30px; bottom: 27px; width: clamp(220px, 22vw, 320px);
+  aspect-ratio: auto; border: 3px solid #b2ada5; border-radius: 0;
+  background: #30353a; box-shadow: 0 0 0 1px #1e2430, 0 3px 12px #0006;
+  filter: none; overflow: hidden;
+}
+.hud-minimap canvas { width: 100%; height: auto; display: block; }
+.minimap-caption { display: flex; justify-content: space-between; padding: 4px 7px; background: #292c32; color: #efede6; font: 700 10px Arial,sans-serif; letter-spacing: .06em; }
+.minimap-health { height: 6px; background: #1e414c; }
+.minimap-health i { display: block; height: 100%; background: #77b88b; transition: width .2s; }
+.hud-minimap.has-waypoint .minimap-caption { background: #382346; }
+.hud-minimap.has-waypoint .minimap-caption [data-map-mode] { color: #ebbcff; }
+.wpn-hud { left: auto; right: 28px; bottom: 28px; }
+.hud-prompt, .hud-location, .wpn-hint, .veh-keys { display: none !important; }
+
+/* Turquoise pause screen with pink focus, matching the supplied reference. */
+.game-menu {
+  --menu-text: 18px; position: absolute; inset: 0; z-index: 40; display: block;
+  pointer-events: auto; color: #0d6672;
+  background: url('./pause-palms.svg') center / cover no-repeat, linear-gradient(130deg,#ddf5f2 0%,#b5edf0 37%,#73d9df 72%,#36becb 100%);
+}
+.game-menu.hidden { display: none; }
+.gm-frame {
+  width: 100%; height: 100%; max-height: none; display: grid; grid-template-columns: clamp(170px,19vw,250px) minmax(0,1fr);
+  gap: clamp(20px,3vw,54px); padding: clamp(20px,4vh,42px) clamp(24px,4vw,64px) 24px 24px;
+  background: none; border: 0; border-radius: 0; box-shadow: none; color: #146b77;
+}
+.gm-sidebar { min-height: 0; display: flex; flex-direction: column; }
+.gm-brand { flex: 0 0 auto; display: grid; justify-items: center; padding: 0 10px 24px; }
+.gm-brand > span { display: block; font: 900 clamp(48px,6.6vw,88px)/.84 Impact,'Arial Black',sans-serif; letter-spacing: -.05em; color: #fffdf6; -webkit-text-stroke: 2px #17252b; paint-order: stroke fill; text-shadow: 3px 4px #17252b; }
+.gm-brand em { font: bold italic clamp(28px,3.4vw,46px)/1.15 'Segoe Script','Brush Script MT',cursive; letter-spacing: -.07em; color: #ed79b4; -webkit-text-stroke: 1px #263039; paint-order: stroke fill; text-shadow: 2px 3px #263039; margin-top: 2px; white-space: nowrap; }
+.gm-brand small { margin-top: 6px; padding: 4px 8px; background: #dcc38a; color: #293538; font: 800 9px Arial; letter-spacing: .15em; }
+.gm-tabs { display: flex; flex: 1; flex-direction: column; flex-wrap: nowrap; justify-content: center; gap: 5px; padding: 0 4px; border: 0; }
+.gm-tabs button {
+  border: 0; border-radius: 0; padding: 9px 5px; width: 100%; min-height: 40px;
+  background: transparent; box-shadow: none; color: #f9ffff;
+  font: 900 clamp(17px,2vw,26px)/1.15 Impact,'Arial Black',sans-serif;
+  letter-spacing: .025em; text-shadow: 1px 2px #2d94a3; cursor: pointer;
+}
+.gm-tabs button.active, .gm-tabs button:hover { background: #ee85b7; box-shadow: 2px 3px #2592a342; border: 0; transform: rotate(-1deg); }
+.gm-main { min-height: 0; min-width: 0; display: grid; grid-template-rows: 62px minmax(0,1fr) 36px; }
+.gm-categories { display: flex; align-items: stretch; gap: 0; border-bottom: 3px solid #6cbdc6; }
+.gm-categories button {
+  flex: 1; min-width: 0; padding: 8px; border: 0; border-radius: 0; background: #e6f7f46e;
+  font: 900 clamp(11px,1.4vw,19px) Impact,'Arial Black',sans-serif; letter-spacing: .02em; color: #177987; cursor: pointer;
+}
+.gm-categories button.active, .gm-categories button:hover { color: #fff; background: #ee86b6; }
+.gm-categories h2 { margin: auto 14px; font: 900 26px Impact,'Arial Black',sans-serif; letter-spacing: .05em; }
+.gm-categories > span { margin: auto 14px auto auto; font-size: 12px; font-weight: 800; letter-spacing: .1em; }
+.gm-body { overflow: auto; min-height: 0; padding: 0; scrollbar-color: #df80b2 #c7ecea; scrollbar-width: thin; }
+.gm-option-row {
+  display: flex; width: 100%; min-height: 53px; align-items: center; justify-content: space-between; gap: 18px;
+  padding: 12px 17px; margin: 0; border: 0; border-radius: 0;
+  color: #176c76; background: #effcf8c9; font: 700 var(--menu-text)/1.35 'Trebuchet MS','Segoe UI',sans-serif; letter-spacing: .005em;
+}
+.gm-option-row:nth-child(even) { background: #d7f3f2bd; }
+.gm-option-row:hover, .gm-option-row:focus-within { background: #f0a3ca; color: #fff; }
+.gm-option-row strong { font: inherit; text-align: right; }
+.gm-option-control { display: flex; align-items: center; justify-content: flex-end; gap: 14px; min-width: 140px; }
+.gm-option-control select { width: auto; max-width: 230px; border: 0; border-radius: 0; background: transparent; color: #156978; font: inherit; font-weight: 800; cursor: pointer; }
+.gm-option-control select option { color: #175967; background: #e6f8f5; }
+.gm-option-control input[type=range] { accent-color: #b95d93; width: clamp(100px,15vw,210px); cursor: pointer; }
+.gm-option-control input[type=checkbox] { accent-color: #dc72a9; width: 23px; height: 23px; cursor: pointer; }
+.gm-option-control output, .gm-option-control b { min-width: 38px; text-align: right; }
+.gm-switch { display: none; }
+.gm-body button.gm-wide-action { font: 700 var(--menu-text)/1.35 'Trebuchet MS','Segoe UI',sans-serif; letter-spacing: 0; text-align: left; cursor: pointer; border: 0; border-radius: 0; color: #176c76; background: #e2f7f0; }
+.gm-body button.gm-wide-action:hover, .gm-body button.gm-wide-action:focus-visible { background: #ed91be; color: white; }
+.gm-restore { margin-top: 16px !important; }
+.gm-note { font-size: calc(var(--menu-text) * .78); color: #1d6e79; background: #e4f7f0b3; margin: 0; padding: 14px 17px; line-height: 1.55; }
+.gm-manual-heading { padding: 13px 17px; color: #fff; background: #54abb8; font: 900 16px Impact,sans-serif; letter-spacing: .12em; }
+.gm-foot { gap: 10px; align-items: end; font-size: 11px; color: #186d78; font-weight: 800; letter-spacing: .03em; }
+.gm-foot kbd { padding: 2px 4px; color: #146473; border: 1px solid #73b7c1; background: #ddf5f3; }
+.gm-slot, .gm-prop { padding: 14px 17px; margin: 0 0 3px; color: #176c76; background: #e8f9f2dc; border-radius: 0; border-left-color: #70b4bd; }
+.gm-slot b, .gm-prop b { color: #156978; }
+.gm-body button:not(.gm-wide-action) { color: #146473; background: #c2e7e6; border: 1px solid #6fb4bf; letter-spacing: .03em; }
+.gm-body button:not(.gm-wide-action):hover { color: white; background: #e789b8; }
+.gm-pre { padding: 16px; background: #e7f7f0dd; font-size: var(--menu-text); color: #176c76; }
+.gm-confirm { color: #165d6d; background: #e0f2ed; }
+.gm-map { height: calc(100% - 53px); min-height: 240px; display: grid; place-items: center; background: #3c5356; }
+.gm-map canvas { max-width: 100%; max-height: 100%; width: auto; height: 100%; object-fit: contain; }
+.game-menu[data-text-size=small] { --menu-text: 15px; }
+.game-menu[data-text-size=large] { --menu-text: 22px; }
+.gm-high-contrast .gm-option-row { color: #003d49; background: #f6ffff; }
+.gm-high-contrast .gm-option-row:nth-child(even) { background: #c3e5e8; }
+.gm-high-contrast .gm-option-row:hover, .gm-high-contrast .gm-option-row:focus-within { background: #f098c2; color: #26303b; }
+.game-menu :focus-visible { outline: 3px solid #176d82; outline-offset: -3px; }
+.reduce-interface-motion #ui-root *, .reduce-interface-motion #ui-root *::before, .reduce-interface-motion #ui-root *::after { animation: none !important; transition: none !important; }
+@media (max-width: 760px) {
+  .gm-frame { grid-template-columns: 125px minmax(0,1fr); padding: 16px 14px; gap: 14px; }
+  .gm-brand { padding: 4px 0 20px; }
+  .gm-brand > span { font-size: 54px; }
+  .gm-brand em { font-size: 28px; }
+  .gm-brand small { font-size: 7px; }
+  .gm-tabs button { font-size: 16px; }
+  .gm-main { grid-template-rows: 52px minmax(0,1fr) 40px; }
+  .gm-categories { flex-wrap: wrap; }
+  .gm-categories button { font-size: 11px; padding: 5px 3px; }
+  .game-menu { --menu-text: 14px; }
+  .gm-option-row { padding: 10px; gap: 8px; min-height: 48px; }
+  .gm-option-control { min-width: 90px; gap: 6px; }
+  .gm-option-control select { max-width: 145px; }
+  .gm-foot { font-size: 9px; }
+  .hud-minimap { left: 16px; bottom: 18px; width: 210px; }
+}
+@media (max-height: 570px) {
+  .gm-brand { padding-bottom: 10px; }
+  .gm-brand > span { font-size: 48px; }
+  .gm-brand em { font-size: 27px; }
+  .gm-tabs { gap: 2px; }
+  .gm-tabs button { padding: 5px; min-height: 30px; font-size: 17px; }
+}
+
+/* Compact transparent instruments, shared by cars and motorcycles. */
+.veh-hud.compact-gauge {
+  position: fixed; right: 24px; bottom: 22px; width: clamp(160px,16vw,220px); padding: 0;
+  display: none; background: none; border: 0; border-radius: 0; box-shadow: none; backdrop-filter: none;
+  transform: none; transition: opacity .15s; filter: drop-shadow(0 2px 2px #0008);
+}
+.veh-hud.compact-gauge.visible { display: block; opacity: 1; }
+.gauge-cluster { width: 100%; height: auto; display: block; overflow: visible; }
+.gauge-face { fill: #3e403db8; }
+.gauge-ring { fill: none; stroke: #deded74d; stroke-width: 1.4; }
+.gauge-inner-ring { stroke: #deded71a; stroke-width: 5; }
+.gauge-redline { stroke: #a52f33; stroke-width: 6; fill: none; }
+.gauge-tick { stroke: #fafaf1; stroke-width: 1.6; }
+.gauge-tick-label { fill: #f8f8ed; text-anchor: middle; font: italic 700 13px Arial,sans-serif; }
+.gauge-needle { stroke: #f0efdf; stroke-width: 3.1; stroke-linecap: round; }
+.gauge-aux-needle { stroke-width: 2; }
+.gauge-hub { fill: #77766a; stroke: #bebdb0; stroke-width: 1; }
+.gauge-rpm-unit { fill: #eeeedd; font: 7px Arial,sans-serif; text-anchor: middle; opacity: .7; }
+.gauge-speed-number { fill: #fffde9; font: italic 700 31px Arial,sans-serif; text-anchor: middle; }
+.gauge-speed-unit { fill: #fffde9; font: italic 700 10px Arial,sans-serif; text-anchor: middle; }
+.gauge-gear-number { fill: #f0a348; font: italic 700 21px Arial,sans-serif; text-anchor: middle; }
+.gauge-mode { fill: #e4dfd1; font: 6px Arial,sans-serif; text-anchor: middle; }
+.gauge-shift-arrow { fill: #72d65d; opacity: .3; }
+.gauge-shift-arrow.on { opacity: 1; filter: drop-shadow(0 0 3px #7bff48); }
+.gauge-aux-label { fill: #eeebdf; font: 6px Arial,sans-serif; text-anchor: middle; }
+.gauge-caption { margin-top: -7px; text-align: right; font: 700 8px Arial,sans-serif; color: #eeede5; letter-spacing: .06em; }
+.gauge-launch { opacity: 0; margin-left: 4px; color: #edbd56; }
+.gauge-launch.on { opacity: 1; }
+.gauge-launch.ready { color: #99e57a; }
+.gauge-integrity { margin: 3px 0 0 auto; width: 55%; display: flex; align-items: center; gap: 4px; color: #eae7dc; font: 7px Arial,sans-serif; }
+.gauge-integrity > div, .gauge-nitro > div { height: 2px; background: #f3f0dd24; flex: 1; }
+.gauge-integrity i, .gauge-nitro i { display: block; height: 100%; background: #b9c596; }
+.gauge-nitro { width: 45%; margin: 3px 0 0 auto; display: none; }
+.compact-gauge.has-pt .gauge-nitro { display: flex; }
+.gauge-nitro i { background: #90bec8; }
+.gauge-nitro.active i { background: #d9ffff; }
+.compact-gauge .veh-feedback { position: absolute; left: 0; right: 0; bottom: 100%; font: 700 9px Arial,sans-serif; letter-spacing: .04em; text-shadow: 1px 1px #000; }
+
+/* The MAP page uses the full pause screen and the atlas's original colors. */
+.game-menu.is-map { background: #080a0e; }
+.is-map .gm-frame { display: block; padding: 0; }
+.is-map .gm-sidebar, .is-map .gm-foot { display: none; }
+.is-map .gm-main { height: 100%; grid-template-rows: 64px minmax(0,1fr); }
+.is-map .gm-body { overflow: hidden; }
+.is-map .gm-categories { border: 0; align-items: center; padding: 0 16px; gap: 16px; background: #080a0e; }
+.is-map .gm-categories h2 { margin: 0 auto 0 4px; font: bold italic 32px 'Segoe Script','Brush Script MT',cursive; color: #e99dc4; text-shadow: 2px 2px #6c5b69; }
+.is-map .gm-categories > span { margin: 0; color: #e995ca; font: 900 29px Impact,'Arial Black',sans-serif; letter-spacing: .02em; }
+.is-map .gm-categories button { flex: 0 0 auto; background: #24242c; color: #f5d9e8; font: 700 11px Arial,sans-serif; padding: 9px 12px; }
+.world-map-view { position: relative; width: 100%; height: 100%; background: #80b1d6; overflow: hidden; }
+.world-map-view > canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; cursor: crosshair; touch-action: none; outline: none; }
+.world-map-toolbar { position: absolute; top: 12px; right: 12px; left: 12px; display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 5px; pointer-events: none; }
+.gm-body .world-map-toolbar button { pointer-events: auto; border: 1px solid #f7d2e36b; border-radius: 2px; background: #151621d9; color: #fff4fa; padding: 9px 11px; font: 700 11px Arial,sans-serif; letter-spacing: 0; }
+.gm-body .world-map-toolbar button:hover { background: #c55d97; }
+.gm-body .world-map-toolbar button:disabled { opacity: .45; cursor: default; }
+.world-map-status { position: absolute; bottom: 43px; left: 12px; right: 12px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 5px 16px; padding: 9px 11px; color: #f5d5f9; background: #11151bdb; font: 700 11px Arial,sans-serif; pointer-events: none; }
+.world-map-status [data-map-coordinates] { color: #ddd; font-weight: 400; }
+.world-map-help { position: absolute; bottom: 0; left: 0; right: 0; min-height: 34px; padding: 10px 12px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 5px; background: #080a0e; color: #efb3d3; font: 700 10px Arial,sans-serif; }
+.world-map-help span { color: #ded8da; font-weight: 400; }
+@media (max-width: 600px) {
+  .veh-hud.compact-gauge { width: 160px; bottom: 20px; right: 14px; }
+  .world-map-toolbar { top: 8px; right: 8px; left: 8px; }
+  .gm-body .world-map-toolbar button { padding: 8px; font-size: 10px; }
+  .world-map-status { font-size: 10px; bottom: 52px; }
+  .world-map-help { font-size: 9px; }
+}
+@media (max-width: 480px) {
+  .hud-minimap { width: 160px; }
+  .veh-hud.compact-gauge { width: 142px; }
+}

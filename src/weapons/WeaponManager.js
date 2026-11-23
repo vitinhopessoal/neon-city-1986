@@ -627,7 +627,7 @@ export class WeaponManager {
   _ensureRange() {
     // Área de testes: só em desenvolvimento (import dinâmico eliminado do build).
     if (!import.meta.env.DEV || !CONFIG.weapons.targetRange) return;
-    const id = this.game.maps?.activeId || 'sunset-beach';
+    const id = this.game.maps?.activeId || CONFIG.map.id;
     if (id === this._rangeMap || this.game.mapLoading) return;
     if (this.range) { this.ballistics.targets.delete(this.range); this.range.dispose(); this.range = null; }
     this._rangeMap = id;

@@ -146,19 +146,19 @@ test('minimap draws both views, changes environments and tolerates maps without 
   const oldDocument = globalThis.document;
   let draws = 0;
   const ctx = new Proxy({}, { get: () => () => { draws++; } });
-  const caption = {}, canvas = { getContext: () => ctx };
+  const caption = {}, canvas = { width: 672, height: 360, getContext: () => ctx };
   const el = { querySelector: q => q === 'canvas' ? canvas : caption, remove() {} };
   globalThis.document = { createElement: () => el };
   try {
     const minimap = new Minimap({ appendChild() {} });
     minimap.setEnvironment({ bounds: city.bounds, roads: net, districts: [city], pois: [] });
     minimap.update(0.1, { x: 46, z: -248 }, Math.PI);
-    assert.ok(draws > 100);
+    assert.ok(draws > city.roads.length);
     minimap.toggle();
-    assert.equal(caption.textContent, 'N: MAPA LOCAL');
+    assert.equal(caption.textContent, 'VICE CITY · GERAL');
     minimap.update(0.1, { x: 46, z: -248 }, Math.PI);
     minimap.setEnvironment({ isImported: true, manifest: { bounds: city.bounds } });
-    assert.equal(el.hidden, true);
+    assert.equal(el.hidden, false, 'an imported radar does not require a separate roads list');
     minimap.setEnvironment({ isImported: true, manifest: { bounds: city.bounds, roads: city.roads } });
     assert.equal(el.hidden, false);
     minimap.update(0.1, { x: 0, z: 0 }, 0);

@@ -1,6 +1,6 @@
 {
   "name": "neon-city-1986",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "NEON CITY: 1986 — jogo de ação em mundo aberto, original, inspirado nos anos 80 (Three.js).",
   "private": true,
   "type": "module",
@@ -29,7 +29,11 @@
     "build:radio": "node tools/radio/build-radio.mjs",
     "test:moto": "node --test tools/vehicles/neon-moto.test.mjs",
     "test:mechanics": "node --test tools/vehicles/mechanics-core.test.mjs tools/vehicles/powertrain-integration.test.mjs tools/vehicles/mechanics-neon.test.mjs",
-    "build:motos": "blender --background --factory-startup --python tools/blender/neon_moto/run_moto.py -- --all --render"
+    "build:motos": "blender --background --factory-startup --python tools/blender/neon_moto/run_moto.py -- --all --render",
+    "build:vice": "python tools/vice-city/convert.py --all",
+    "test:vice": "node --test tools/vice-city/collision.test.mjs tools/vice-city/single-map.test.mjs",
+    "test:interface": "node --test tools/hud/radar-menu.test.mjs tools/hud/waypoint-gauge.test.mjs",
+    "test:desktop": "node --test tools/desktop/local-map.test.cjs"
   },
   "dependencies": {
     "three": "^0.187.0"

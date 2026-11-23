@@ -55,19 +55,19 @@ test('six wanted levels respond to crimes and decay only after a quiet interval'
   s.setWanted(10); assert.equal(s.wanted, 6);
 });
 
-test('F3 prevents browser find, emits once per press, and has no binding conflict', () => {
+test('F3 prevents browser find but cannot restore the removed instruction overlay', () => {
   const input = Object.create(InputManager.prototype);
-  Object.assign(input, { enabled: true, _down: new Set(), _pressed: new Set(), _codeToActions: new Map([['F3', ['toggleHUD']]]) });
+  Object.assign(input, { enabled: true, _down: new Set(), _pressed: new Set(), _codeToActions: new Map() });
   let prevented = 0;
   const event = { code: 'F3', repeat: false, preventDefault: () => prevented++ };
-  input._onKeyDown(event); assert.equal(prevented, 1); assert.equal(input.wasPressed('toggleHUD'), true);
+  input._onKeyDown(event); assert.equal(prevented, 1); assert.equal(input.wasPressed('toggleHUD'), false);
   input.endFrame(); input._onKeyDown({ ...event, repeat: true });
   assert.equal(input.wasPressed('toggleHUD'), false);
-  input._onKeyUp(event); input._onKeyDown(event); assert.equal(input.wasPressed('toggleHUD'), true);
-  assert.deepEqual(Object.entries(DEFAULT_BINDINGS).filter(([, keys]) => keys.includes('F3')).map(([key]) => key), ['toggleHUD']);
+  input._onKeyUp(event); input._onKeyDown(event); assert.equal(input.wasPressed('toggleHUD'), false);
+  assert.deepEqual(Object.entries(DEFAULT_BINDINGS).filter(([, keys]) => keys.includes('F3')), []);
 });
 
-test('primary HUD updates values and all weapon categories; F3 retains the radar and status node', async () => {
+test('primary HUD updates values and weapon categories without rendering gameplay manuals', async () => {
   const oldDocument = globalThis.document, oldImage = globalThis.Image;
   const operations = [];
   const context = new Proxy({}, { get: (_obj, key) => (...args) => operations.push([key, ...args]) });
@@ -109,9 +109,8 @@ test('primary HUD updates values and all weapon categories; F3 retains the radar
     for (const [def, expected] of [[{ category: 'shotgun' }, 'buddyshot'], [{ category: 'carbine' }, 'm4'], [{ category: 'compact', id: 'mac10' }, 'ingramsl'], [{ category: 'compact', id: 'kg99' }, 'tec9']]) {
       assert.equal(weaponIcon(def), expected);
     }
-    assert.equal(hud.extrasHidden, true); assert.equal(hud.toggleExtras(), true); assert.equal(hud.toggleExtras(), false);
     assert.ok(hud.el.children.includes(hud.status.el)); assert.ok(hud.el.children.includes(radar));
-    assert.ok(hud.el.classes.has('hud-extras-hidden'));
+    assert.doesNotMatch(hud.el.html, /hud-help|hud-lock|hud-stats/);
   } finally {
     await server?.close(); globalThis.document = oldDocument; globalThis.Image = oldImage;
   }

@@ -1,4 +1,3 @@
-import { bindingLabel as K } from '../core/InputManager.js';
 
 /**
  * Painel náutico (anos 80): velocidade em nós e km/h, acelerador (frente/ré),
@@ -19,7 +18,6 @@ export class BoatHUD {
       </div>
       <div class="veh-integrity"><small>CASCO</small><div class="veh-bar"><div class="veh-fill" data-ref="fill"></div></div><span data-ref="hp">100%</span></div>
       <div class="boat-info"><span data-ref="head">RUMO N</span> · <span data-ref="depth">PROF. —</span> · <span data-ref="place"></span></div>
-      <div class="veh-keys"><kbd>${K('forward')}</kbd>/<kbd>${K('back')}</kbd> acelerar/ré · <kbd>${K('left')}</kbd>/<kbd>${K('right')}</kbd> leme · <kbd>${K('run')}</kbd> potência · <kbd>${K('horn')}</kbd> buzina · <kbd>${K('toggleCamera')}</kbd> câmera · <kbd>${K('interact')}</kbd> sair</div>
     `;
     root.appendChild(this.el);
     this.refs = {};

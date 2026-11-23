@@ -24,13 +24,23 @@ Há também:
 O trânsito continua no modelo arcade. Testes: `npm run test:mechanics` e `__NEON_TEST__.mechanicsSuite()`.
 Detalhes em [docs/MECANICA_VEICULAR.md](docs/MECANICA_VEICULAR.md).
 
-## Mundo unificado — Sunset Beach + TEST CITY
+## Vice City — único mapa
 
-Os dois mapas viraram um só: o TEST CITY é o **bairro oeste** de Sunset Beach, ligado pela
-Flamingo Street (pórtico "TEST CITY"), sem tela de carregamento. Trânsito, pedestres, polícia,
-radar, salvamento e a Sala de teste funcionam nos dois bairros. O GLB original é só transladado
-(arquivo intacto). Testes: `npm run test:merged` e `__NEON_TEST__.mergedSuite()`.
-Detalhes em [docs/MUNDO_UNIFICADO.md](docs/MUNDO_UNIFICADO.md).
+O jogo abre diretamente o Vice City completo, com os 29 setores locais. Sunset Beach,
+Lantern Point e TEST CITY foram retirados da inicialização, do seletor e do atalho F8.
+Salvamentos de mapas removidos recuperam o progresso no spawn seguro do Vice City.
+
+Execute `npm run dev -- --host 127.0.0.1` e abra <http://127.0.0.1:5173/>.
+Os modelos e texturas do GTA ficam somente em `dev-maps/vice-city/`, ignorados pelo Git
+e excluídos do build. Instruções e limitações em [docs/VICE_CITY_LOCAL.md](docs/VICE_CITY_LOCAL.md).
+
+O minimapa retangular fixo usa o radar original do Vice City, calibrado para as
+coordenadas do cenário. **P** abre opções, mapa completo, manuais e estatísticas;
+F3 não exibe mais guias na tela. Detalhes em [docs/INTERFACE_VICE_CITY.md](docs/INTERFACE_VICE_CITY.md).
+No mapa completo, clique para marcar um destino no minimapa, use a roda para
+ampliar e arraste para mover. O velocímetro compacto aparece somente em carros e motos.
+O executável 0.2.2 encontra ou solicita a pasta local do mapa convertido;
+os recursos do GTA continuam fora dos downloads publicados no GitHub.
 
 ## NEON RADIO NETWORK — rádio nos carros, barcos, lojas e casas
 
@@ -194,25 +204,12 @@ src/
   styles/main.css
 ```
 
-## Mapas de teste importados (modo dev)
+## Recursos locais do cenário
 
-Sunset Beach continua sendo o mapa do jogo. Para testar o pipeline de importação glTF/GLB:
-
-```bash
-npm run build:testmap
-```
-
-Gera `dev-maps/test-city/` e a cópia do jogo em `public/maps/test-city/` (conteúdo original): 16 quarteirões, praça elevada com escada e rampa,
-colina, prédios girados, galeria com pilotis, beco de 3,5 m e objetos de calibração de escala.
-
-- `http://localhost:5173/?map=test-city` inicia direto no mapa de teste.
-- Na tela inicial: seletor "MAPA (DEV)" (TEST CITY isolado). Em jogo, o TEST CITY já é o bairro oeste do mundo; **F8** leva até ele.
-- Carregamento com progresso, colisões geradas automaticamente, spawn seguro, descarga completa
-  ao sair e mensagens de erro (o mapa atual continua ativo se o novo falhar).
-- Nada disso existe no build de produção. Detalhes e convenções em [dev-maps/README.md](dev-maps/README.md).
-
-Arquivos: `src/maps/` (MapManager, ImportedMap, HeightField), `src/ui/LoadingOverlay.js`,
-`tools/test-map/` (gerador do mapa, gravador GLB e codificador PNG sem dependências).
+O carregador em `src/maps/` usa somente `dev-maps/vice-city/manifest.json`.
+URLs antigas com `?map=` também abrem a cidade completa; o setor piloto permanece
+como parte dela, sem uma opção de mapa separada. As ferramentas históricas em
+`tools/test-map/` servem como fixtures de testes e não publicam mapas em `public/`.
 
 ## Testes automatizados (modo dev)
 

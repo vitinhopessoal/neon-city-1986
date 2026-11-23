@@ -1,7 +1,5 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, existsSync } from 'node:fs';
-import { createHash } from 'node:crypto';
 import { createCoastalCity } from '../../src/world/districts/CoastalCity.js';
 import { SUNSET_BEACH } from '../../src/world/districts/SunsetBeach.js';
 import { TEST_CITY_LINK } from '../../src/world/districts/TestCityLink.js';
@@ -98,18 +96,4 @@ test('only lamp posts standing inside a carriageway are left out when attaching'
   assert.equal(a._inCarriageway(-56.2, 47.5), true);  // idem na rua X50
   assert.equal(a._inCarriageway(75 + 15, 75 - 18.8), false); // borda da calçada
   assert.equal(a._inCarriageway(-75 - 18.8, -25 + 7.5), false);
-});
-
-test('the shipped TEST CITY GLB is a byte-identical copy of the generated map', () => {
-  const pub = new URL('../../public/maps/test-city/test-city.glb', import.meta.url);
-  const dev = new URL('../../dev-maps/test-city/test-city.glb', import.meta.url);
-  assert.ok(existsSync(pub), 'public/maps/test-city/test-city.glb ausente');
-  const man = JSON.parse(readFileSync(new URL('../../public/maps/test-city/manifest.json', import.meta.url), 'utf8'));
-  const bytes = readFileSync(pub);
-  assert.equal(bytes.length, man.generated.bytes);
-  if (existsSync(dev)) {
-    const h = (b) => createHash('sha256').update(b).digest('hex');
-    assert.equal(h(bytes), h(readFileSync(dev)));
-  }
-  assert.deepEqual(man.bounds, { minX: -L.half, maxX: L.half, minZ: -L.half, maxZ: L.half });
 });

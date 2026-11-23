@@ -277,8 +277,9 @@ export class VehicleInteraction {
     const col = env.collision;
     const g = col.getGroundHeight(x, z, refY + 0.4, 0.45);
     if (Math.abs(g - refY) > 0.7) return null;
-    if (env.waterDepth && env.waterDepth(x, z) > 0.45) return null;
+    if (env.waterDepth && env.waterDepth(x, z, g) > 0.45) return null;
     if (env.boundaryHint && env.boundaryHint(x, z, 0.4) === 'closed') return null;
+    if (col.isVolumeFree) return col.isVolumeFree(x, g, z, 0.42, 1.85) ? g : null;
     const list = col.queryCircle(x, z, 0.42, this._tmpList || (this._tmpList = []));
     for (const c of list) {
       if (!c.solid || c.type === 'ramp') continue;

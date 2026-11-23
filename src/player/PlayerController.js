@@ -103,7 +103,7 @@ export class PlayerController {
 
     // Profundidade sob o jogador (fundo do mar) e lâmina d'água nos pés
     // (zero sobre píeres e conveses, mesmo com água funda embaixo).
-    this.seaDepth = this.env.waterDepth(p.x, p.z);
+    this.seaDepth = this.env.waterDepth(p.x, p.z, p.y);
     const level = this.env.waterLevel ?? BEACH.waterLevel;
     this.waterDepth = Math.max(0, Math.min(this.seaDepth, level - p.y));
     if (this.swimming) { this._swimStep(dt, input, w, wl, level); return; }
@@ -251,7 +251,7 @@ export class PlayerController {
     p.y += (swimY - p.y) * Math.min(1, dt * 6);
     this.grounded = true;
     this.airTime = 0;
-    this.seaDepth = this.env.waterDepth(p.x, p.z);
+    this.seaDepth = this.env.waterDepth(p.x, p.z, p.y);
     // Pé volta a tocar o fundo: sai do nado andando.
     const ground = this.collision.getGroundHeight(p.x, p.z, level - c.swimFloat, 0.08);
     if (ground >= level - c.swimFloat - 0.06 || this.seaDepth < c.swimDepth - 0.12) {

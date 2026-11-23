@@ -5,12 +5,9 @@ import { Terrain, BEACH } from './Terrain.js';
 import { RoadNetwork } from './RoadNetwork.js';
 import { Environment, TIME_PRESETS } from './Environment.js';
 import { SURFACE_UNIFORMS, setSurfaceDetailEnabled } from '../render/SurfaceDetail.js';
-import { Ocean } from './Ocean.js';
 import { NeonSignSystem } from './NeonSign.js';
 import { CityGenerator } from './CityGenerator.js';
 import { VehicleFactory } from '../vehicles/VehicleFactory.js';
-import { SUNSET_BEACH } from './districts/SunsetBeach.js';
-import { createCoastalCity } from './districts/CoastalCity.js';
 import { DestructionSystem } from './DestructionSystem.js';
 
 /**
@@ -62,7 +59,6 @@ export class World {
     this.lodMeshes = [];
     this._lodTimer = 0;
     this._lodCam = new THREE.Vector3(1e9, 0, 1e9);
-    this.sunsetBuilt = false;
     // Bairros anexados ao mundo (ex.: TEST CITY a oeste): limites, dicas e relevo próprios.
     this.annexes = [];
     this._playBounds = null;
@@ -122,32 +118,13 @@ export class World {
     this.ocean?.syncEnvironment(this.environment.palette);
   }
 
-  /**
-   * Gera Sunset Beach (uma única vez) e retorna o World como ambiente de mapa.
-   * O cenário permanece em memória quando outro mapa de testes está ativo.
-   */
-  ensureSunsetBeach() {
-    if (!this.sunsetBuilt) {
-      this.ocean = new Ocean(this.environment.palette);
-      this.scene.add(this.ocean.mesh);
-      // A Flamingo Street segue para oeste até o TEST CITY (anexado por TestCityAnnex).
-      this.loadDistrict(createCoastalCity({ testCityLink: true }));
-      this.sunsetBuilt = true;
-      // Ganchos pós-montagem (ex.: NEON MOTOR COMPANY estaciona seus modelos nas vagas recém-criadas).
-      for (const fn of this.afterDistrictBuild || []) fn(this);
-      this.applyTimeOfDay();
-      this.applyQuality(this.quality);
-    }
-    return this;
-  }
-
   // ------------------------------------- interface de ambiente de mapa
   get isImported() {
     return false;
   }
 
   get label() {
-    return SUNSET_BEACH.name;
+    return this.districts[0]?.name || 'VICE CITY';
   }
 
   get spawnPoint() {
@@ -253,7 +230,7 @@ export class World {
    * lotes de detalhe dos edifícios. Barato: só recalcula quando a câmera anda.
    */
   updateLOD(camPos, force = false) {
-    if (!this.sunsetBuilt) return;
+    if (!this.districts.length) return;
     this.palms?.updateLOD(camPos, force);
     this.vegetation?.update(this._elapsed ?? 0, camPos);
     if (!force && camPos.distanceToSquared(this._lodCam) < 9) return;

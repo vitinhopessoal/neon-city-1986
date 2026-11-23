@@ -1,5 +1,4 @@
 import { AMMO_TYPES } from './WeaponDefinitions.js';
-import { bindingLabel } from '../core/InputManager.js';
 
 /**
  * HUD de combate (canto inferior esquerdo, longe do velocímetro) + retículo
@@ -11,7 +10,6 @@ const MODE_LABEL = { semi: 'SEMI', auto: 'AUTO', pump: 'BOMBA' };
 export class WeaponHUD {
   constructor(root, inventory) {
     this.inv = inventory;
-    const K = (a) => bindingLabel(a);
     this.el = document.createElement('div');
     this.el.className = 'wpn-layer';
     this.el.innerHTML = `
@@ -19,7 +17,6 @@ export class WeaponHUD {
         <div class="wpn-head"><span class="wpn-name" data-w="name"></span><span class="wpn-mode" data-w="mode"></span></div>
         <div class="wpn-ammo"><span class="wpn-loaded" data-w="loaded">0</span><span class="wpn-sep">/</span><span class="wpn-reserve" data-w="reserve">0</span><span class="wpn-cat" data-w="cat"></span></div>
         <div class="wpn-reload" data-w="reloadBox"><div class="wpn-reload-bar" data-w="reloadBar"></div><span>RECARREGANDO</span></div>
-        <div class="wpn-hint" data-w="hint"></div>
       </div>
       <div class="wpn-reticle hidden" data-w="reticle"><i></i><i></i><i></i><i></i><b></b></div>
       <div class="wpn-hit" data-w="hit"></div>
@@ -28,7 +25,6 @@ export class WeaponHUD {
     root.appendChild(this.el);
     this.r = {};
     this.el.querySelectorAll('[data-w]').forEach((n) => { this.r[n.dataset.w] = n; });
-    this.keys = { holster: K('holster'), reload: K('reload'), quick: K('quickSelect') };
     this._quickTimer = 0;
     this._hitTimer = 0;
     this._last = {};
@@ -73,12 +69,6 @@ export class WeaponHUD {
       const reloading = s.reloadK >= 0;
       r.reloadBox.classList.toggle('visible', reloading);
       if (reloading) r.reloadBar.style.transform = `scaleX(${s.reloadK.toFixed(3)})`;
-      let hint;
-      if (!s.drawn) hint = `<kbd>${this.keys.holster}</kbd> sacar · <kbd>${this.keys.quick}</kbd> armas`;
-      else if (s.loaded === 0 && s.reserve > 0) hint = `<kbd>${this.keys.reload}</kbd> recarregar`;
-      else if (s.loaded === 0) hint = 'SEM MUNIÇÃO';
-      else hint = `<kbd>${this.keys.holster}</kbd> guardar · <kbd>${this.keys.reload}</kbd> recarregar`;
-      this._set('hint', hint, true);
     }
     // Retículo: aparece com a arma sacada; abre com a dispersão.
     const ret = s.visible && s.drawn;

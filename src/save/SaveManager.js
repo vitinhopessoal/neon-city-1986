@@ -113,7 +113,7 @@ export class SaveManager {
   refs() {
     const g = this.game;
     return {
-      maps: new Set(g.maps?.list?.().map((m) => m.id) || ['sunset-beach']),
+      maps: new Set(g.maps?.list?.().map((m) => m.id) || ['vice-city']),
       properties: new Set(g.properties?.defs.map((d) => d.id) || []),
       garages: new Set(g.properties?.garageIds() || []),
       weapons: new Set(g.weapons?.inv.defs.map((d) => d.id) || []),
@@ -145,7 +145,7 @@ export class SaveManager {
       gameId: this.gameId || this.newGameId(),
       savedAt: new Date().toISOString(),
       label: String(label).slice(0, 40),
-      map: g.maps?.activeId || 'sunset-beach',
+      map: g.maps?.activeId || g.maps?.defaultId || 'vice-city',
       location: inside ? I.active.def.name : (district?.name || g.mapEnv?.label || ''),
       playTime: Math.round(g.playTime || 0),
       player: { x: +pos.x.toFixed(3), y: +pos.y.toFixed(3), z: +pos.z.toFixed(3), yaw: +yaw.toFixed(4), health: g.player.status.health, inside },
@@ -268,8 +268,16 @@ export class SaveManager {
     if (g.boats?.aboard) g.boats.forceExit();
     const maps = this.refs().maps;
     let map = s.map, recovered = false;
-    if (!maps.has(map)) { warnings.push(`Mapa "${map}" indisponível: recuperado em Sunset Beach.`); map = 'sunset-beach'; recovered = true; }
-    if (g.maps.activeId !== map) await g.maps.activate(map);
+    if (!maps.has(map)) {
+      map = g.maps.defaultId || maps.values().next().value;
+      if (!map) throw new Error('Nenhum mapa disponível para recuperar o salvamento.');
+      warnings.push(`Mapa "${s.map}" indisponível: recuperado em ${g.maps.registry?.get(map)?.label || map}.`);
+      recovered = true;
+    }
+    if (g.maps.activeId !== map) {
+      const ok = await g.maps.activate(map);
+      if (!ok || g.maps.activeId !== map) throw new Error('Não foi possível carregar o mapa do salvamento.');
+    }
     for (let i = 0; i < 400 && g.mapLoading; i++) await new Promise((res) => setTimeout(res, 50));
     // 2) Economia, inventário, compras dos estabelecimentos.
     g.economy.deserialize(s.economy);

@@ -1,32 +1,26 @@
-# dev-maps/ — mapas de teste (somente desenvolvimento)
+# dev-maps/ — cenário local do Vice City
 
 Esta pasta é servida em `/dev-maps/` **apenas** pelo `npm run dev` (plugin em `vite.config.js`).
 Ela **não** entra no `dist/` nem no `vite preview`. Conteúdo aqui é tratado como externo ao jogo.
 
-- `test-city/` — mapa de testes original, gerado por `npm run build:testmap`. O mesmo comando grava uma cópia
-  idêntica em `public/maps/test-city/`, carregada pelo jogo como bairro oeste do mundo unificado
-  (`docs/MUNDO_UNIFICADO.md`).
+- `vice-city/` — único cenário do jogo: 29 setores GLB, texturas e colisões.
+  O jogo abre automaticamente `vice-city/manifest.json`; não há seletor de mapas.
+- `vice-city-converted.zip` — pacote local de reinstalação do mesmo cenário.
+- Sunset Beach, Lantern Point e TEST CITY saíram do fluxo de carregamento.
 - Não coloque aqui conteúdo de terceiros sem licença que permita o uso. Mesmo com licença,
   mantenha-o nesta pasta (fora de `src/` e `public/`) até a autorização estar documentada.
 - O `.gitignore` ignora tudo nesta pasta, exceto este README, para evitar redistribuição acidental.
 
 ## Formato
 
-Cada mapa é uma pasta com `manifest.json` + modelo glTF/GLB (metros, Y para cima):
+O `vice-city/manifest.json` combina `files` (29 GLBs) e `collisionFiles`
+(29 arquivos COL convertidos). Cada setor tem também seu manifesto de conversão.
+As coordenadas usam metros, com Y para cima. A colisão efetiva é tridimensional,
+independente do campo de alturas legado do importador.
 
-```json
-{
-  "id": "test-city",
-  "label": "TEST CITY",
-  "file": "test-city.glb",
-  "scale": 1,
-  "spawn": { "x": 0, "y": 0, "z": 15, "yaw": 0 },
-  "bounds": { "minX": -108, "maxX": 108, "minZ": -108, "maxZ": 108 },
-  "heightfieldCell": 0.5
-}
-```
-
-Registre o mapa em `CONFIG.dev.testMaps` (`src/config.js`).
+O cenário ativo é definido em `CONFIG.map` (`src/config.js`). A configuração
+atual aceita somente o Vice City completo; os manifestos por setor são recursos
+de conversão e validação, sem entradas separadas no jogo.
 
 ## Convenções nos "extras" dos nós glTF
 

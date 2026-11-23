@@ -46,7 +46,7 @@ export class LoadingOverlay {
   error(title, message) {
     this.el.classList.add('visible', 'error');
     this.refs.title.textContent = `Falha ao carregar: ${title}`;
-    this.refs.phase.textContent = 'O mapa anterior continua ativo.';
+    this.refs.phase.textContent = 'Não foi possível concluir o carregamento do cenário.';
     this.refs.detail.textContent = message;
   }
 

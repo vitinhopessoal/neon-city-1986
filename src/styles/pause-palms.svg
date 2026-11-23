@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" fill="none">
+  <defs><path id="leaf" d="M0 0Q85-76 220-35Q118-56 0 0M18-9L63-67L46-19M56-27L110-81L89-39M100-39L158-77L136-44M145-45L197-60L174-45M28-13L93 12L62-27M75-31L145-3L111-40M128-42L195-25L166-44" fill="currentColor"/></defs>
+  <g color="#008b98" opacity=".29" transform="translate(115 560) scale(1.6)">
+    <path d="M-30 240Q55 90 0 0Q27 92-6 240Z" fill="currentColor"/>
+    <use href="#leaf"/><use href="#leaf" transform="rotate(42)"/><use href="#leaf" transform="rotate(86)"/><use href="#leaf" transform="rotate(138)"/><use href="#leaf" transform="rotate(178)"/><use href="#leaf" transform="rotate(218)"/><use href="#leaf" transform="rotate(278)"/><use href="#leaf" transform="rotate(324)"/>
+  </g>
+  <g color="#07909b" opacity=".18" transform="translate(1350 660) scale(2.3)">
+    <path d="M-10 150Q29 54 0 0Q41 53 15 150Z" fill="currentColor"/>
+    <use href="#leaf"/><use href="#leaf" transform="rotate(52)"/><use href="#leaf" transform="rotate(112)"/><use href="#leaf" transform="rotate(168)"/><use href="#leaf" transform="rotate(210)"/><use href="#leaf" transform="rotate(269)"/><use href="#leaf" transform="rotate(321)"/>
+  </g>
+  <g stroke="#fff" stroke-width="2" opacity=".14"><path d="M0 120H1600M0 490H1600M370 0V900M1100 0V900"/><path d="M-100 850L1500 250M300 950L1700 400M0 770L1600 160"/></g>
+</svg>

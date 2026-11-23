@@ -1,139 +1,153 @@
-// Heading-up circular radar drawn from the same layout as the playable world.
-// Canvas2D adds no WebGL draw calls; refresh is limited to ten times a second.
+import { validateWaypoint, waypointIndicator, formatMapDistance, readWaypoint, storeWaypoint } from './Waypoint.js';
+
+// The same invertible projection serves the radar and clickable world map.
+export function radarProjection(position, yaw, { width = 336, height = 180, range = 460, northUp = false, bounds = null, zoom = 1, center = null } = {}) {
+  const scale = bounds ? Math.min(width / (bounds.maxX - bounds.minX), height / (bounds.maxZ - bounds.minZ)) * 0.94 * zoom : width / range;
+  const cx = bounds ? (center?.x ?? (bounds.minX + bounds.maxX) / 2) : position.x;
+  const cz = bounds ? (center?.z ?? (bounds.minZ + bounds.maxZ) / 2) : position.z;
+  const rotation = bounds || northUp ? 0 : Math.PI + yaw;
+  const px = width / 2, py = bounds ? height / 2 : height * 0.64;
+  const cos = Math.cos(rotation), sin = Math.sin(rotation);
+  return { scale, cx, cz, rotation, px, py,
+    project(x, z) { const dx = (x - cx) * scale, dz = (z - cz) * scale;
+      return { x: px + dx * cos - dz * sin, y: py + dx * sin + dz * cos }; },
+    unproject(x, y) { const dx = (x - px) / scale, dz = (y - py) / scale;
+      return { x: cx + dx * cos + dz * sin, z: cz - dx * sin + dz * cos }; },
+  };
+}
+
 export class Minimap {
   constructor(parent) {
-    this.el = document.createElement('div');
-    this.el.className = 'hud-minimap';
-    this.el.innerHTML = '<canvas width="408" height="408" aria-label="Mapa da cidade: ruas, pontos de interesse e jogador"></canvas><div class="minimap-caption"><span>N / NORTE</span><span data-map-mode>N: MAPA GERAL</span></div>';
+    this.el = document.createElement('div'); this.el.className = 'hud-minimap';
+    this.el.innerHTML = '<canvas width="672" height="360" role="img" aria-label="Minimapa do Vice City: ruas reais e jogador"></canvas><div class="minimap-caption"><span data-map-mode>VICE CITY</span><span data-scale>100 m</span></div><div class="minimap-health" role="progressbar" aria-label="Saúde" aria-valuemin="0" aria-valuemax="100"><i></i></div>';
     parent.appendChild(this.el);
-    this.canvas = this.el.querySelector('canvas');
-    this.ctx = this.canvas.getContext('2d');
-    this.caption = this.el.querySelector('[data-map-mode]');
-    this.overview = false;
-    this.timer = 0;
-    if (typeof Image !== 'undefined') {
-      this.frame = new Image();
-      this.frame.onload = () => { this.timer = 0; };
-      this.frame.src = `${import.meta.env?.BASE_URL || './'}hud/vice/radardisc.png`;
-    }
+    this.canvas = this.el.querySelector('canvas'); this.ctx = this.canvas.getContext('2d');
+    this.caption = this.el.querySelector('[data-map-mode]'); this.scaleLabel = this.el.querySelector('[data-scale]');
+    this.health = this.el.querySelector('.minimap-health'); this.healthFill = this.el.querySelector('.minimap-health i');
+    this.overview = false; this.timer = 0;
+    this.waypoint = null; this.listeners = new Set();
+    this.settings = { northUp: false, zoom: 1, colorBlind: 'off' };
   }
-
+  configure(settings) { Object.assign(this.settings, settings); this.timer = 0; }
+  subscribe(listener) { this.listeners.add(listener); return () => this.listeners.delete(listener); }
+  _notify() { for (const listener of this.listeners) listener(); }
+  setWaypoint(point) {
+    const valid = validateWaypoint(point, this.mapData?.bounds || this.bounds);
+    if (!valid) return false;
+    this.waypoint = valid; storeWaypoint(this.env.id || 'vice-city', valid); this.timer = 0; this._notify(); return true;
+  }
+  clearWaypoint() { this.waypoint = null; storeWaypoint(this.env?.id || 'vice-city', null); this.timer = 0; this._notify(); }
+  get waypointDistance() {
+    const position = this.position || this.env?.spawnPoint;
+    return position && this.waypoint ? Math.hypot(this.waypoint.x - position.x, this.waypoint.z - position.z) : null;
+  }
   setEnvironment(env) {
-    this.env = env;
-    // Área jogável completa: bairros anexados (TEST CITY) entram no mesmo radar.
-    this.bounds = env.playBounds || env.bounds || env.manifest?.bounds;
+    this.env = env; this.bounds = env.playBounds || env.bounds || env.manifest?.bounds;
     this.roads = env.roads?.roads ? [...env.roads.roads.values()] : (env.manifest?.roads || []);
-    this.buildings = env.districts?.flatMap(d => d.buildings || []) || [];
-    this.overlays = env.districts?.flatMap(d => d.overlays || []) || [];
-    this.regions = env.districts?.flatMap(d => d.regions || [d]) || [];
-    this.el.hidden = !this.bounds || !this.roads.length || !this.ctx;
+    this.mapData = env.manifest?.minimap;
+    this.waypoint = readWaypoint(env.id || 'vice-city', this.mapData?.bounds || this.bounds);
+    this.image = null; this.imageReady = false; this.imageError = false;
+    this.el.hidden = !this.bounds || !this.ctx;
+    if (this.mapData?.image && typeof Image !== 'undefined') {
+      const image = new Image(); this.image = image;
+      image.onload = () => { if (this.image === image) { this.imageReady = true; this.timer = 0; this._notify(); } };
+      image.onerror = () => { if (this.image === image) this.imageError = true; };
+      const base = env.manifestUrl?.slice(0, env.manifestUrl.lastIndexOf('/') + 1) || '';
+      image.src = base + this.mapData.image;
+    }
     this.timer = 0;
   }
-
   toggle() {
-    this.overview = !this.overview;
-    this.caption.textContent = this.overview ? 'N: MAPA LOCAL' : 'N: MAPA GERAL';
-    this.timer = 0;
+    this.overview = !this.overview; this.caption.textContent = this.overview ? 'VICE CITY · GERAL' : 'VICE CITY'; this.timer = 0;
   }
-
-  update(dt, position, yaw) {
+  update(dt, position, yaw, status = null) {
+    this.position = { x: position.x, z: position.z }; this.yaw = yaw;
+    if (status && this.healthFill?.style) {
+      this.healthFill.style.width = `${status.health}%`; this.health.setAttribute?.('aria-valuenow', String(status.health));
+    }
     if (this.el.hidden || !this.env) return;
-    this.timer -= dt;
-    if (this.timer > 0) return;
-    this.timer = 0.1;
-    const ctx = this.ctx, size = 204, b = this.bounds;
-    const range = this.overview ? Math.max(b.maxX - b.minX, b.maxZ - b.minZ) + 50 : 220;
-    const scale = size / range;
-    const cx = this.overview ? (b.minX + b.maxX) / 2 : position.x;
-    const cz = this.overview ? (b.minZ + b.maxZ) / 2 : position.z;
-    const x = v => size / 2 + (v - cx) * scale;
-    const y = v => size / 2 + (v - cz) * scale;
-    ctx.setTransform(2, 0, 0, 2, 0, 0);
-    ctx.clearRect(0, 0, size, size);
-    ctx.save();
-    ctx.beginPath(); ctx.arc(size / 2, size / 2, size / 2 - 8, 0, Math.PI * 2); ctx.clip();
-    ctx.fillStyle = '#72b9cf'; ctx.fillRect(0, 0, size, size);
-    const rotation = this.overview ? 0 : Math.PI + yaw;
-    ctx.translate(size / 2, size / 2); ctx.rotate(rotation); ctx.translate(-size / 2, -size / 2);
-    ctx.save();
-    ctx.beginPath();
-    for (const r of b.rects || [b]) ctx.rect(x(r.minX), y(r.minZ), (r.maxX - r.minX) * scale, (r.maxZ - r.minZ) * scale);
-    ctx.clip();
-    ctx.fillStyle = '#075537'; ctx.fillRect(-size, -size, size * 3, size * 3);
-    for (const d of this.env.districts || []) {
-      if (!d.annex) continue;
-      // Bairro anexado: quadra de asfalto (o chão do GLB é asfalto entre as calçadas).
-      ctx.fillStyle = '#5f6b6e';
-      ctx.fillRect(x(d.bounds.minX), y(d.bounds.minZ), (d.bounds.maxX - d.bounds.minX) * scale, (d.bounds.maxZ - d.bounds.minZ) * scale);
-    }
-    if (!this.env.isImported) {
-      ctx.fillStyle = '#d4c78e'; ctx.fillRect(x(54), -size * 3, (110 - 54) * scale, size * 7);
-      ctx.fillStyle = '#72b9cf'; ctx.fillRect(x(93), -size * 3, size * 6, size * 7);
-      ctx.fillStyle = '#e5dfc1'; ctx.fillRect(x(38), -size * 3, 16 * scale, size * 7);
-    }
-    for (const o of this.overlays) {
-      ctx.fillStyle = o.surface === 'grass' ? '#276d48' : '#dce9dd';
-      ctx.fillRect(x(o.minX), y(o.minZ), (o.maxX - o.minX) * scale, (o.maxZ - o.minZ) * scale);
-    }
-    ctx.strokeStyle = '#f7fff5'; ctx.lineCap = 'butt';
-    for (const r of this.roads) {
-      ctx.lineWidth = Math.max(2, (r.width || 12) * scale);
-      ctx.beginPath(); ctx.moveTo(x(r.start.x), y(r.start.z)); ctx.lineTo(x(r.end.x), y(r.end.z)); ctx.stroke();
-    }
-    for (const building of this.buildings) {
-      const w = building.lotW || building.w || 18, d = building.lotD || building.d || 18;
-      ctx.save(); ctx.translate(x(building.x), y(building.z)); ctx.rotate(-(building.rotY || 0));
-      ctx.fillStyle = '#dceada';
-      ctx.fillRect(-w * scale / 2, -d * scale / 2, w * scale, d * scale); ctx.restore();
-    }
-    for (const poi of this.env.pois || []) {
-      if (poi.type !== 'landmark') continue;
-      ctx.fillStyle = '#ffd083'; ctx.beginPath(); ctx.arc(x(poi.x), y(poi.z), 2.8, 0, Math.PI * 2); ctx.fill();
-    }
-    if (this.overview) {
-      ctx.font = 'bold 8px Arial'; ctx.textAlign = 'center'; ctx.fillStyle = '#f0e8d8';
-      for (const region of this.regions) {
-        const rb = region.bounds;
-        ctx.fillText(region.name, x(region.labelX ?? -20), y((rb.minZ + rb.maxZ) / 2));
+    this.timer -= dt; if (this.timer > 0) return; this.timer = 0.1;
+    this.draw(this.canvas, this.overview);
+  }
+  draw(canvas, overview = true, { colored = false, pixelRatio = 2, zoom = 1, center = null, crosshair = null } = {}) {
+    const ctx = canvas.getContext('2d'); if (!ctx || !this.bounds) return;
+    const width = canvas.width / pixelRatio, height = canvas.height / pixelRatio;
+    const position = this.position || this.env.spawnPoint || { x: 0, z: 0 }, yaw = this.yaw ?? 0;
+    const projection = radarProjection(position, yaw, { width, height, range: 460 * this.settings.zoom,
+      northUp: this.settings.northUp, bounds: overview ? (this.mapData?.bounds || this.bounds) : null, zoom, center });
+    const { px, py, rotation, scale, cx, cz } = projection;
+    ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0); ctx.clearRect(0, 0, width, height);
+    ctx.fillStyle = colored ? '#80b1d6' : '#374a50'; ctx.fillRect(0, 0, width, height);
+    ctx.save(); ctx.beginPath(); ctx.rect(0, 0, width, height); ctx.clip();
+    ctx.save(); ctx.translate(px, py); ctx.rotate(rotation); ctx.scale(scale, scale); ctx.translate(-cx, -cz);
+    if (this.imageReady) {
+      const b = this.mapData.bounds;
+      ctx.filter = colored ? 'none' : 'grayscale(1) invert(1) contrast(.8) brightness(.78)';
+      ctx.drawImage(this.image, b.minX, b.minZ, b.maxX - b.minX, b.maxZ - b.minZ); ctx.filter = 'none';
+    } else if (this.roads.length) {
+      // Fixtures draw their actual graph. No guessed streets when metadata is absent.
+      ctx.strokeStyle = '#d4d8d2'; ctx.lineCap = 'butt';
+      for (const r of this.roads) {
+        ctx.lineWidth = r.width || 12; ctx.beginPath(); ctx.moveTo(r.start.x, r.start.z); ctx.lineTo(r.end.x, r.end.z); ctx.stroke();
       }
     }
     ctx.restore();
-    // Marcadores de propriedades (PROMPT 07): residência própria, à venda, garagem.
-    for (const m of this.markers?.() || []) {
-      const mx = x(m.x), my = y(m.z);
-      ctx.save(); ctx.translate(mx, my); ctx.rotate(-rotation);
-      ctx.lineWidth = 1.5; ctx.strokeStyle = '#10151c';
-      if (m.kind === 'home') {
-        ctx.fillStyle = '#5dff9c'; ctx.beginPath(); ctx.moveTo(0, -6); ctx.lineTo(6, 0); ctx.lineTo(4, 0); ctx.lineTo(4, 5); ctx.lineTo(-4, 5); ctx.lineTo(-4, 0); ctx.lineTo(-6, 0); ctx.closePath(); ctx.fill(); ctx.stroke();
-      } else if (m.kind === 'sale') {
-        ctx.fillStyle = '#ffe95a'; ctx.beginPath(); ctx.arc(0, 0, 5.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-        ctx.fillStyle = '#10151c'; ctx.font = '900 8px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('$', 0, 0.5);
-      } else if (m.kind === 'marina') {
-        ctx.fillStyle = '#2fd3c6'; ctx.beginPath(); ctx.arc(0, 0, 5.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-        ctx.fillStyle = '#10151c'; ctx.font = '900 7px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('M', 0, 0.5);
-      } else if (m.kind === 'boat') {
-        ctx.fillStyle = '#45f3ff'; ctx.beginPath(); ctx.moveTo(0, -5); ctx.lineTo(4, 4); ctx.lineTo(-4, 4); ctx.closePath(); ctx.fill(); ctx.stroke();
-      } else if (m.kind === 'garage') {
-        ctx.fillStyle = '#45a0ff'; ctx.fillRect(-4.5, -4.5, 9, 9); ctx.strokeRect(-4.5, -4.5, 9, 9);
-        ctx.fillStyle = '#fff'; ctx.font = '900 7px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('G', 0, 0.5);
-      }
-      ctx.restore();
+    for (const marker of this.markers?.() || []) this._marker(ctx, projection, marker);
+    for (const vehicle of this.env.vehicles || []) {
+      if (!vehicle.root?.position || Math.hypot(vehicle.root.position.x - position.x, vehicle.root.position.z - position.z) < 3) continue;
+      this._marker(ctx, projection, { x: vehicle.root.position.x, z: vehicle.root.position.z, kind: 'vehicle' });
     }
-    for (const contact of this.police?.radarContacts() || []) {
-      ctx.fillStyle = Math.sin(this.police.time * 8) > 0 ? '#ff3c65' : '#4c9fff';
-      ctx.strokeStyle = '#10151c'; ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.arc(x(contact.x), y(contact.z), 4, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    for (const contact of this.police?.radarContacts() || []) this._marker(ctx, projection, { ...contact, kind: 'police' });
+    if (crosshair) {
+      const target = projection.project(crosshair.x, crosshair.z);
+      ctx.strokeStyle = '#ef81b9a6'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(target.x, 0); ctx.lineTo(target.x, height); ctx.moveTo(0, target.y); ctx.lineTo(width, target.y); ctx.stroke();
     }
-    // Pointer uses the character/vehicle heading (+Z local), not camera orbit.
-    ctx.save(); ctx.translate(x(position.x), y(position.z)); ctx.rotate(Math.PI - yaw);
-    ctx.fillStyle = '#fff'; ctx.strokeStyle = '#101a18'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(0, -7); ctx.lineTo(5, 5); ctx.lineTo(0, 2); ctx.lineTo(-5, 5); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
-    ctx.restore(); // Circular clipping and rotating map.
-    if (this.frame?.complete && this.frame.naturalWidth) ctx.drawImage(this.frame, 0, 0, size, size);
-    const nx = size / 2 + Math.sin(rotation) * 90, ny = size / 2 - Math.cos(rotation) * 90;
-    ctx.fillStyle = '#071412'; ctx.beginPath(); ctx.arc(nx, ny, 11, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#bde7ed'; ctx.font = '900 15px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('N', nx, ny + 1);
+    if (this.waypoint) this._drawWaypoint(ctx, projection, position, width, height, overview);
+    const player = projection.project(position.x, position.z);
+    ctx.save(); ctx.translate(player.x, player.y); ctx.rotate(Math.PI - yaw + rotation);
+    ctx.fillStyle = this.settings.colorBlind === 'off' ? '#f5f4ee' : '#ffe35d'; ctx.strokeStyle = '#20202b'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(0, -10); ctx.lineTo(6, 7); ctx.lineTo(0, 3); ctx.lineTo(-6, 7); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
+    if (!this.imageReady && !this.roads.length) {
+      ctx.fillStyle = '#f1f5ef'; ctx.font = '12px Arial'; ctx.textAlign = 'center';
+      ctx.fillText(this.imageError ? 'Radar local indisponível' : 'Carregando radar…', width / 2, 24);
+    }
+    ctx.restore();
+    const nx = width - 20, ny = 22;
+    ctx.fillStyle = '#14191e'; ctx.beginPath(); ctx.arc(nx, ny, 12, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 12px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('N', nx, ny);
+    ctx.save(); ctx.translate(nx, ny); ctx.rotate(rotation); ctx.strokeStyle = '#f2c1e6'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(0, -17); ctx.lineTo(0, -13); ctx.stroke(); ctx.restore();
+    ctx.strokeStyle = '#f7f5e9'; ctx.lineWidth = 2; ctx.beginPath();
+    ctx.moveTo(width - 96, height - 12); ctx.lineTo(width - 96, height - 7); ctx.lineTo(width - 16, height - 7); ctx.lineTo(width - 16, height - 12); ctx.stroke();
+    if (!overview && this.scaleLabel) this.scaleLabel.textContent = `${Math.round(80 / scale)} m`;
+    if (canvas === this.canvas) {
+      this.caption.textContent = this.waypoint ? `DESTINO · ${formatMapDistance(this.waypointDistance)}` : this.overview ? 'VICE CITY · GERAL' : 'VICE CITY';
+      this.el.classList?.toggle('has-waypoint', !!this.waypoint);
+    }
+    canvas.setAttribute?.('aria-label', `Mapa fiel do Vice City. Jogador em X ${position.x.toFixed(1)}, Z ${position.z.toFixed(1)}. ${overview ? 'Cidade completa.' : 'Vista local.'}${this.waypoint ? ` Destino em X ${this.waypoint.x.toFixed(1)}, Z ${this.waypoint.z.toFixed(1)}, distância direta ${formatMapDistance(this.waypointDistance)}.` : ''}`);
+    return projection;
   }
-
-  dispose() { this.el.remove(); }
+  _drawWaypoint(ctx, projection, position, width, height, overview) {
+    const target = projection.project(this.waypoint.x, this.waypoint.z);
+    const origin = projection.project(position.x, position.z);
+    const indicator = overview ? { ...target, inside: true, angle: 0 } : waypointIndicator(target, origin, width, height);
+    ctx.save(); ctx.translate(indicator.x, indicator.y);
+    ctx.fillStyle = '#d16bff'; ctx.strokeStyle = '#241333'; ctx.lineWidth = 3;
+    ctx.beginPath();
+    if (!indicator.inside) {
+      ctx.rotate(indicator.angle); ctx.moveTo(0, -10); ctx.lineTo(7, 6); ctx.lineTo(0, 3); ctx.lineTo(-7, 6);
+    } else { ctx.moveTo(0, -8); ctx.lineTo(8, 0); ctx.lineTo(0, 8); ctx.lineTo(-8, 0); }
+    ctx.closePath(); ctx.stroke(); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(0, 0, 2, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+  }
+  _marker(ctx, projection, marker) {
+    const p = projection.project(marker.x, marker.z);
+    ctx.fillStyle = ({ home: '#91d5ae', sale: '#edcc71', garage: '#81c8dd', marina: '#8bcac6', boat: '#92cfef', police: '#f695b8', vehicle: '#e3e2d8' })[marker.kind] || '#dab0e8';
+    ctx.strokeStyle = '#222630'; ctx.lineWidth = 1.5;
+    ctx.fillRect(p.x - 4, p.y - 4, 8, 8); ctx.strokeRect(p.x - 4, p.y - 4, 8, 8);
+    const symbol = ({ home: 'H', sale: '$', garage: 'G', marina: 'M', police: '!' })[marker.kind];
+    if (symbol) { ctx.fillStyle = '#182029'; ctx.font = 'bold 7px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(symbol, p.x, p.y + 0.5); }
+  }
+  dispose() { this.listeners.clear(); this.image = null; this.el.remove(); }
 }

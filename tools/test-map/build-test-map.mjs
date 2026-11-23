@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 /**
  * Gera o mapa de testes "TEST CITY" (conteúdo 100% original do Neon City)
- * como GLB + manifest.json em dev-maps/test-city/.
+ * como fixture GLB + manifest.json fora dos recursos do jogo.
  *
  * O objetivo é exercitar o pipeline de importação externo (GLTFLoader) com
  * características típicas de mapas de terceiros: muitos nós, malhas reusadas,
  * múltiplas primitivas, texturas PNG, prédios girados, terreno irregular,
  * escadas com colisão explícita (proxies COL_*) e objetos de calibração de escala.
  *
- * Uso: npm run build:testmap
+ * Uso interno: node tools/test-map/build-test-map.mjs
  */
 import { trafficMetadata } from './traffic-metadata.mjs';
 import * as THREE from 'three';
@@ -19,7 +19,7 @@ import { fileURLToPath } from 'node:url';
 import { exportGLB } from './glb-writer.mjs';
 import { makeImage } from './png.mjs';
 
-const OUT_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'dev-maps', 'test-city');
+const OUT_DIR = join(dirname(fileURLToPath(import.meta.url)), 'fixtures', 'test-city');
 
 // ------------------------------------------------------------------ RNG
 function rngFrom(seed) {
@@ -492,10 +492,5 @@ const manifest = {
   generated: { nodes: summary.nodes, meshes: summary.meshes, primitives: summary.primitives, materials: summary.materials, textures: summary.textures, triangles: Math.round(tris), bytes: glb.length },
 };
 writeFileSync(join(OUT_DIR, 'manifest.json'), JSON.stringify(manifest, null, 2));
-// Copia idêntica para o jogo: o TEST CITY é o bairro oeste do mundo unificado (public/maps/test-city).
-const PUBLIC_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'public', 'maps', 'test-city');
-mkdirSync(PUBLIC_DIR, { recursive: true });
-writeFileSync(join(PUBLIC_DIR, 'test-city.glb'), glb);
-writeFileSync(join(PUBLIC_DIR, 'manifest.json'), JSON.stringify(manifest, null, 2));
 console.log(`TEST CITY gerado em ${OUT_DIR}`);
 console.log(JSON.stringify(manifest.generated));

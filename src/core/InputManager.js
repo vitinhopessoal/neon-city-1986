@@ -12,11 +12,9 @@ export const DEFAULT_BINDINGS = {
   jump: ['Space'],
   toggleCamera: ['KeyV'],
   toggleHelp: ['KeyH'],
-  toggleHUD: ['F3'],
   toggleStats: ['Backquote'],
   cycleQuality: ['KeyG'],
   toggleMute: ['KeyM'],
-  toggleMap: ['F8'],
   toggleNavigation: ['KeyN'],
   togglePlayerModel: ['F9'],
   toggleCityDebug: ['F10'],
@@ -61,7 +59,6 @@ export const DEFAULT_BINDINGS = {
  * atualiza automaticamente o HUD (via bindingLabel).
  */
 export const ACTION_INFO = {
-  toggleHUD: { context: 'global', label: 'Mostrar/ocultar painéis extras da HUD' },
   toggleNavigation: { context: 'global', label: 'Mapa local / mapa geral' },
   forward: { context: 'pé/carro', label: 'Andar para frente / acelerar' },
   back: { context: 'pé/carro', label: 'Andar para trás / frear e ré' },
@@ -78,14 +75,13 @@ export const ACTION_INFO = {
   gearDown: { context: 'carro', label: 'Reduzir marcha (câmbio manual; parado: N e R)' },
   transmissionMode: { context: 'carro', label: 'Câmbio automático / manual' },
   toggleCamera: { context: 'global', label: 'Alternar 1ª / 3ª pessoa' },
-  toggleHelp: { context: 'global', label: 'Mostrar/ocultar ajuda' },
-  toggleStats: { context: 'global', label: 'Estatísticas de desempenho' },
+  toggleHelp: { context: 'global', label: 'Abrir manuais no menu de pausa' },
+  toggleStats: { context: 'global', label: 'Estatísticas no menu de pausa' },
   cycleQuality: { context: 'global', label: 'Perfil gráfico (baixo/médio/alto)' },
   toggleMute: { context: 'global', label: 'Som liga/desliga' },
   cycleTime: { context: 'global', label: 'Horário (manhã/pôr do sol/noite)' },
   gameMenu: { context: 'global', label: 'Menu do jogo (salvar, carregar, propriedades, inventário)' },
   inventory: { context: 'global', label: 'Consultar inventário' },
-  toggleMap: { context: 'global (dev)', label: 'Alternar mapa de testes' },
   togglePlayerModel: { context: 'global (dev)', label: 'Alternar protagonista (GLB / original)' },
   toggleCityDebug: { context: 'global (dev)', label: 'Depuração do trânsito e pedestres' },
   fire: { context: 'pé (armado)', label: 'Disparar' },
@@ -137,7 +133,7 @@ export function bindingConflicts(bindings = DEFAULT_BINDINGS) {
 const PREVENT_DEFAULT = new Set(['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Backquote', 'F3', 'F8', 'F9', 'Tab']);
 
 /** Ações de interface que funcionam também fora da jogabilidade (ex.: tela inicial). */
-const GLOBAL_ACTIONS = new Set(['toggleHUD', 'toggleMap', 'togglePlayerModel', 'toggleCityDebug', 'toggleStats', 'cycleQuality', 'toggleMute', 'toggleHelp', 'cycleTime']);
+const GLOBAL_ACTIONS = new Set(['gameMenu', 'togglePlayerModel', 'toggleCityDebug', 'toggleStats', 'cycleQuality', 'toggleMute', 'toggleHelp', 'cycleTime']);
 /** Teclas sem ação padrão útil no navegador, bloqueadas mesmo com o jogo inativo. */
 const ALWAYS_PREVENT = new Set(['F3', 'F8', 'F9', 'F10']);
 

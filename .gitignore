@@ -6,6 +6,7 @@ dev-maps/*
 !dev-maps/README.md
 tools/ai-reference-temp/
 tools/vice-city-local/
+tools/test-map/fixtures/
 # Pacotes compactados na raiz (mods/arquivos de terceiros e o ZIP original do protagonista).
 *.zip
 *.rar

@@ -11,11 +11,12 @@ Depois de extrair os TXDs para a pasta de trabalho:
 
 ```powershell
 python tools/hud/extract-hud.py tools/ai-reference-temp/hud
-npm run test:hud
+node --test tools/hud/status.test.mjs tools/hud/radar-menu.test.mjs
 npm run build
 ```
 
-- `F3`: mostra/oculta os painéis auxiliares. Status, radar e mira continuam disponíveis.
+- `P`: abre opções, manuais, mapa completo e estatísticas. F3 não restaura mais
+  painéis ou instruções sobre a cena.
 - `N`: alterna radar local e mapa geral. O radar local gira com o personagem.
 - `X` e seleção de armas continuam funcionando; o ícone mostra a arma sacada ou o punho.
 - `player.status`: saúde, carteira, relógio e nível de procurado, independentes da interface.
@@ -30,5 +31,7 @@ npm run build
 - O relógio avança um minuto por segundo de jogo ativo. `T` sincroniza o
   relógio com o preset de iluminação escolhido; a iluminação continua manual.
 
-As posições e proporções usam a referência de 1024×572: indicadores no alto
-à direita, radar de aproximadamente 136×114 no canto inferior esquerdo.
+Os indicadores ficam no alto à direita. O minimapa agora é retangular, fixo no
+canto inferior esquerdo, com as 64 texturas originais de radar convertidas para
+`dev-maps/vice-city/radar/atlas.png`. Esses novos recursos ficam fora do Git e
+do build. Veja `docs/INTERFACE_VICE_CITY.md` para calibração e opções do menu.

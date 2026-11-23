@@ -17,7 +17,6 @@ import { StartScreen } from '../ui/StartScreen.js';
 import { AudioManager } from '../audio/AudioManager.js';
 import { BODY_LAYER, HEAD_LAYER, ARMS_LAYER } from '../player/CharacterModel.js';
 import { MapManager } from '../maps/MapManager.js';
-import { TestCityAnnex } from '../maps/TestCityAnnex.js';
 import { TIME_ORDER, TIME_PRESETS } from '../world/Environment.js';
 import { VehicleManager } from '../vehicles/VehicleManager.js';
 import { InteriorManager } from '../interiors/InteriorManager.js';
@@ -29,8 +28,6 @@ import { GameMenu } from '../ui/GameMenu.js';
 import { VehicleCustomizationManager } from '../vehicles/customization/VehicleCustomizationManager.js';
 import { WaterManager } from '../water/WaterManager.js';
 import { BoatManager } from '../boats/BoatManager.js';
-import { placeNeonShowcase } from '../vehicles/models/NeonShowcase.js';
-import { placeMotoShowcase } from '../vehicles/models/MotoShowcase.js';
 import { RadioManager } from '../audio/radio/RadioManager.js';
 
 const QUALITY_KEY = 'neoncity.quality';
@@ -65,7 +62,6 @@ export class Game {
     this._focus = new THREE.Vector3();
     this._perf = { lowTime: 0, highTime: 0 };
     this._audioInfo = { shoreDistance: 0, inWater: false, cameraRight: 0 };
-    this._hudStats = {};
     this._hintCooldown = 0;
   }
 
@@ -97,7 +93,6 @@ export class Game {
     this.input = new InputManager(this.canvas);
     this.hud = new HUD(this.uiRoot);
     this.minimap = new Minimap(this.hud.el);
-    this.hud.showStats = CONFIG.debug.showStats;
     this.audio = new AudioManager(CONFIG.audio.masterVolume);
     this.startScreen = new StartScreen(this.uiRoot, {
       presets: CONFIG.graphics.presets,
@@ -109,8 +104,8 @@ export class Game {
       onQuality: (k) => this.setQuality(k),
     });
 
-    // Aguarda um quadro para a tela de carregamento aparecer.
-    await new Promise((r) => requestAnimationFrame(() => r()));
+    // Yield for the loading screen without depending on foreground-only rAF.
+    await new Promise((r) => setTimeout(r, 0));
 
     // Ambiente compartilhado (céu, sol, névoa). O cenário vem do mapa ativo.
     this.world = new World({ scene: this.scene, renderer, quality: this.quality });
@@ -122,9 +117,6 @@ export class Game {
       this.weapons?.audio.impact(record.profile.material, distance);
     };
     this.world.build();
-    // Mundo unificado: o GLB do TEST CITY baixa em paralelo e vira o bairro oeste de Sunset Beach.
-    this.testCity = new TestCityAnnex(this.world);
-    this._testCityLoad = this.testCity.preload();
     // NEON MOTOR COMPANY (PROMPT 12): os nove GLBs carregam em paralelo com o restante da inicialização.
     this._neonLoad = this.world.vehicleFactory.preloadNeon();
     // NEON MOTORCYCLES (PROMPT 15): seis GLBs de motos, também em paralelo.
@@ -170,12 +162,9 @@ export class Game {
     this.minimap.markers = () => [...this.properties.markers(), ...(this.boats?.markers() || [])];
     this.player.status.setTimePreset(this.world.timeOfDay);
 
-    // Mapas: Sunset Beach (sempre) + mapas de teste (somente em desenvolvimento).
+    // Vice City completo é o único mapa, inclusive ao abrir URLs antigas.
     this.maps = new MapManager(this, this.uiRoot);
-    this.maps.register({ id: 'sunset-beach', label: 'SUNSET BEACH', type: 'procedural' });
-    if (CONFIG.dev.mapSwitching) {
-      for (const m of CONFIG.dev.testMaps) this.maps.register({ ...m, type: 'imported' });
-    }
+    this.maps.register(CONFIG.map);
 
     this.player.events.footstep = (surface, run, foot, wading) => this.audio.footstep(surface, run, wading);
     this.player.events.land = (impact, surface) => {
@@ -198,30 +187,19 @@ export class Game {
     this._loop = this._loop.bind(this);
     this._rafId = requestAnimationFrame(this._loop);
 
-    // Modelos GLB prontos antes de montar o mapa: um exemplar de cada no Sunset Beach (veículos do mapa).
+    // Modelos dos veículos prontos antes do posicionamento seguro no Vice City.
     await this._neonLoad;
     const neonLib = this.world.vehicleFactory.neon;
     if (neonLib.errors.length) console.warn('[NEON MOTOR]', neonLib.errors);
-    // Estaciona um exemplar de cada modelo assim que o Sunset Beach (e suas vagas) for montado,
-    // antes de os sistemas receberem o mapa: os carros contam como veículos do mapa.
-    (this.world.afterDistrictBuild ||= []).push((w) => placeNeonShowcase(w));
     await this._motoLoad;
     const motoLib = this.world.vehicleFactory.moto;
     if (motoLib.errors.length) console.warn('[NEON MOTORCYCLES]', motoLib.errors);
-    (this.world.afterDistrictBuild ||= []).push((w) => placeMotoShowcase(w));
     this.loadStats = { ...(this.loadStats || {}), motoMs: motoLib.loadMs, motoModels: motoLib.templates.size };
     this.loadStats = { ...(this.loadStats || {}), neonMotorMs: neonLib.loadMs, neonMotorModels: neonLib.templates.size };
-    // TEST CITY anexado logo após a montagem do Sunset Beach (antes de trânsito, polícia, interiores e minimapa).
-    await this._testCityLoad;
-    (this.world.afterDistrictBuild ||= []).push(() => {
-      if (this.testCity.attach()) this.loadStats = { ...(this.loadStats || {}), testCityMs: this.testCity.stats.totalMs, testCityAttachMs: this.testCity.stats.attachMs };
-      else if (this.testCity.error) console.warn('[TEST CITY] bairro oeste indisponível:', this.testCity.error);
-    });
-    // Mapa inicial: ?map=<id> (apenas dev) ou Sunset Beach. Falhas voltam ao Sunset Beach.
-    const requested = CONFIG.dev.mapSwitching ? new URLSearchParams(location.search).get('map') : null;
-    let ok = false;
-    if (requested && requested !== 'sunset-beach' && this.maps.registry.has(requested)) ok = await this.maps.activate(requested);
-    if (!ok) await this.maps.activate('sunset-beach');
+    if (!await this.maps.activate(CONFIG.map.id)) {
+      this.startScreen.showMessage('Vice City não carregou. Confira os arquivos locais em dev-maps/vice-city/ e recarregue a página.');
+      throw new Error('Vice City indisponível. Confira dev-maps/vice-city/manifest.json e execute npm run dev.');
+    }
     // Finaliza a carga do personagem antes de liberar a tela inicial.
     await this.protagonistLoad;
     // Compila shaders antes do primeiro quadro jogável para evitar travadas.
@@ -232,14 +210,6 @@ export class Game {
     this.loadStats = { ...(this.loadStats || {}), titleReadyMs: Math.round(performance.now()), worldBuildMs: Math.round(this.world.stats.buildMs || 0) };
     this.startScreen.setReady();
     this.save.latest().then((l) => this.startScreen.setSaveInfo(l)).catch(() => this.startScreen.setSaveInfo(null));
-    if (CONFIG.dev.mapSwitching) {
-      this.startScreen.setMapOptions(this.maps.list(), this.maps.activeId, async (id) => {
-        this.startScreen.setBusy(true);
-        await this.maps.activate(id);
-        this.startScreen.setBusy(false);
-        this.startScreen.markMap(this.maps.activeId);
-      });
-    }
 
     // import.meta.env.DEV literal permite ao bundler remover este bloco (e o harness) do build.
     if (import.meta.env.DEV && CONFIG.debug.exposeGlobal) {
@@ -290,32 +260,19 @@ export class Game {
     this.cameras.yaw = sp.yaw;
     this.cameras.pitch = CONFIG.camera.thirdPerson.defaultPitch;
     if (this.cameras.cinematic.active) {
-      if (def.type === 'procedural') this.cameras.setCinematic(new THREE.Vector3(sp.x - 18, 0, sp.z - 60), 62, 11);
-      // Mapas importados: órbita alta, acima dos telhados (não atravessa prédios).
-      else this.cameras.setCinematic(new THREE.Vector3(sp.x, sp.y, sp.z - 28), 85, 75);
+      this.cameras.setCinematic(new THREE.Vector3(sp.x, sp.y, sp.z - 28), 85, 75);
     }
     this.hud.setDistrict(env.label);
     this._districtId = null;
     this.minimap.setEnvironment(env);
     if (this.state === 'playing') {
-      this.hud.location(env.label, def.type === 'imported' ? 'MAPA DE TESTE · DESENVOLVIMENTO' : 'NEON CITY · 1986', 3.5);
+      this.hud.location(env.label, 'NEON CITY · 1986', 3.5);
     }
-  }
-
-  /** Atalho de desenvolvimento: teleporta o protagonista (a pé) entre Sunset Beach e o TEST CITY. */
-  travelBetweenDistricts() {
-    if (this.vehicles?.playerVehicle || this.boats?.aboard || this.interiors?.active) { this.hud.toast('Saia do veículo/interior para usar o F8', 2.5); return false; }
-    const tc = this.world.testCity;
-    const p = this.player.controller.position;
-    const sp = tc.contains(p.x, p.z) ? this.world.spawnPoint : this.world.spawnPoints.get('spawn_test_city');
-    this.player.spawn(sp);
-    this.cameras.yaw = sp.yaw ?? 0;
-    return true;
   }
 
   /**
    * Nova partida (PROMPT 07): saldo inicial, inventário padrão, apartamento
-   * inicial e o NEON GT na porta. O jogador começa dentro do Sunset Apartment.
+   * inicial. O jogador começa no spawn seguro do Vice City.
    */
   newGame() {
     if (this.state !== 'title' || this.mapLoading) return;
@@ -329,9 +286,7 @@ export class Game {
     this.playTime = 0;
     this.player.status.setHealth(100);
     this.player.status.setWanted(0);
-    const inside = this.maps.activeId === 'sunset-beach' && this.interiors.enterImmediately('sunset_apartment');
     this.start(() => {
-      if (inside) this.hud.location('SUNSET APARTMENT', 'SUA CASA · CORAL STREET', 4);
       this.save.autosave('Nova partida');
     });
   }
@@ -373,8 +328,7 @@ export class Game {
       onPlaying?.();
     });
     this.hud.show();
-    const imported = this.mapEnv?.isImported;
-    this.hud.location(this.mapEnv?.label || 'SUNSET BEACH', imported ? 'MAPA DE TESTE · DESENVOLVIMENTO' : 'NEON CITY · 1986', 4.5);
+    this.hud.location(this.mapEnv?.label || CONFIG.map.label, 'NEON CITY · 1986', 4.5);
   }
 
   setQuality(key) {
@@ -481,21 +435,15 @@ export class Game {
         this.hud.toast(`Modelo 3D indisponível (${this.player.modelStatus})`);
       }
     }
-    if (i.wasPressed('gameMenu') && this.state === 'playing' && !this.interiors?.ui.open) this.gameMenu.toggle('save');
+    if (i.wasPressed('gameMenu') && ['playing', 'title'].includes(this.state) && !this.interiors?.ui.open) this.gameMenu.toggle('settings');
     if (i.wasPressed('inventory') && this.state === 'playing' && !this.interiors?.ui.open) this.gameMenu.toggle('inv');
     if (i.wasPressed('toggleCamera') && this.state === 'playing') this.cameras.toggle();
-    if (i.wasPressed('toggleHelp')) this.hud.toggleHelp();
-    if (i.wasPressed('toggleHUD')) this.hud.toggleExtras();
+    if (i.wasPressed('toggleHelp') && this.state === 'playing') this.gameMenu.show('manuals');
     if (i.wasPressed('toggleNavigation') && this.state === 'playing') this.minimap.toggle();
-    if (i.wasPressed('toggleStats')) this.hud.showStats = !this.hud.showStats;
+    if (i.wasPressed('toggleStats') && this.state === 'playing') this.gameMenu.show('stats');
     if (i.wasPressed('cycleQuality')) this.cycleQuality();
     if (i.wasPressed('cycleTime') && this.state !== 'loading') this.cycleTime();
     if (i.wasPressed('toggleMute')) this.hud.toast(this.audio.toggleMute() ? 'Som desativado' : 'Som ativado');
-    if (i.wasPressed('toggleMap') && CONFIG.dev.mapSwitching && (this.state === 'playing' || this.state === 'title') && !this.mapLoading) {
-      // Mundo unificado: F8 leva de um bairro ao outro (o mapa isolado continua no seletor da tela inicial e em ?map=test-city).
-      if (this.state === 'playing' && this.maps.activeId === 'sunset-beach' && this.world.testCity?.ready) this.travelBetweenDistricts();
-      else this.maps.toggle().then(() => this.startScreen?.markMap?.(this.maps.activeId));
-    }
   }
 
   _loop(now) {
@@ -511,10 +459,8 @@ export class Game {
 
     // 1) Entrada
     this.input.consumeMouseDelta(this._mouse);
-    // Menu do jogo aberto: simulação pausada (só desenha o quadro).
+    // A tela de pausa é opaca: mantém o último quadro e suspende a simulação.
     if (this.menuOpen) {
-      this.renderer.info.reset();
-      if (this.composer) this.composer.render(dt); else this.renderer.render(this.scene, this.camera);
       this.input.endFrame();
       return;
     }
@@ -525,6 +471,7 @@ export class Game {
       this.playTime += dt;
     }
     this._handleGlobalKeys();
+    if (this.menuOpen) { this.input.endFrame(); return; }
 
     // 2) Jogador (física + animação) — controle suspenso durante troca de mapa.
     // Veículos: estados de entrada/saída antes do personagem (bloqueiam o controle a pé).
@@ -542,6 +489,7 @@ export class Game {
     // 3) Mundo e câmera
     this._focus.copy(this.player.visualPosition);
     this.world.update(dt, elapsed, this._focus, this.camera);
+    this.mapEnv?.updateVisibility?.(this.player.visualPosition, dt);
     // Água e barcos depois do oceano: a física usa o mesmo uTime do quadro desenhado.
     this.water?.update(dt, this.camera);
     this.boats?.update(dt);
@@ -566,7 +514,7 @@ export class Game {
         this.hud.setDistrict(district?.name || this.mapEnv.label);
         if (previous && district && this.state === 'playing') this.hud.location(district.name, 'NEON CITY / 1986', 3.5);
       }
-      this.minimap.update(dt, c.position, this.player.model.root.rotation.y);
+      this.minimap.update(dt, c.position, this.player.model.root.rotation.y, this.player.status);
     }
     const ai = this._audioInfo;
     ai.shoreDistance = (this.mapEnv || this.world).distanceToShore(c.position.x, c.position.z);
@@ -586,24 +534,7 @@ export class Game {
     if (this.composer) this.composer.render(dt);
     else this.renderer.render(this.scene, this.camera);
 
-    if (this.hud.showStats) {
-      const info = this.renderer.info.render;
-      const s = this._hudStats;
-      s.fps = this.time.fps;
-      s.ms = this.time.frameTimeMs;
-      s.calls = info.calls;
-      s.triangles = info.triangles;
-      s.pixelRatio = this.pixelRatio;
-      s.quality = this.quality.label;
-      s.pos = c.position;
-      s.surface = this.player.surface;
-      s.speed = c.horizontalSpeed;
-      s.state = `${c.swimming ? 'nadando' : c.grounded ? 'solo' : 'ar'}${c.wading && !c.swimming ? ' · água' : ''} · ${this.cameras.modeLabel} · ${this.boats?.aboard ? `barco ${this.boats.aboard.name}` : this.vehicles.state}`;
-      s.map = `${this.mapEnv?.label || '—'} · colisores ${this.mapEnv?.collision?.colliders.size ?? 0}`;
-      this.hud.update(dt, s);
-    } else {
-      this.hud.update(dt, null);
-    }
+    this.hud.update(dt);
     this._adaptResolution(dt);
     this.input.endFrame();
   }

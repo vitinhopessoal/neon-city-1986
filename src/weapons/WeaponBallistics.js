@@ -131,6 +131,10 @@ export class WeaponBallistics {
 
   /** Normal da face atingida de uma caixa orientada ou cilindro. */
   _normal(c, p, dir, out) {
+    if (c.type === 'sphere') return out.set(p.x - c.cx, p.y - c.cy, p.z - c.cz).normalize();
+    if (c.type === 'tri') {
+      out.copy(c.normal); if (out.dot(dir) > 0) out.negate(); return out;
+    }
     if (c.type === 'cyl') {
       const top = Math.abs(p.y - c.maxY) < 0.03;
       if (top) return out.set(0, 1, 0);
