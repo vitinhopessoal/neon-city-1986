@@ -1,6 +1,6 @@
 {
   "name": "neon-city-1986",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "NEON CITY: 1986 — jogo de ação em mundo aberto, original, inspirado nos anos 80 (Three.js).",
   "private": true,
   "type": "module",

@@ -5,7 +5,7 @@ O jogo roda numa janela própria, sem navegador, empacotado com **Electron**.
 de produção (`dist/`) por um protocolo interno `app://neon-city/`, além do mapa
 convertido em uma pasta externa local.
 
-## Vice City local — versão 0.2.2
+## Vice City local — versão 0.2.3
 
 O instalador e o portátil publicados no GitHub não incluem modelos, texturas,
 colisões nem o atlas do GTA. É necessário ter o mapa convertido descrito em
@@ -64,10 +64,10 @@ Localmente, num Linux: `npm run dist:linux`. No Windows o AppImage não pode ser
 empacotamento exige links simbólicos.
 
 - **`.deb` (recomendado no Mint)**: dois cliques no arquivo → **Instalar pacote**. Ou, no terminal:
-  `sudo apt install ./NEON-CITY-1986-0.2.2-linux-amd64.deb`. O jogo aparece no menu como **NEON CITY 1986**.
+  `sudo apt install ./NEON-CITY-1986-0.2.3-linux-amd64.deb`. O jogo aparece no menu como **NEON CITY 1986**.
   Para remover: `sudo apt remove neon-city-1986`.
 - **AppImage (sem instalar)**: botão direito → Propriedades → Permissões → *Permitir executar o arquivo como
-  programa*, depois dois cliques. Ou `chmod +x NEON-CITY-1986-0.2.2-linux-x86_64.AppImage && ./NEON-CITY-1986-0.2.2-linux-x86_64.AppImage`.
+  programa*, depois dois cliques. Ou `chmod +x NEON-CITY-1986-0.2.3-linux-x86_64.AppImage && ./NEON-CITY-1986-0.2.3-linux-x86_64.AppImage`.
   Se reclamar de FUSE: `sudo apt install libfuse2t64` (Mint 22) ou `sudo apt install libfuse2` (Mint 21).
 - Saves no Linux: `~/.config/neon-city-1986`.
 - Placa NVIDIA: use o driver proprietário (Gerenciador de Drivers do Mint) para o WebGL rodar com aceleração.
