@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { ImportedMap } from './ImportedMap.js';
 import { TriangleCollisionSystem } from '../physics/TriangleCollisionSystem.js';
+import { cachedFetch, preloadTextures, releaseBlobs } from './mapCache.js';
 
 /** Optional local sector maps: real geometry and independent COL faces.
  * Legacy GLBs continue to use ImportedMap without any behavior changes. */
@@ -22,46 +23,63 @@ export class TriangleMap extends ImportedMap {
     this._sharedTextures = new Map();
     this._sharedMaterials = new Map();
     let bytes = 0, parseMs = 0, downloadMs = 0;
-    for (let i = 0; i < files.length; i++) {
-      this._check(); onProgress('download', i / files.length);
-      const start = performance.now();
-      const result = await fetch(base + files[i]);
-      if (!result.ok) throw new Error(`${files[i]}: HTTP ${result.status}`);
-      const buffer = await result.arrayBuffer(); bytes += buffer.byteLength;
-      downloadMs += performance.now() - start;
-      const parsedAt = performance.now();
-      const gltf = await new GLTFLoader().parseAsync(buffer, base);
-      gltf.scene.traverse(object => {
-        const materials = [].concat(object.material || []).map(material => {
-          const map = material.map;
-          if (map?.name) {
-            const shared = this._sharedTextures.get(map.name);
-            if (shared && shared !== map) {
-              if (map.image !== shared.image) map.image?.close?.();
-              map.dispose(); material.map = shared;
-            } else this._sharedTextures.set(map.name, map);
-          }
-          // Identical converted materials share a UUID before the inherited
-          // batcher groups meshes, including meshes from different sectors.
-          const key = JSON.stringify([material.type, material.color?.getHexString(), material.opacity,
-            material.transparent, material.alphaTest, material.side, material.vertexColors,
-            material.map?.uuid, material.depthWrite, material.blending, material.toneMapped,
-            material.metalness, material.roughness]);
-          const shared = this._sharedMaterials.get(key);
-          if (shared && shared !== material) { material.dispose(); return shared; }
-          this._sharedMaterials.set(key, material); return material;
+    // Setores, colisões e texturas passam pelo cache persistente (mapCache.js) e o
+    // setor seguinte é buscado enquanto o atual é interpretado (antes era um por vez).
+    const blobs = new Map();
+    const download = i => {
+      const get = async name => {
+        if (!name) return null;
+        const res = await cachedFetch(base + name);
+        if (!res.ok) throw new Error(`${name}: HTTP ${res.status}`);
+        return res.arrayBuffer();
+      };
+      const p = Promise.all([get(files[i]), get(collisions[i])])
+        .then(async ([buffer, colData]) => [buffer, colData, await preloadTextures(buffer, base, blobs)]);
+      p.catch(() => {}); // erro tratado quando o setor for aguardado
+      return p;
+    };
+    let next = files.length ? download(0) : null;
+    try {
+      for (let i = 0; i < files.length; i++) {
+        this._check(); onProgress('download', i / files.length);
+        const start = performance.now();
+        const [buffer, colData, manager] = await next;
+        next = i + 1 < files.length ? download(i + 1) : null;
+        bytes += buffer.byteLength;
+        downloadMs += performance.now() - start;
+        const parsedAt = performance.now();
+        const gltf = await new GLTFLoader(manager).parseAsync(buffer, base);
+        gltf.scene.traverse(object => {
+          const materials = [].concat(object.material || []).map(material => {
+            const map = material.map;
+            if (map?.name) {
+              const shared = this._sharedTextures.get(map.name);
+              if (shared && shared !== map) {
+                if (map.image !== shared.image) map.image?.close?.();
+                map.dispose(); material.map = shared;
+              } else this._sharedTextures.set(map.name, map);
+            }
+            // Identical converted materials share a UUID before the inherited
+            // batcher groups meshes, including meshes from different sectors.
+            const key = JSON.stringify([material.type, material.color?.getHexString(), material.opacity,
+              material.transparent, material.alphaTest, material.side, material.vertexColors,
+              material.map?.uuid, material.depthWrite, material.blending, material.toneMapped,
+              material.metalness, material.roughness]);
+            const shared = this._sharedMaterials.get(key);
+            if (shared && shared !== material) { material.dispose(); return shared; }
+            this._sharedMaterials.set(key, material); return material;
+          });
+          if (object.material) object.material = Array.isArray(object.material) ? materials : materials[0];
         });
-        if (object.material) object.material = Array.isArray(object.material) ? materials : materials[0];
-      });
-      root.add(gltf.scene); parseMs += performance.now() - parsedAt;
-      if (collisions[i]) {
-        const col = await fetch(base + collisions[i]);
-        if (!col.ok) throw new Error(`${collisions[i]}: HTTP ${col.status}`);
-        const data = await col.arrayBuffer(); this._collisionBuffers.push(data); bytes += data.byteLength;
+        root.add(gltf.scene); parseMs += performance.now() - parsedAt;
+        if (colData) { this._collisionBuffers.push(colData); bytes += colData.byteLength; }
+        // Keep downloading sectors when the tab is in the background. rAF is
+        // suspended by browsers there and used to stall the entire city load.
+        await new Promise(resolve => setTimeout(resolve, 0));
       }
-      // Keep downloading sectors when the tab is in the background. rAF is
-      // suspended by browsers there and used to stall the entire city load.
-      await new Promise(resolve => setTimeout(resolve, 0));
+    } finally {
+      await next?.catch(() => {});
+      releaseBlobs(blobs);
     }
     this._timing = { fileBytes: bytes, downloadMs, parseMs };
     return this;

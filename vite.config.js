@@ -37,9 +37,23 @@ function devMapsPlugin() {
             res.statusCode = 404;
             return res.end('Not found');
           }
+          // Validadores (ETag/Last-Modified): o navegador guarda os ~130 MB do mapa no cache
+          // e, nas próximas aberturas, só revalida — recebe 304 sem baixar nada de novo.
+          // Se o arquivo for reconvertido, tamanho/data mudam e o ETag força o download.
+          const etag = `W/"${st.size.toString(16)}-${Math.floor(st.mtimeMs).toString(16)}"`;
+          res.setHeader('ETag', etag);
+          res.setHeader('Last-Modified', st.mtime.toUTCString());
+          res.setHeader('Cache-Control', 'no-cache');
+          const inm = req.headers['if-none-match'];
+          const ims = req.headers['if-modified-since'];
+          if ((inm && inm.split(',').some(t => t.trim() === etag))
+            || (!inm && ims && Math.floor(st.mtimeMs / 1000) <= Math.floor(Date.parse(ims) / 1000))) {
+            res.statusCode = 304;
+            return res.end();
+          }
           res.setHeader('Content-Type', types[extname(file).toLowerCase()] || 'application/octet-stream');
           res.setHeader('Content-Length', st.size);
-          res.setHeader('Cache-Control', 'no-cache');
+          if (req.method === 'HEAD') return res.end();
           createReadStream(file).pipe(res);
         } catch (err) {
           next(err);
