@@ -39,7 +39,7 @@ coordenadas do cenário. **P** abre opções, mapa completo, manuais e estatíst
 F3 não exibe mais guias na tela. Detalhes em [docs/INTERFACE_VICE_CITY.md](docs/INTERFACE_VICE_CITY.md).
 No mapa completo, clique para marcar um destino no minimapa, use a roda para
 ampliar e arraste para mover. O velocímetro compacto aparece somente em carros e motos.
-O executável 0.2.3 encontra ou solicita a pasta local do mapa convertido;
+O executável 0.2.4 encontra ou solicita a pasta local do mapa convertido;
 os recursos do GTA continuam fora dos downloads publicados no GitHub.
 
 ## NEON RADIO NETWORK — rádio nos carros, barcos, lojas e casas
