@@ -12,7 +12,133 @@ export class TriangleCollisionSystem extends CollisionSystem {
   constructor() {
     super({ cellSize: 12 });
     this.triangleCount = 0;
-    this.setTerrain(() => -100);
+    this.fallback = null;
+    this.setTerrain((x, z) => this.fallbackHeight(x, z));
+  }
+
+  /**
+   * Chão para os pontos sem nenhuma face COL embaixo. O conversor só gera o chão
+   * das ilhas: o mar inteiro e algumas falhas em terra ficavam sem colisão, e tudo
+   * caía até o plano de segurança em y = -100 ("limbo"). Aqui o mapa é rasterizado
+   * numa grade de células: onde o radar (isWater) mostra água, o buraco vira fundo
+   * do mar (waterLevel - seaDepth); onde mostra terra, recebe a altura do chão mais
+   * próximo. Sem radar, a água é deduzida pela ligação com a borda do mapa.
+   * As faces reais continuam tendo prioridade sobre este preenchimento.
+   */
+  buildFallback({ bounds, waterLevel, cell = 4, seaDepth = 6, isWater = null }) {
+    const seabed = waterLevel - seaDepth;
+    const minX = bounds.minX, minZ = bounds.minZ;
+    const w = Math.max(1, Math.ceil((bounds.maxX - minX) / cell)), d = Math.max(1, Math.ceil((bounds.maxZ - minZ) / cell));
+    const n = w * d, low = new Float32Array(n).fill(NaN);
+    // Chão mais baixo no centro de cada célula (ignora telhados sobre a rua).
+    for (const record of this.colliders.values()) {
+      if (record.type !== 'tri' || !record.walkable) continue;
+      const v = record.vertices;
+      const i0 = Math.max(0, Math.ceil((Math.min(v[0], v[3], v[6]) - minX) / cell - 0.5));
+      const i1 = Math.min(w - 1, Math.floor((Math.max(v[0], v[3], v[6]) - minX) / cell - 0.5));
+      const j0 = Math.max(0, Math.ceil((Math.min(v[2], v[5], v[8]) - minZ) / cell - 0.5));
+      const j1 = Math.min(d - 1, Math.floor((Math.max(v[2], v[5], v[8]) - minZ) / cell - 0.5));
+      for (let j = j0; j <= j1; j++) {
+        const z = minZ + (j + 0.5) * cell;
+        for (let i = i0; i <= i1; i++) {
+          const y = this._height(record, minX + (i + 0.5) * cell, z);
+          const k = j * w + i;
+          if (y !== null && !(low[k] <= y)) low[k] = y;
+        }
+      }
+    }
+    const kind = new Uint8Array(n); // 0 chão, 1 mar, 2 buraco em terra
+    const queue = new Int32Array(n);
+    const regions = [];
+    let head = 0, tail = 0;
+    const neighbors = (k, fn) => {
+      const i = k % w;
+      if (i > 0) fn(k - 1); if (i < w - 1) fn(k + 1);
+      if (k >= w) fn(k - w); if (k < n - w) fn(k + w);
+    };
+    if (isWater) {
+      // Radar do mapa (fonte confiável): cada buraco é mar ou terra pelo que o radar mostra.
+      for (let k = 0; k < n; k++) {
+        if (!Number.isNaN(low[k])) continue;
+        kind[k] = isWater(minX + (k % w + 0.5) * cell, minZ + (Math.floor(k / w) + 0.5) * cell) ? 1 : 2;
+      }
+    } else {
+      // Sem radar: mar = buracos alcançáveis a partir da borda do mapa.
+      const seed = k => { if (Number.isNaN(low[k]) && !kind[k]) { kind[k] = 1; queue[tail++] = k; } };
+      for (let i = 0; i < w; i++) { seed(i); seed((d - 1) * w + i); }
+      for (let j = 0; j < d; j++) { seed(j * w); seed(j * w + w - 1); }
+      while (head < tail) neighbors(queue[head++], seed);
+      // Regiões fechadas (pontes e cais cercam baías inteiras): é água quando a região
+      // é grande e a margem fica perto do nível do mar; senão é falha em terra firme.
+      for (let s = 0; s < n; s++) {
+        if (!Number.isNaN(low[s]) || kind[s]) continue;
+        const start = tail; kind[s] = 3; queue[tail++] = s;
+        const border = [];
+        for (let q = start; q < tail; q++) {
+          neighbors(queue[q], m => {
+            if (!Number.isNaN(low[m])) { if (border.length < 4096) border.push(low[m]); return; }
+            if (!kind[m]) { kind[m] = 3; queue[tail++] = m; }
+          });
+        }
+        border.sort((p, q) => p - q);
+        const median = border.length ? border[border.length >> 1] : seabed;
+        const water = tail - start >= 64 && median < waterLevel + 2;
+        for (let q = start; q < tail; q++) kind[queue[q]] = water ? 1 : 2;
+        regions.push({ cells: tail - start, water, median });
+      }
+    }
+    // Falhas em terra: cada uma vira um piso plano na altura MAIS BAIXA da sua
+    // borda que fique acima da água — a rua, nunca o telhado de um prédio vizinho
+    // nem um túnel/fundo do mar encostado. Sem borda seca, usa a mais alta.
+    const height = new Float32Array(n);
+    for (let k = 0; k < n; k++) height[k] = kind[k] ? seabed : low[k];
+    const done = new Uint8Array(n);
+    for (let s = 0; s < n; s++) {
+      if (kind[s] !== 2 || done[s]) continue;
+      head = tail = 0; queue[tail++] = s; done[s] = 1;
+      let dry = Infinity, wet = -Infinity;
+      while (head < tail) {
+        neighbors(queue[head++], m => {
+          if (kind[m] === 2) { if (!done[m]) { done[m] = 1; queue[tail++] = m; } return; }
+          if (kind[m]) return;
+          const y = low[m];
+          if (y >= waterLevel - 0.5) { if (y < dry) dry = y; } else if (y > wet) wet = y;
+        });
+      }
+      const fill = dry < Infinity ? dry : wet > -Infinity ? wet : seabed;
+      for (let q = 0; q < tail; q++) height[queue[q]] = fill;
+    }
+    let sea = 0, gaps = 0;
+    for (let k = 0; k < n; k++) { if (kind[k] === 1) sea++; else if (kind[k] === 2) gaps++; }
+    this.fallback = { minX, minZ, cell, w, d, height, seabed };
+    return { cells: n, seaCells: sea, landGaps: gaps, source: isWater ? 'radar' : 'conectividade',
+      enclosedWater: regions.filter(r => r.water).length, seabed };
+  }
+
+  fallbackHeight(x, z) {
+    const f = this.fallback;
+    if (!f) return -100;
+    const i = Math.floor((x - f.minX) / f.cell), j = Math.floor((z - f.minZ) / f.cell);
+    if (i < 0 || j < 0 || i >= f.w || j >= f.d) return f.seabed;
+    return f.height[j * f.w + i];
+  }
+
+  /** Faces reais primeiro; o preenchimento só vale onde não há chão nenhum embaixo. */
+  getGroundHeight(x, z, feetY, stepHeight) {
+    const limit = feetY + stepHeight;
+    let best = -Infinity;
+    const list = this._gather(x - 0.01, z - 0.01, x + 0.01, z + 0.01);
+    for (let i = 0; i < list.length; i++) {
+      const c = list[i];
+      if (!c.walkable) continue;
+      const top = this._topAt(c, x, z);
+      if (top !== null && top <= limit && top > best) best = top;
+    }
+    if (best > -Infinity) return best;
+    // Preenchimento muito acima do corpo (só existe uma estrutura alta ali, sem
+    // chão embaixo): não puxa ninguém para cima — trata como fundo do mar.
+    const fill = this.terrainHeight(x, z);
+    return fill <= limit + 2 || !this.fallback ? fill : this.fallback.seabed;
   }
 
   addBuffer(buffer, prefix = 'col') {

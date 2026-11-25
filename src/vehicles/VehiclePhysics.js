@@ -71,6 +71,14 @@ export class VehiclePhysics {
     this.contactTimer = 0;
     this.stuckTime = 0;
     this.inWater = false;
+    this._waterDepth = 0;
+    this.waterImmersion = 0;
+    // Lâmina d'água que cobre as rodas (m) e velocidade de afundar (m/s).
+    this._floatDepth = vehicle.spec.bike ? 0.6 : 0.9;
+    this._sinkSpeed = vehicle.spec.bike ? 1.2 : 0.55;
+    this.splash = 0;
+    this.lastSafe = null;
+    this._safeTimer = 0;
     this.landing = 0;
     this.rpm = H.idleRpm;
     this.gear = 0;
@@ -254,6 +262,7 @@ export class VehiclePhysics {
       n++;
     }
     this.alpha = this.acc / PHYSICS_STEP;
+    this._safetyNet(dt);
     this._updateDrivetrain(dt);
     // Repouso: veículo sem motorista parado por 1 s deixa de ser simulado.
     if (!this.v.driver && this.speed < 0.05 && Math.abs(this.yawRate) < 0.01 && this.vy === 0) {
@@ -261,6 +270,25 @@ export class VehiclePhysics {
       if (this.sleepTimer > 1) { this.awake = false; this.px = this.x; this.pz = this.z; this.py = this.y; this.pheading = this.heading; this.alpha = 1; }
     } else this.sleepTimer = 0;
     return n;
+  }
+
+  /**
+   * Rede de segurança (o personagem a pé já tinha uma): guarda a última pose
+   * apoiada em terra seca e, se o veículo despencar para baixo do mundo, volta
+   * para ela parado — nunca fica caindo no vazio.
+   */
+  _safetyNet(dt) {
+    this._safeTimer = (this._safeTimer ?? 0) - dt;
+    if (this.vy === 0 && !this.inWater && this._safeTimer <= 0) {
+      (this.lastSafe ??= {}).x = this.x; this.lastSafe.y = this.y; this.lastSafe.z = this.z; this.lastSafe.heading = this.heading;
+      this._safeTimer = 0.5;
+    }
+    if (this.y > -80 || !this.lastSafe) return;
+    const s = this.lastSafe;
+    this.x = this.px = s.x; this.z = this.pz = s.z; this.y = this.py = s.y + 0.3;
+    this.heading = this.pheading = s.heading;
+    this.vx = this.vz = this.vy = this.yawRate = this.vLong = this.vLat = 0;
+    this.alpha = 1;
   }
 
   /** Pose interpolada para renderização. */
@@ -291,6 +319,12 @@ export class VehiclePhysics {
       this.surface = this.inWater ? 'water' : (this.env.getSurface?.(this.x, this.z, this.y) || 'asphalt');
       this._waterDepth = wd;
     }
+    // Quanto do veículo está submerso (0 seco … 1 rodas cobertas / boiando).
+    // Com as rodas cobertas não há tração nem direção: o carro (ou a moto) só
+    // desliza freado pela água e afunda — não anda como em solo firme.
+    const wl = this.env.waterLevel;
+    this.waterImmersion = this.inWater && wl != null ? clamp((wl - this.y) / this._floatDepth, 0, 1) : 0;
+    const traction = this.inWater ? clamp((1 - this.waterImmersion) * 2, 0, 1) : 1;
     const sp = this._surfaceProps();
 
     const sin = Math.sin(this.heading), cos = Math.cos(this.heading);
@@ -311,7 +345,7 @@ export class VehiclePhysics {
     let powertrainResistance = 0;
     const thr = c.throttle * (this.inWater ? 0.2 : 1);
     const pt = this.powertrainActive ? this.powertrain : null;
-    const mu = H.grip * sp.grip;
+    const mu = H.grip * sp.grip * Math.max(0.05, traction);
     let Fzf = m * G * b / L, Fzr = m * G * a / L;
     let brakeResist = c.brake * H.brakeForce + (c.handbrake ? H.handbrakeForce : 0);
     let latF = Infinity, latR = Infinity;
@@ -359,6 +393,7 @@ export class VehiclePhysics {
     resist += brakeResist;
     resist += powertrainResistance;
     if (this.inWater) resist += m * 3;
+    drive *= traction;
     // Gravidade ao longo do terreno: nariz para cima puxa para trás; lateral
     // mais alta empurra para o lado mais baixo (pneus resistem pela deriva).
     vLong -= G * Math.sin(this.groundPitch) * h;
@@ -392,9 +427,20 @@ export class VehiclePhysics {
 
     // Baixa velocidade: mistura com o modelo cinemático (sem pivotar parado).
     const k = clamp((absV - 0.5) / 3.5, 0, 1);
-    const wKin = vLong * Math.tan(delta) / L;
+    const wKin = vLong * Math.tan(delta) / L * traction;
     w = lerp(wKin, w, k);
     vLat *= k + (1 - k) * Math.exp(-12 * h);
+
+    // Arrasto da água: linear + quadrático (bater na água a 70 km/h para em ~1 s).
+    const imm = this.waterImmersion;
+    if (imm > 0) {
+      const lin = Math.exp(-(0.6 + 3 * imm) * h);
+      vLong *= lin; vLat *= lin;
+      w *= Math.exp(-(1 + 4 * imm) * h);
+      const q = 0.12 * imm * h;
+      vLong -= Math.sign(vLong) * Math.min(Math.abs(vLong), q * vLong * vLong);
+      vLat -= Math.sign(vLat) * Math.min(Math.abs(vLat), q * vLat * vLat);
+    }
 
     // Estabilidade: limita a guinada fora do freio de mão.
     if (!hbActive) {
@@ -424,15 +470,8 @@ export class VehiclePhysics {
     const s2 = Math.sin(this.heading), c2 = Math.cos(this.heading);
     this.vx = vLong * s2 + vLat * c2;
     this.vz = vLong * c2 - vLat * s2;
-    const ox = this.x, oz = this.z;
     this.x += this.vx * h;
     this.z += this.vz * h;
-
-    // Água funda: bloqueia como parede (não afunda o carro).
-    if (this._waterDepth > 0.75) {
-      this.x = ox; this.z = oz;
-      this.vx *= -0.1; this.vz *= -0.1;
-    }
 
     this._collide(h);
     this._ground(h);
@@ -505,6 +544,7 @@ export class VehiclePhysics {
     // Rodas: 0 fl, 1 fr, 2 rl, 3 rr.
     this.groundPitch = Math.atan2(((wy[0] + wy[1]) - (wy[2] + wy[3])) / 2, s.wheelBase);
     this.groundRoll = Math.atan2(((wy[0] + wy[2]) - (wy[1] + wy[3])) / 2, s.track);
+    if (this._sink(h, target)) { this._wheelGround = wy; return; }
     if (target >= this.y) {
       // Subida (meio-fio, rampa): acompanha rápido, sem saltos visuais.
       this.y += (target - this.y) * Math.min(1, h * 30);
@@ -520,6 +560,27 @@ export class VehiclePhysics {
       }
     }
     this._wheelGround = wy;
+  }
+
+  /**
+   * Água funda (mais funda que as rodas): o fundo não sustenta o veículo até ele
+   * chegar lá. Cai livre até a superfície, perde quase toda a velocidade vertical
+   * no impacto e afunda devagar (empuxo + arrasto) até o fundo. Devolve true
+   * quando a água controlou a altura neste passo.
+   */
+  _sink(h, target) {
+    const wl = this.env.waterLevel;
+    if (wl == null || !this.inWater || this._waterDepth <= this._floatDepth || target >= wl - this._floatDepth) return false;
+    if (this.y > wl) {
+      this.vy -= G * h;
+      this.y += this.vy * h;
+      if (this.y <= wl) { this.splash = Math.min(1, -this.vy / 8); this.vy *= 0.2; }
+    } else {
+      this.vy += (-this._sinkSpeed - this.vy) * Math.min(1, h * 2.5);
+      this.y += this.vy * h;
+    }
+    if (this.y <= target) { this.y = target; this.vy = 0; }
+    return true;
   }
 
   /** Marcha automática e rotação estimada (HUD e áudio). */

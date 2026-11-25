@@ -31,9 +31,9 @@ export const mapCacheEnabled = enabled;
  * então a cópia salva é usada sem nem consultar o servidor.
  */
 export async function cachedFetch(url, { immutable = false } = {}) {
-  const key = new URL(url, location.href).href;
   const cache = await openCache();
-  if (!cache) return fetch(key);
+  if (!cache) return fetch(url); // Node/Electron: sem Cache Storage (e sem `location`)
+  const key = new URL(url, location.href).href;
   let cached = null;
   try { cached = await cache.match(key); } catch { cached = null; }
   if (cached && immutable) return cached;

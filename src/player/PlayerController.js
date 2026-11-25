@@ -67,7 +67,8 @@ export class PlayerController {
 
   /** Superfície da água em (x, z): ondas sincronizadas quando o mapa as fornece. */
   _surface(x, z) {
-    return this.env.waterHeight ? this.env.waterHeight(x, z) : BEACH.waterLevel;
+    // Sem ondas: nível de água do próprio mapa (Vice City = 6 m), não o da praia antiga.
+    return this.env.waterHeight ? this.env.waterHeight(x, z) : (this.env.waterLevel ?? BEACH.waterLevel);
   }
 
   get horizontalSpeed() {

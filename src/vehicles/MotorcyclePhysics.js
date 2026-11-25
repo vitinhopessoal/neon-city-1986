@@ -74,6 +74,7 @@ export class MotorcyclePhysics extends VehiclePhysics {
     const target = (wy[0] + wy[1]) / 2;
     this.groundPitch = Math.atan2(wy[0] - wy[1], s.wheelBase);
     this.groundRoll = 0;
+    if (this._sink(h, target)) { this._wheelGround = wy; return; }
     if (target >= this.y) {
       this.y += (target - this.y) * Math.min(1, h * 30);
       if (target - this.y < 0.004) this.y = target;

@@ -276,6 +276,8 @@ export class VehicleInteraction {
     const env = this.mgr.env;
     const col = env.collision;
     const g = col.getGroundHeight(x, z, refY + 0.4, 0.45);
+    // Veículo dentro d'água: o personagem sai nadando (o nado assume a altura).
+    if (this.vehicle?.physics?.inWater && env.waterDepth && env.waterDepth(x, z, g) > 0.45) return g;
     if (Math.abs(g - refY) > 0.7) return null;
     if (env.waterDepth && env.waterDepth(x, z, g) > 0.45) return null;
     if (env.boundaryHint && env.boundaryHint(x, z, 0.4) === 'closed') return null;

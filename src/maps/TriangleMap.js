@@ -3,6 +3,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { ImportedMap } from './ImportedMap.js';
 import { TriangleCollisionSystem } from '../physics/TriangleCollisionSystem.js';
 import { cachedFetch, preloadTextures, releaseBlobs } from './mapCache.js';
+import { loadRadarWater } from './radarWater.js';
 
 /** Optional local sector maps: real geometry and independent COL faces.
  * Legacy GLBs continue to use ImportedMap without any behavior changes. */
@@ -22,6 +23,12 @@ export class TriangleMap extends ImportedMap {
     this._collisionBuffers = [];
     this._sharedTextures = new Map();
     this._sharedMaterials = new Map();
+    // Radar → máscara de água (usada para preencher o mar sem COL); em paralelo aos setores.
+    this._radarWater = m.minimap?.image
+      ? loadRadarWater(base + m.minimap.image, m.minimap.bounds, cachedFetch).catch(err => {
+        console.warn('[TriangleMap] radar indisponível para a máscara de água:', err); return null;
+      })
+      : Promise.resolve(null);
     let bytes = 0, parseMs = 0, downloadMs = 0;
     // Setores, colisões e texturas passam pelo cache persistente (mapCache.js) e o
     // setor seguinte é buscado enquanto o atual é interpretado (antes era um por vez).
@@ -81,6 +88,7 @@ export class TriangleMap extends ImportedMap {
       await next?.catch(() => {});
       releaseBlobs(blobs);
     }
+    this._radarWater = await this._radarWater;
     this._timing = { fileBytes: bytes, downloadMs, parseMs };
     return this;
   }
@@ -96,6 +104,10 @@ export class TriangleMap extends ImportedMap {
     this.collision = col;
     this.waterLevel = this.manifest.waterLevel ?? 6;
     const bounds = this.bounds;
+    // Mar e falhas da conversão sem COL: fundo do mar / chão vizinho em vez do limbo (y = -100).
+    const fillStart = performance.now();
+    this.stats.fallback = { ...col.buildFallback({ bounds, waterLevel: this.waterLevel, isWater: this._radarWater }), ms: Math.round(performance.now() - fillStart) };
+    this._radarWater = null;
     for (const [minX, maxX, minZ, maxZ] of [
       [bounds.minX - 4, bounds.maxX + 4, bounds.minZ - 4, bounds.minZ],
       [bounds.minX - 4, bounds.maxX + 4, bounds.maxZ, bounds.maxZ + 4],
