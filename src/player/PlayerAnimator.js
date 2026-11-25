@@ -71,6 +71,8 @@ export class PlayerAnimator {
     this.seatRide = null;
     this.rideState = { steer: 0, lean: 0, speed: 0, footDown: 0 };
     this.rideSwing = 0;
+    /** Queda da moto: pesos { fly, lie, getup, fade } preenchidos pelo BikeCrash, ou null. */
+    this.crash = null;
     /**
      * Camada armada (preenchida pelo WeaponManager): hold 'pistol' | 'long' |
      * null; draw 0..1 (sacar); aim 0..1; pitch (rad, + para cima); kick
@@ -427,6 +429,9 @@ export class PlayerAnimator {
       t.kneeR += 0.3 * this.seatDuck;
     }
 
+    // Queda da moto (BikeCrash): braços e pernas soltos no ar, corpo largado no chão, levantar.
+    if (this.crash) this._crashLayer(t, this.crash);
+
     // --------------------------------------------- aplicação suavizada
     // Os pesos (andar/correr/ar/aterrissar) já são suavizados; aqui só um
     // filtro leve contra descontinuidades, sem "atrasar" a passada (~3 Hz).
@@ -434,6 +439,51 @@ export class PlayerAnimator {
     const p = this.pose;
     for (const key of POSE_KEYS) p[key] += (t[key] - p[key]) * k;
     this._apply(p);
+  }
+
+  /**
+   * Camada da queda da moto. w = { fly, lie, getup, fade? } (pesos 0..1):
+   * fly — braços e pernas se debatendo no ar; lie — largado no chão (um braço
+   * acima da cabeça, pernas abertas, cabeça de lado); getup — agachado,
+   * apoiando-se para levantar. fade leva de volta à pose normal no fim.
+   */
+  _crashLayer(t, w) {
+    const fade = w.fade ?? 1;
+    const tt = this.time;
+    const pose = this._crashPose || (this._crashPose = emptyPose());
+    for (const k of POSE_KEYS) pose[k] = 0;
+    const add = (k, v, wt) => { pose[k] += v * wt; };
+    const f = w.fly || 0, l = w.lie || 0, g = w.getup || 0;
+    if (f > 0) {
+      const a = Math.sin(tt * 11), b = Math.sin(tt * 9 + 1.3), c = Math.sin(tt * 13 + 2.1);
+      add('shoulderL', 2.3 + a * 0.55, f); add('shoulderR', 1.9 - c * 0.55, f);
+      add('armOutL', 0.75 + b * 0.2, f); add('armOutR', 0.7 - a * 0.2, f);
+      add('elbowL', 0.5 + c * 0.35, f); add('elbowR', 0.6 + a * 0.35, f);
+      add('hipL', 0.65 + b * 0.45, f); add('hipR', 0.3 - b * 0.45, f);
+      add('kneeL', 0.9 + a * 0.4, f); add('kneeR', 1.1 - c * 0.4, f);
+      add('hipSpreadL', 0.2, f); add('hipSpreadR', 0.2, f);
+      add('spinePitch', 0.25, f); add('headPitch', -0.35, f); add('headRoll', c * 0.15, f);
+    }
+    if (l > 0) {
+      add('shoulderL', 2.7, l); add('shoulderR', 0.35, l);
+      add('armOutL', 0.45, l); add('armOutR', 0.35, l);
+      add('elbowL', 0.45, l); add('elbowR', 0.25, l);
+      add('hipL', 0.12, l); add('hipR', -0.12, l);
+      add('kneeL', 0.55, l); add('kneeR', 0.12, l);
+      add('hipSpreadL', 0.22, l); add('hipSpreadR', 0.16, l);
+      add('headYaw', 0.7, l); add('spineRoll', 0.08, l);
+    }
+    if (g > 0) {
+      add('hipsY', -0.45, g);
+      add('hipL', 1.45, g); add('hipR', 1.2, g);
+      add('kneeL', 2.0, g); add('kneeR', 1.7, g);
+      add('ankleL', 0.5, g); add('ankleR', 0.4, g);
+      add('spinePitch', 0.55, g); add('headPitch', -0.25, g);
+      add('shoulderL', 0.75, g); add('shoulderR', 0.6, g);
+      add('elbowL', 0.5, g); add('elbowR', 0.6, g); add('armOutL', 0.15, g); add('armOutR', 0.15, g);
+    }
+    const total = Math.min(1, f + l + g) * fade;
+    for (const k of POSE_KEYS) t[k] = lerp(t[k], pose[k] / Math.max(1, f + l + g), total);
   }
 
   /** Sobrepõe os braços com a pose da arma (pronta, mira, recuo, recarga). */

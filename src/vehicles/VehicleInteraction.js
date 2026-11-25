@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { clamp, smoothstep, angleDelta } from '../utils/math.js';
 import { bindingLabel } from '../core/InputManager.js';
+import { BikeCrash } from './BikeCrash.js';
 
 /**
  * Máquina de estados do jogador em relação aos veículos:
@@ -14,12 +15,15 @@ import { bindingLabel } from '../core/InputManager.js';
  * Saída: só parado ou devagar (< 7 km/h); testa o lado do motorista e, se
  * bloqueado, alternativas seguras (sem parede, sem outro carro, sem água,
  * com chão). Sem saída válida, permanece no carro e avisa discretamente.
+ * Queda (CRASHED): batida forte de moto arremessa o piloto (BikeCrash); ele
+ * rola, fica caído e se levanta, e então volta a ON_FOOT.
  */
 export const PLAYER_STATES = {
   ON_FOOT: 'ON_FOOT',
   ENTERING_VEHICLE: 'ENTERING_VEHICLE',
   DRIVING: 'DRIVING',
   EXITING_VEHICLE: 'EXITING_VEHICLE',
+  CRASHED: 'CRASHED',
 };
 
 const ENTER_RANGE = 1.5;
@@ -106,6 +110,8 @@ export class VehicleInteraction {
       else this._seatPlayer(dt);
     } else if (this.state === S.EXITING_VEHICLE) {
       this._advanceExit(dt);
+    } else if (this.state === S.CRASHED) {
+      this._advanceCrash(dt);
     }
   }
 
@@ -130,6 +136,8 @@ export class VehicleInteraction {
     anim.seatRide = vehicle.bike && driverSeat.ride ? driverSeat.ride : null;
     anim.rideSwing = 0;
     anim.rideState.footDown = vehicle.bike ? 1 : 0;
+    // Moto caída de uma batida: volta a ficar em pé ao ser montada.
+    vehicle.fallen = 0;
     // Centro do volante em relação ao quadril do motorista (IK dos braços).
     const wheel = vehicle.spec?.wheel;
     this.game.player.animator.seatGrip = wheel ? { y: wheel.y - driverSeat.hipY, z: wheel.z - driverSeat.z } : null;
@@ -382,8 +390,68 @@ export class VehicleInteraction {
     if (this.seq) this.mgr.setCameraBlend(1 - clamp((t - q.open) / (q.out - q.open), 0, 1));
   }
 
+  // --------------------------------------------------------- queda
+
+  /**
+   * Batida forte de moto: o piloto é arremessado. velocity: velocidade da moto
+   * antes da batida; normal: direção da batida (do obstáculo para a moto) ou null.
+   */
+  crash(velocity, normal = null) {
+    const v = this.vehicle;
+    if (!v?.bike || this.state !== PLAYER_STATES.DRIVING) return false;
+    const player = this.game.player;
+    const root = this._seatWorld(this.seat, this._pos);
+    const hipHeight = player.animator.hipsBaseY || 0.95;
+    const hip = root.clone();
+    hip.y += hipHeight;
+    // A moto continua sozinha: motor desligado, cai de lado e desliza até parar.
+    this.mgr.stopEngine(v);
+    this.mgr.onExitDone(v);
+    v.controls.brake = 0.4;
+    v.fallen = (v.root.rotation.z || 0) >= 0 ? 1 : -1;
+    this.mgr.setCameraBlend(0);
+    this.game.cameras.yaw = Math.atan2(velocity.x, velocity.z) + Math.PI;
+    const anim = player.animator;
+    anim.seatRide = null;
+    anim.rideSwing = 0;
+    anim.seatGrip = null;
+    this.vehicle = null;
+    this.seq = null;
+    this.door = null;
+    this.crashState = new BikeCrash(this.mgr.env.collision, { hip, velocity, normal, yaw: v.root.rotation.y, hipHeight, ignore: v.collider });
+    this._setState(PLAYER_STATES.CRASHED);
+    this._crashPose();
+    return true;
+  }
+
+  _crashPose() {
+    const c = this.crashState, player = this.game.player;
+    player.animator.crash = c.weights;
+    // Corpo inteiro girado em torno do quadril (pitch = rolar para a frente).
+    player.setExternalPose(c.rootPosition(this._pos), c.yaw, 0, 0, 0, 0, 0, c.roll, c.pitch);
+  }
+
+  _advanceCrash(dt) {
+    const c = this.crashState;
+    if (!c) { this._setState(PLAYER_STATES.ON_FOOT); return; }
+    const done = c.update(dt);
+    this._crashPose();
+    if (done) this._endCrash();
+  }
+
+  /** Fim da queda (ou interrupção por troca de mapa/carregamento): controle a pé de volta. */
+  _endCrash(point = null) {
+    const c = this.crashState;
+    const player = this.game.player;
+    player.animator.crash = null;
+    if (c) player.releaseExternalPose(point || c.standPoint(), c.yaw);
+    this.crashState = null;
+    this._setState(PLAYER_STATES.ON_FOOT);
+  }
+
   /** Troca de mapa / recuperação de emergência: sai sem animação. */
   forceExit(point = null) {
+    if (this.state === PLAYER_STATES.CRASHED) { this._endCrash(point); return; }
     const v = this.vehicle;
     if (!v) return;
     const player = this.game.player;

@@ -109,13 +109,15 @@ export class Game {
 
     // Ambiente compartilhado (céu, sol, névoa). O cenário vem do mapa ativo.
     this.world = new World({ scene: this.scene, renderer, quality: this.quality });
-    this.world.destruction.onBreak = record => {
+    // Objeto quebrado (cidade procedural ou mapa ativo): som, evento urbano e crime.
+    this._onPropBreak = record => {
       const p = record.position;
       this.city?.events.emit('propBreak', { x: p.x, y: p.y, z: p.z, id: record.id, material: record.profile.material });
       if (record.breakSource === 'player') this.city?.events.emit('crime', { source: 'player', severity: 1, x: p.x, y: p.y, z: p.z });
       const distance = this.camera.position.distanceTo(p);
       this.weapons?.audio.impact(record.profile.material, distance);
     };
+    this.world.destruction.onBreak = this._onPropBreak;
     this.world.build();
     // NEON MOTOR COMPANY (PROMPT 12): os nove GLBs carregam em paralelo com o restante da inicialização.
     this._neonLoad = this.world.vehicleFactory.preloadNeon();
@@ -253,6 +255,7 @@ export class Game {
     this.water?.onMapActivated(env);
     this.boats?.onMapActivated(env);
     this.mapEnv = env;
+    if (env.destruction && env.destruction !== this.world.destruction) env.destruction.onBreak = this._onPropBreak;
     this.player.setEnvironment(env);
     this.cameras.setCollision(env.collision);
     const sp = env.spawnPoint;
@@ -490,6 +493,9 @@ export class Game {
     this._focus.copy(this.player.visualPosition);
     this.world.update(dt, elapsed, this._focus, this.camera);
     this.mapEnv?.updateVisibility?.(this.player.visualPosition, dt);
+    // Destroços e objetos quebrados do mapa ativo (voltam ao lugar longe do jogador).
+    const mapDestruction = this.mapEnv?.destruction;
+    if (mapDestruction && mapDestruction !== this.world.destruction) mapDestruction.update(dt, this.player.visualPosition);
     // Água e barcos depois do oceano: a física usa o mesmo uTime do quadro desenhado.
     this.water?.update(dt, this.camera);
     this.boats?.update(dt);

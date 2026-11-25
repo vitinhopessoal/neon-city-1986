@@ -150,7 +150,8 @@ export class CollisionSystem {
       const list = this._gather(pos.x - radius, pos.z - radius, pos.x + radius, pos.z + radius);
       for (let i = 0; i < list.length; i++) {
         const c = list[i];
-        if (!c.solid) continue;
+        // vehicleOnly: objeto quebrável sem colisão própria (arbusto) — só os veículos o atingem.
+        if (!c.solid || c.vehicleOnly) continue;
         if (c.maxY <= lowY || c.minY >= highY) continue;
         if (this._pushCircle(c, pos, radius)) {
           moved = true;

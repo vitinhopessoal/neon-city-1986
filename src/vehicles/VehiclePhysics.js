@@ -253,6 +253,8 @@ export class VehiclePhysics {
   update(dt) {
     if (!this.awake) return 0;
     this.impact = 0;
+    // Maior velocidade de batida em objeto quebrável pesado no quadro (queda da moto).
+    this.propHit = 0;
     this.acc += Math.min(dt, 0.1);
     let n = 0;
     while (this.acc >= PHYSICS_STEP && n < 16) {

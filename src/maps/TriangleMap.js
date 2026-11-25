@@ -4,6 +4,7 @@ import { ImportedMap } from './ImportedMap.js';
 import { TriangleCollisionSystem } from '../physics/TriangleCollisionSystem.js';
 import { cachedFetch, preloadTextures, releaseBlobs } from './mapCache.js';
 import { loadRadarWater } from './radarWater.js';
+import { extractProps, buildProps } from './ViceProps.js';
 
 /** Optional local sector maps: real geometry and independent COL faces.
  * Legacy GLBs continue to use ImportedMap without any behavior changes. */
@@ -95,6 +96,8 @@ export class TriangleMap extends ImportedMap {
 
   process(onProgress = () => {}) {
     const start = performance.now();
+    // Objetos quebráveis (postes, hidrantes, bancos...) saem antes da fusão estática.
+    const props = extractProps(this._gltf.scene);
     // Reuse mesh instancing/material batching. No visual mesh is replaced by
     // a box; all visual nodes explicitly opt out of automatic box collisions.
     super.process((phase, fraction) => onProgress(phase, fraction * 0.7));
@@ -134,6 +137,10 @@ export class TriangleMap extends ImportedMap {
     this.water = new THREE.Mesh(geometry, material);
     this.water.position.set((bounds.minX + bounds.maxX) / 2, this.waterLevel - 0.03, (bounds.minZ + bounds.maxZ) / 2);
     this.water.name = 'VC_WATER'; this.root.add(this.water);
+    const propsStart = performance.now();
+    const built = buildProps(this.root, col, props);
+    this.destruction = built.destruction;
+    this.stats.props = { ...built.stats, ms: Math.round(performance.now() - propsStart) };
     this.stats.colliders = { total: col.colliders.size, triangles: col.triangleCount, bounds: 4 };
     this.stats.sectors = this.manifest.files?.length || 1;
     this._drawGroups = this.root.children.filter(o => o.isMesh && o !== this.water).map(object => ({ object,
@@ -176,6 +183,8 @@ export class TriangleMap extends ImportedMap {
   }
 
   unload() {
+    this.destruction?.dispose();
+    this.destruction = null;
     super.unload();
     for (const texture of this._sharedTextures?.values() || []) texture.image?.close?.();
     this._sharedTextures?.clear(); this._gltf = null; this._collisionBuffers = null;

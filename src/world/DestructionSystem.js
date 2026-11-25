@@ -20,6 +20,28 @@ export const BREAKABLE_PROFILES = {
   trafficSign: { hp: 30, speed: 3, material: 'metal' },
   signal: { hp: 100, speed: 6, material: 'metal' },
   phoneBooth: { hp: 65, speed: 4, material: 'glass' },
+  // Vice City (objetos do mapa convertido). mass: kg para a perda de velocidade do
+  // veículo; fling: fração do empurrão nos destroços (postes tombam, caixas voam);
+  // rider: pesado o bastante para derrubar o piloto de uma moto em alta velocidade.
+  streetLamp: { hp: 85, speed: 5, material: 'metal', mass: 180, fling: 0.4, rider: true },
+  pole: { hp: 95, speed: 6, material: 'wood', mass: 260, fling: 0.3, rider: true },
+  viceBollard: { hp: 60, speed: 4.5, material: 'metal', mass: 70, fling: 0.7, rider: true },
+  viceBench: { hp: 40, speed: 3, material: 'wood', mass: 70, fling: 0.7, rider: true },
+  viceHydrant: { hp: 65, speed: 4, material: 'metal', water: true, mass: 120, fling: 0.6, rider: true },
+  viceBin: { hp: 30, speed: 2.5, material: 'metal', mass: 25, fling: 1 },
+  viceMeter: { hp: 30, speed: 2.5, material: 'metal', mass: 25, fling: 0.8 },
+  viceNews: { hp: 35, speed: 3, material: 'metal', mass: 35, fling: 0.9 },
+  mailbox: { hp: 50, speed: 4, material: 'metal', mass: 80, fling: 0.6, rider: true },
+  vicePhone: { hp: 65, speed: 4, material: 'glass', mass: 150, fling: 0.5, rider: true },
+  viceSign: { hp: 30, speed: 3, material: 'metal', mass: 30, fling: 0.7 },
+  box: { hp: 10, speed: 1.2, material: 'wood', mass: 8, fling: 1.1 },
+  barrel: { hp: 30, speed: 2.5, material: 'metal', mass: 40, fling: 0.9 },
+  barrier: { hp: 15, speed: 1.5, material: 'wood', mass: 15, fling: 1 },
+  dumpster: { hp: 120, speed: 7, material: 'metal', mass: 400, fling: 0.25, rider: true },
+  table: { hp: 30, speed: 2.5, material: 'wood', mass: 30, fling: 0.9 },
+  viceLounger: { hp: 22, speed: 2, material: 'wood', mass: 15, fling: 1 },
+  pot: { hp: 45, speed: 3.5, material: 'concrete', mass: 90, fling: 0.6, rider: true },
+  smallTree: { hp: 70, speed: 4.5, material: 'wood', mass: 150, fling: 0.45, rider: true },
 };
 
 const UP = new THREE.Vector3(0, 1, 0);
@@ -41,7 +63,7 @@ export function fracturePart(geometry, material) {
 }
 
 export class DestructionSystem {
-  constructor(parent, collision, { maxFragments = 180, maxJets = 6, lifetime = 14, random = Math.random } = {}) {
+  constructor(parent, collision, { maxFragments = 180, maxJets = 6, lifetime = 14, random = Math.random, respawn = null } = {}) {
     this.parent = parent;
     this.collision = collision;
     this.root = new THREE.Group();
@@ -59,6 +81,10 @@ export class DestructionSystem {
     this.time = 0;
     this.brokenCount = 0;
     this.onBreak = null;
+    /** { delay (s), distance (m) }: objeto quebrado volta quando ninguém está olhando (mundo aberto). */
+    this.respawn = respawn;
+    this.broken = new Set();
+    this._respawnTimer = 0;
     this.waterMaterial = new THREE.PointsMaterial({ color: 0x9ce9ff, size: 0.095, transparent: true, opacity: 0.8, depthWrite: false });
   }
 
@@ -70,7 +96,12 @@ export class DestructionSystem {
     matrix.decompose(_pos, _quat, _scale);
     record.position = _pos.clone();
     this.records.set(id, record);
-    for (const collider of colliders) collider.destructible = record;
+    for (const collider of colliders) {
+      collider.destructible = record;
+      // Estado original, para restore() quando o objeto volta ao mapa.
+      collider.restoreSolid ??= collider.solid;
+      collider.restoreWalkable ??= collider.walkable;
+    }
     return record;
   }
 
@@ -129,13 +160,21 @@ export class DestructionSystem {
     const vx = physics.vx + physics.yawRate * rz;
     const vz = physics.vz - physics.yawRate * rx;
     const closing = -(vx * contact.nx + vz * contact.nz);
-    if (closing < record.profile.speed) return true;
+    const profile = record.profile;
+    // Colisor só para veículos (objeto sem COL própria): nunca vira parede.
+    if (contact.collider.vehicleOnly) {
+      if (closing < 0.5) return false;
+    } else if (closing < profile.speed) return true;
     record.breakSource = physics.v?.driver === 'player' ? 'player' : 'vehicle';
     this.damageCollider(contact.collider, {
       damage: record.hp, direction: { x: vx, y: 0.25, z: vz }, force: Math.min(10, closing * 0.6),
     });
-    // Small momentum loss instead of the impulse of an immovable wall.
-    physics.vx *= 0.94; physics.vz *= 0.94;
+    // Perda de momento em vez do impulso de uma parede: proporcional à massa do
+    // objeto (caixa quase nada; um poste freia uma moto bem mais que um carro).
+    const mass = physics.H?.mass;
+    const keep = profile.mass && mass ? Math.max(0.55, mass / (mass + profile.mass * 0.5)) : 0.94;
+    physics.vx *= keep; physics.vz *= keep;
+    if (profile.rider) physics.propHit = Math.max(physics.propHit || 0, closing);
     return false;
   }
 
@@ -150,6 +189,8 @@ export class DestructionSystem {
     record.shake = 0;
     this.shaking.delete(record);
     this.brokenCount++;
+    record.brokenAt = this.time;
+    this.broken.add(record);
     for (const collider of record.colliders) {
       collider.solid = false;
       collider.walkable = false;
@@ -160,6 +201,8 @@ export class DestructionSystem {
     const dir = new THREE.Vector3(direction.x || 0, 0, direction.z || 0);
     if (dir.lengthSq() < 0.01) dir.set(0.8, 0, 0.6);
     dir.normalize();
+    const fling = record.profile.fling ?? 1;
+    force *= fling;
     record.matrix.decompose(_pos, _quat, _scale);
     // Geometry is shared with fragment templates; only the active meshes exist.
     for (const part of record.fragments.slice(0, 32)) {
@@ -173,8 +216,10 @@ export class DestructionSystem {
       mesh.name = `debris:${record.id}`;
       this.root.add(mesh);
       const rnd = () => this.random() - 0.5;
-      const velocity = new THREE.Vector3(dir.x * force + rnd() * 2.6, 1.4 + this.random() * 2.3, dir.z * force + rnd() * 2.6);
-      const spin = new THREE.Vector3(dir.z * 2 + rnd() * 2.5, rnd() * 2, -dir.x * 2 + rnd() * 2.5);
+      // Objetos pesados (fling < 1: postes, árvores) tombam para o lado da batida em vez de voar.
+      const loose = Math.min(1, fling);
+      const velocity = new THREE.Vector3(dir.x * force + rnd() * 2.6 * loose, (1.4 + this.random() * 2.3) * loose, dir.z * force + rnd() * 2.6 * loose);
+      const spin = new THREE.Vector3(dir.z * 2 + rnd() * 2.5 * loose, rnd() * 2 * loose, -dir.x * 2 + rnd() * 2.5 * loose);
       this.fragments.push({ mesh, velocity, spin, half: part.half.clone().multiply(_scale), baseScale: _scale.clone(), age: 0, resting: false });
     }
     if (record.profile.water) this._waterJet(record.position);
@@ -201,10 +246,44 @@ export class DestructionSystem {
     this.jets.push({ mesh, age: 0 });
   }
 
-  update(dt) {
+  /** Reconstrói um objeto quebrado (colisões, instâncias visíveis, durabilidade). */
+  restore(record) {
+    if (!record.broken || this.records.get(record.id) !== record) return false;
+    record.broken = false;
+    record.hp = record.profile.hp;
+    this.broken.delete(record);
+    for (const collider of record.colliders) {
+      collider.solid = collider.restoreSolid ?? true;
+      collider.walkable = collider.restoreWalkable ?? false;
+      this.collision._insert(collider);
+    }
+    for (const binding of record.bindings) {
+      binding.mesh.setMatrixAt(binding.index, record.matrix);
+      binding.mesh.instanceMatrix.needsUpdate = true;
+    }
+    if (record.object) record.object.visible = true;
+    return true;
+  }
+
+  _respawnBroken(delta, focus) {
+    if (!this.respawn || !focus || !this.broken.size) return;
+    this._respawnTimer -= delta;
+    if (this._respawnTimer > 0) return;
+    this._respawnTimer = 1;
+    const { delay = 90, distance = 150 } = this.respawn;
+    for (const record of this.broken) {
+      if (this.time - record.brokenAt < delay) continue;
+      const p = record.position;
+      if ((p.x - focus.x) ** 2 + (p.z - focus.z) ** 2 < distance * distance) continue;
+      this.restore(record);
+    }
+  }
+
+  update(dt, focus = null) {
     if (!this.parent.visible) return; // Pause effects while a different map is active.
     const delta = Math.min(0.1, Math.max(0, dt));
     this.time += delta;
+    this._respawnBroken(delta, focus);
     for (const record of this.shaking) {
       record.shake = Math.max(0, record.shake - delta);
       const k = Math.sin(record.shake * 90) * record.shake * 0.08;
@@ -236,7 +315,8 @@ export class DestructionSystem {
           const e = f.mesh.matrix.elements;
           // Exact vertical extent of the rotated local bounding box, not a sphere.
           const extent = Math.abs(e[1]) * f.half.x / f.baseScale.x + Math.abs(e[5]) * f.half.y / f.baseScale.y + Math.abs(e[9]) * f.half.z / f.baseScale.z;
-          const floor = this.collision.getGroundHeight(f.mesh.position.x, f.mesh.position.z, 0.2, 0.25);
+          // Chão sob o destroço (o Vice City fica a ~6-20 m de altura, não em y = 0).
+          const floor = this.collision.getGroundHeight(f.mesh.position.x, f.mesh.position.z, f.mesh.position.y, 0.25);
           if (f.mesh.position.y < floor + extent) {
             f.mesh.position.y = floor + extent;
             f.velocity.y = Math.abs(f.velocity.y) * 0.22;
@@ -281,7 +361,7 @@ export class DestructionSystem {
     while (this.fragments.length) this._removeFragment(0);
     while (this.jets.length) this._removeJet(0);
     for (const record of this.records.values()) for (const c of record.colliders) delete c.destructible;
-    this.records.clear(); this.shaking.clear();
+    this.records.clear(); this.shaking.clear(); this.broken.clear();
     for (const g of this.ownedGeometries) g.dispose();
     this.ownedGeometries.clear();
     this.waterMaterial.dispose(); this.root.removeFromParent();

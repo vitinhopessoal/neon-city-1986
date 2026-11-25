@@ -132,6 +132,9 @@ export class SaveManager {
       const e = I.active.ext;
       pos = { x: e.poi.x + e.normal.x * 1.35, y: e.poi.y, z: e.poi.z + e.normal.z * 1.35 };
       yaw = e.bld.rotY;
+    } else if (g.vehicles.interaction.crashState) {
+      // Caindo da moto: salva o ponto no chão onde o personagem vai se levantar.
+      pos = g.vehicles.interaction.crashState.standPoint();
     } else if (g.vehicles.playerVehicle) {
       const v = g.vehicles.playerVehicle;
       pos = { x: v.root.position.x, y: v.root.position.y, z: v.root.position.z };
@@ -264,7 +267,7 @@ export class SaveManager {
     const warnings = [];
     // 1) Mapa: só posiciona o jogador depois que o mapa salvo estiver pronto.
     if (g.interiors?.active) g.interiors._forceOutside();
-    if (g.vehicles.interaction.vehicle) g.vehicles.interaction.forceExit();
+    if (g.vehicles.interaction.vehicle || g.vehicles.interaction.crashState) g.vehicles.interaction.forceExit();
     if (g.boats?.aboard) g.boats.forceExit();
     const maps = this.refs().maps;
     let map = s.map, recovered = false;

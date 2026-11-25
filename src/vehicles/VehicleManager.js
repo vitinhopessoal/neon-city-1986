@@ -8,6 +8,7 @@ import { VehicleEffects } from './VehicleEffects.js';
 import { VehicleAudio } from './VehicleAudio.js';
 import { VehicleCamera } from './VehicleCamera.js';
 import { VehicleInteraction, PLAYER_STATES } from './VehicleInteraction.js';
+import { isBikeCrash } from './BikeCrash.js';
 import { PlayerDriver } from './VehicleController.js';
 import { VehicleHUD } from '../ui/VehicleHUD.js';
 import { SPECS } from './VehicleFactory.js';
@@ -57,6 +58,7 @@ export class VehicleManager {
     this.beam.target = this.beamTarget;
     game.scene.add(this.beam, this.beamTarget);
     this._lodTimer = 0;
+    this._preVel = { x: 0, z: 0 };
     game.cameras.vehicleRig = this.camera;
   }
 
@@ -70,7 +72,7 @@ export class VehicleManager {
 
   /** Mapa ativo mudou: troca a lista de veículos e as colisões usadas. */
   onMapActivated(env) {
-    if (this.interaction.vehicle) this.interaction.forceExit();
+    if (this.interaction.vehicle || this.interaction.crashState) this.interaction.forceExit();
     // Veículos criados para um mapa importado anterior: descartados com ele.
     if (this._spawned && this._spawnedEnv !== env) {
       for (const v of this._spawned) this.game.world.vehicleFactory.dispose(v);
@@ -293,8 +295,10 @@ export class VehicleManager {
       const ph = v.physics;
       if (!ph) continue;
       if (ph.awake) awake++;
-      steps += ph.update(dt);
       const isPlayer = v === pv;
+      // Velocidade antes da física do quadro: embalo do piloto numa queda de moto.
+      if (isPlayer) { this._preVel.x = ph.vx; this._preVel.z = ph.vz; }
+      steps += ph.update(dt);
       if (ph.externalImpact > 0) {
         // Atingido por outro veículo: dano e reação visual proporcionais.
         v.damage.applyImpact(ph.externalImpact, 0);
@@ -304,6 +308,7 @@ export class VehicleManager {
       if (ph.awake || isPlayer) {
         v.syncCollider(ph.x, ph.y, ph.z, ph.heading);
         this._handleImpact(v, isPlayer);
+        if (isPlayer && driving && v.bike) this._bikeCrash(v);
         this._skids(v);
         this._stuck(v, dt);
       }
@@ -387,6 +392,21 @@ export class VehicleManager {
       this.camera.addShake(clamp((ph.impact - 2) / 20, 0, 0.3));
       if (dmg > 0) this.lastImpact = { speed: ph.impact, damage: dmg, integrity: v.damage.integrity };
     }
+  }
+
+  /** Batida forte de moto (parede, prédio, carro ou objeto pesado): o piloto cai. */
+  _bikeCrash(v) {
+    const ph = v.physics;
+    const hit = Math.max(ph.impact, ph.propHit || 0);
+    const speed = Math.hypot(this._preVel.x, this._preVel.z);
+    if (!isBikeCrash(hit, speed) || this.game.state !== 'playing' || this.inputLocked) return;
+    const ip = ph.impactPoint;
+    const normal = ph.impact >= ph.propHit ? { x: ip.nx, z: ip.nz } : null;
+    if (!this.interaction.crash({ x: this._preVel.x, z: this._preVel.z }, normal)) return;
+    this.game.player.status?.damage(3 + speed * 0.6);
+    this.audio.impact(Math.max(hit, 6));
+    this.camera.addShake(0.3);
+    this.stats.crashes = (this.stats.crashes || 0) + 1;
   }
 
   _skids(v) {

@@ -6,7 +6,7 @@ import { clamp, damp } from '../utils/math.js';
  *  - pose interpolada do passo fixo + arfagem do terreno + INCLINAÇÃO (rolagem
  *    da raiz em torno do contato dos pneus com o solo; o piloto acompanha)
  *  - parada com piloto: quase em pé (pé esquerdo no chão); sem piloto: apoiada
- *    no cavalete lateral
+ *    no cavalete lateral; depois de uma queda (v.fallen = ±1): deitada de lado
  *  - garfo gira no eixo de direção (Y local do nó FrontFork, já inclinado pelo rake)
  *  - suspensão: garfo comprime ao frear/aterrissar (roda sobe ao longo do garfo),
  *    balança gira com o desnível e a carga traseira; mola de arfagem do quadro
@@ -35,7 +35,8 @@ export class MotorcycleAnimation extends VehicleAnimation {
       // Inclinação: física em movimento; parada com piloto quase em pé (pé no chão), sem piloto no cavalete.
       let target = ph.lean;
       if (speed < 1.2) target = v.driver ? -0.06 * clamp(1 - speed, 0, 1) + ph.lean * speed / 1.2 : v.standLean ?? -0.09;
-      this.lean = damp(this.lean, target, v.driver ? 10 : 5, dt);
+      if (v.fallen && !v.driver) target = v.fallen * 1.32;
+      this.lean = damp(this.lean, target, v.driver ? 10 : v.fallen ? 6 : 5, dt);
       r.rotation.set(-this.gPitch, this.pose.heading, this.lean, 'YXZ');
       v.heading = this.pose.heading;
       v.speed = ph.speed;
