@@ -35,14 +35,16 @@ test('user GLB loads with all bones and weapon attachment points', async () => {
   player.model.dispose();
 });
 
-test('all nine weapons remain owned, selectable and generate valid models', () => {
+test('the nine firearms and the knife remain owned, selectable and generate valid models', () => {
   const inv = new WeaponInventory();
   inv.grantAll();
-  assert.equal(inv.list().length, 9);
+  assert.equal(inv.list().length, 10);
+  assert.equal(inv.list().filter(e => e.def.mode !== 'melee').length, 9);
+  assert.equal(inv.get('knife')?.def.hold, 'knife');
   assert.equal(inv.bySlot(8).length, 2);
   for (const entry of inv.list()) {
     assert.ok(entry.loaded > 0);
-    assert.ok(inv.reserve[entry.def.category] > 0);
+    if (entry.def.mode !== 'melee') assert.ok(inv.reserve[entry.def.category] > 0);
     const model = buildWeaponModel(entry.def);
     assert.ok(model.triangles > 0, entry.def.id);
     assert.ok(model.anchors.grip.toArray().every(Number.isFinite));

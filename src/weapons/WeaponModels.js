@@ -461,6 +461,32 @@ function coltCarbine(def, s) {
   return model;
 }
 
+// ----------------------------------------------------------------- faca
+
+/** Faca de combate: lâmina com contragume, guarda e cabo emborrachado (cabo em -Z, lâmina em +Z). */
+function knife(def) {
+  const M = weaponMaterials();
+  const B = new GunBuilder();
+  B.part('body');
+  // Lâmina (perfil lateral: fio embaixo, ponta subindo, contragume no dorso).
+  B.side(M.stainless, [[0.012, -0.012], [0.15, -0.01], [0.19, 0.0], [0.205, 0.008], [0.17, 0.012], [0.12, 0.016], [0.06, 0.016], [0.012, 0.014]], 0.004, { bevel: 0.0012 });
+  // Guarda.
+  B.block(M.black, 0.0, 0.012, -0.024, 0.026, 0.016, { bevel: 0.002 });
+  // Cabo com anéis e pomo.
+  B.side(M.rubber, [[-0.105, -0.011], [0.0, -0.013], [0.0, 0.015], [-0.105, 0.012]], 0.022, { bevel: 0.004 });
+  for (const z of [-0.08, -0.055, -0.03]) B.block(M.black, z, z + 0.006, -0.015, 0.017, 0.024, { bevel: 0.001 });
+  B.block(M.satin, -0.118, -0.105, -0.013, 0.014, 0.024, { bevel: 0.003 });
+  const model = B.build(def.id);
+  model.anchors = {
+    grip: new THREE.Vector3(0, 0.0, -0.05),
+    muzzle: new THREE.Vector3(0, 0.004, 0.2),
+    eject: new THREE.Vector3(0, 0.0, 0.0),
+    support: new THREE.Vector3(0, 0.0, -0.05),
+    sight: new THREE.Vector3(0, 0.02, 0.0),
+  };
+  return model;
+}
+
 // --------------------------------------------------------------- fábrica
 
 const BUILDERS = {
@@ -472,6 +498,7 @@ const BUILDERS = {
   mac11: (d) => macFamily(d, { scale: 0.82, finish: 'black', magLen: 0.07 }),
   kg99: (d) => kg99(d),
   colt653: (d) => coltCarbine(d, { furniture: 'polymer', stock: 'collapsible', handguardEnd: 0.27, barrelEnd: 0.4, triangular: false, magLen: 0.15, magCurve: 0.035 }),
+  knife: (d) => knife(d),
   coltsporter: (d) => coltCarbine(d, { furniture: 'furniture', stock: 'fixed', handguardEnd: 0.31, barrelEnd: 0.47, triangular: false, magLen: 0.1, magCurve: 0.012 }),
 };
 

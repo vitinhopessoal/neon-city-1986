@@ -7,9 +7,9 @@
  * apenas da silhueta externa.
  *
  * Campos:
- *   category     'pistol' | 'shotgun' | 'compact' | 'carbine' (munição compartilhada)
- *   hold         'pistol' (uma mão + apoio) | 'long' (duas mãos, coronha)
- *   mode         'semi' | 'auto' | 'pump'
+ *   category     'pistol' | 'shotgun' | 'compact' | 'carbine' (munição compartilhada) | 'melee'
+ *   hold         'pistol' (uma mão + apoio) | 'long' (duas mãos, coronha) | 'knife'
+ *   mode         'semi' | 'auto' | 'pump' | 'melee' (golpe: range = alcance, hitDelay = contato)
  *   rpm          cadência máxima (disparos por minuto)
  *   damage       dano por projétil; pellets = projéteis por disparo
  *   range        alcance útil (m); o dano cai até 40% entre falloff e range
@@ -26,6 +26,7 @@ export const AMMO_TYPES = {
   shotgun: { label: 'ESCOPETA', max: 48 },
   compact: { label: 'COMPACTA', max: 300 },
   carbine: { label: 'CARABINA', max: 240 },
+  melee: { label: 'CORPO A CORPO', max: 0 },
 };
 
 export const WEAPONS = [
@@ -112,5 +113,16 @@ export const WEAPONS = [
     history: 'Inspirada nas carabinas civis semiautomáticas "Sporter" da Colt vendidas em meados dos anos 80. Nomenclatura exata documentada como aproximada.',
   },
 ];
+
+// Faca (corpo a corpo): sem munição; o golpe usa a animação "Stabbing".
+WEAPONS.push({
+  id: 'knife', slot: 9, name: 'FACA', category: 'melee', hold: 'knife', mode: 'melee',
+  rpm: 70, damage: 60, pellets: 1, range: 1.9, falloff: 1.9, hitDelay: 0.3,
+  spread: 0, aimSpread: 0, bloom: 0, recoil: 0,
+  mag: 1, reserveStart: 0, reload: 0,
+  sound: null,
+  viewmodel: { hip: [0.2, -0.2, -0.4], aim: [0.14, -0.17, -0.36] },
+  history: 'Faca de combate genérica de lâmina fixa, comum nos anos 80.',
+});
 
 export const WEAPON_BY_ID = Object.fromEntries(WEAPONS.map((w) => [w.id, w]));

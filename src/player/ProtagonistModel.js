@@ -179,6 +179,7 @@ export class ProtagonistModel {
     // Deslocamentos do quadril (balanço da caminhada, agachar ao aterrissar).
     const hips = this.bones[0];
     hips.position.x += j.hips.position.x;
+    hips.position.z += j.hips.position.z; // clipes da Mixamo (o procedural mantém 0)
     hips.position.y += j.hips.position.y - animator.hipsBaseY;
     // Sentado: os braços do GLB têm outro comprimento e os ombros ficam mais
     // altos; uma IK de dois ossos leva os pulsos até os do esqueleto

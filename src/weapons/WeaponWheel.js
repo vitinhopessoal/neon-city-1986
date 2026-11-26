@@ -130,7 +130,7 @@ export class WeaponWheel {
     this.cName.textContent = it.name;
     if (it.id) {
       const e = this.inv.get(it.id);
-      this.cAmmo.textContent = `${e.loaded} / ${this.inv.reserve[e.def.category]}`;
+      this.cAmmo.textContent = e.def.mode === 'melee' ? '—' : `${e.loaded} / ${this.inv.reserve[e.def.category]}`;
       this.cCat.textContent = AMMO_TYPES[e.def.category]?.label || '';
     } else {
       this.cAmmo.textContent = '';

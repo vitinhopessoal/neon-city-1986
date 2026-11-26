@@ -423,6 +423,11 @@ export class Game {
         return ok;
       })
       : Promise.resolve(false);
+    // Animações da Mixamo (public/models/anims); até carregarem, a animação é a procedural.
+    this.animationLoad = this.player.loadAnimations(`${import.meta.env.BASE_URL}models/anims/`).then((ok) => {
+      this.loadStats = { ...(this.loadStats || {}), animationsMs: this.player.clips.stats.loadMs, animations: this.player.clips.status };
+      return ok;
+    });
   }
 
   _handleGlobalKeys() {

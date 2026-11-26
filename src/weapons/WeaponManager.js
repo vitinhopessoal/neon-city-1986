@@ -166,6 +166,7 @@ export class WeaponManager {
 
   startReload() {
     const d = this.def;
+    if (d?.mode === 'melee') return false;
     if (!d || this.state !== 'ready' || this.reload || this.selected.loaded >= d.mag) return false;
     if (this.reserve <= 0) { this.audio.mech('empty'); return false; }
     this.reload = { t: 0, dur: d.reload, perRound: !!d.reloadPerRound, startedEmpty: this.selected.loaded === 0, ev: 0 };
@@ -250,6 +251,8 @@ export class WeaponManager {
     W.pitch = -g.cameras.pitch + (this.fpActive ? 0 : 0.05);
     W.kick = this.kick;
     W.reload = this.reload ? this._reloadPhase() : -1;
+    W.reloadDur = d?.reload || 2;
+    W.stab = this.stabCount || 0;
 
     // Corpo acompanha a câmera ao mirar ou logo após atirar.
     g.player.setAimFacing(onFoot && this.drawn && (this.aimHeld || this.hipFireT > 0));
@@ -260,7 +263,7 @@ export class WeaponManager {
     if (vis && g.player.modelMode === 'glb') {
       let wgt = 0;
       if (d && onFoot && this.state !== 'holstered' && this.view.current?.tp.root.visible) {
-        wgt = this.drawK * (d.hold === 'long' ? 1 : Math.max(this.aim, this.hipFireT > 0 ? 0.85 : 0));
+        wgt = d.hold === 'knife' ? 0 : this.drawK * (d.hold === 'long' ? 1 : Math.max(this.aim, this.hipFireT > 0 ? 0.85 : 0));
         if (this.reload) wgt *= 1 - Math.sin(Math.min(1, this._reloadPhase()) * Math.PI);
       }
       vis.leftHand.weight = wgt;
@@ -321,10 +324,19 @@ export class WeaponManager {
     this._updateReload(dt);
     if (!input.isDown('fire')) this.emptyLatch = false;
 
+    // Golpe de faca: contato um instante depois do início da facada.
+    if (this.stabT > 0) this.stabT -= dt;
+    if (this.meleeT > 0) {
+      this.meleeT -= dt;
+      if (this.meleeT <= 0 && d?.mode === 'melee' && this.onFoot) this._meleeHit(d);
+    }
+
     // Disparo.
     if (d && this.onFoot && this.state === 'ready' && !this.quickOpen) {
       const pressed = input.wasPressed('fire');
-      if (d.mode === 'auto') {
+      if (d.mode === 'melee') {
+        if (pressed && this.cooldown <= 0) this._melee(d);
+      } else if (d.mode === 'auto') {
         // Automática: até 2 disparos por quadro mantêm a cadência em 60 fps.
         for (let k = 0; k < 2 && input.isDown('fire') && this.cooldown <= 0 && this.state === 'ready'; k++) this._tryFire(pressed && k === 0);
         if (input.isDown('fire') && this.cooldown > 0) { /* aguardando a cadência */ }
@@ -508,6 +520,35 @@ export class WeaponManager {
     if (e.loaded === 0 && d.category === 'pistol') { this.slideLocked = true; this.slideK = 1; }
   }
 
+  /** Facada: animação (contador lido pelo PlayerClips) e contato agendado. */
+  _melee(d) {
+    this.cooldown = 60 / d.rpm;
+    this.stabCount = (this.stabCount || 0) + 1;
+    this.meleeT = d.hitDelay ?? 0.3;
+    this.stabT = 0.9;
+    this.hipFireT = 0.7; // o corpo vira para a mira, como ao atirar
+    this.audio.mech('holster');
+  }
+
+  _meleeHit(d) {
+    const g = this.game, p = g.player;
+    const origin = _v2.copy(p.visualPosition).setY(p.visualPosition.y + 1.25);
+    // Na direção da mira (câmera) se estiver mirando; senão para onde o corpo olha.
+    const dir = _v3;
+    if (this.aim > 0.5) { g.camera.getWorldDirection(dir); dir.y = Math.max(-0.5, Math.min(0.5, dir.y)); }
+    else dir.set(Math.sin(p.controller.yaw), -0.08, Math.cos(p.controller.yaw));
+    dir.normalize();
+    this.stats.shots++;
+    for (const side of [0, -0.25, 0.25]) {
+      const pd = dir.clone().applyAxisAngle(UP, side);
+      const res = this.ballistics.cast(origin, pd, d.range, { out: this._ra });
+      if (!res.hit) continue;
+      this._applyHit(res, pd, d, true);
+      if (res.target) g.city?.events.emit('crime', { source: 'player', severity: 2, x: res.point.x, y: res.point.y, z: res.point.z });
+      break;
+    }
+  }
+
   _spreadDir(dir, spread, i) {
     // Cone uniforme (disco) em torno da direção.
     const r = spread * Math.sqrt(Math.random());
@@ -569,6 +610,23 @@ export class WeaponManager {
     const wrist = player.getAttachBone('wristR');
     wrist.updateWorldMatrix(true, false);
     this._palm.set(0, -player.palmOffset, 0.012).applyMatrix4(wrist.matrixWorld);
+    if (d.hold === 'knife') {
+      // Faca: segue o punho (a lâmina acompanha a facada da animação).
+      // Cabo atravessado no punho fechado: lâmina para a frente da mão.
+      wrist.getWorldQuaternion(_q);
+      const bone = player.getAttachBone('hips');
+      bone.updateWorldMatrix(true, false);
+      _e.set(Math.PI / 2 + 0.2, 0, 0, 'XYZ');
+      _q2.setFromEuler(_e);
+      _m.compose(_v.set(-0.18, -0.04, 0.06), _q2, _v2.set(1, 1, 1));
+      this._holster.multiplyMatrices(bone.matrixWorld, _m);
+      this.view.placeThird({ visible: !this.fpActive, palm: this._palm, quat: _q, holsterMatrix: this._holster, drawK: this.drawK });
+      const st = this.stabT > 0 ? Math.sin((1 - this.stabT / 0.9) * Math.PI) : 0;
+      const vm = d.viewmodel;
+      this.view.setFPSupport(false);
+      this.view.placeFirst({ visible: this.fpActive && this.drawK > 0.02, camera: cam, offset: this._fpOffset.set(vm.hip[0] - st * 0.1, vm.hip[1] + st * 0.06 - (1 - this.drawK) * 0.25, vm.hip[2] - st * 0.22), yawIn: 0.15, kick: 0, roll: st * 0.4 });
+      return;
+    }
 
     // Orientação: pronta baixa ↔ mira no ponto do retículo.
     const yaw = player.controller.yaw;

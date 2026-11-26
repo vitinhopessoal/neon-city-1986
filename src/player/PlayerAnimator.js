@@ -453,7 +453,17 @@ export class PlayerAnimator {
     const pose = this._crashPose || (this._crashPose = emptyPose());
     for (const k of POSE_KEYS) pose[k] = 0;
     const add = (k, v, wt) => { pose[k] += v * wt; };
-    const f = w.fly || 0, l = w.lie || 0, g = w.getup || 0;
+    const f = w.fly || 0, l = w.lie || 0, g = w.getup || 0, pl = w.pull || 0;
+    if (pl > 0) {
+      // Subindo numa borda: mãos apoiadas em cima, cotovelos dobrando conforme puxa (pullK 0..1).
+      const k = w.pullK || 0;
+      add('shoulderL', 2.75 - k * 1.25, pl); add('shoulderR', 2.75 - k * 1.25, pl);
+      add('elbowL', 0.15 + k * 1.5, pl); add('elbowR', 0.15 + k * 1.5, pl);
+      add('armOutL', 0.22, pl); add('armOutR', 0.22, pl);
+      add('spinePitch', 0.15 + k * 0.35, pl); add('headPitch', -0.3, pl);
+      add('hipL', 0.25 + k * 0.6, pl); add('kneeL', 0.4 + k * 0.9, pl);
+      add('hipR', 0.1, pl); add('kneeR', 0.35, pl);
+    }
     if (f > 0) {
       const a = Math.sin(tt * 11), b = Math.sin(tt * 9 + 1.3), c = Math.sin(tt * 13 + 2.1);
       add('shoulderL', 2.3 + a * 0.55, f); add('shoulderR', 1.9 - c * 0.55, f);
@@ -482,8 +492,9 @@ export class PlayerAnimator {
       add('shoulderL', 0.75, g); add('shoulderR', 0.6, g);
       add('elbowL', 0.5, g); add('elbowR', 0.6, g); add('armOutL', 0.15, g); add('armOutR', 0.15, g);
     }
-    const total = Math.min(1, f + l + g) * fade;
-    for (const k of POSE_KEYS) t[k] = lerp(t[k], pose[k] / Math.max(1, f + l + g), total);
+    const sum = f + l + g + pl;
+    const total = Math.min(1, sum) * fade;
+    for (const k of POSE_KEYS) t[k] = lerp(t[k], pose[k] / Math.max(1, sum), total);
   }
 
   /** Sobrepõe os braços com a pose da arma (pronta, mira, recuo, recarga). */
@@ -493,7 +504,13 @@ export class PlayerAnimator {
     if (w < 0.001) return;
     const aim = W.aim, p = clamp(W.pitch, -0.9, 0.9), kick = W.kick;
     const R = (k, v, wt) => { t[k] = lerp(t[k], v, wt); };
-    if (W.hold === 'pistol') {
+    if (W.hold === 'knife') {
+      // Faca: punho fechado à frente do quadril, lâmina para a frente.
+      R('shoulderR', 0.55 + aim * 0.5, w);
+      R('elbowR', 1.05 - aim * 0.3, w);
+      R('armOutR', 0.04, w);
+      R('wristR', -0.25, w);
+    } else if (W.hold === 'pistol') {
       // Direita: pronta baixa → braço estendido na mira.
       R('shoulderR', lerp(0.5, 1.45 + p, aim) + kick * 0.18, w);
       R('elbowR', lerp(0.8, 0.12, aim) - kick * 0.1, w);

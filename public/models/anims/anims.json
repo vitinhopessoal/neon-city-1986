@@ -1,0 +1,216 @@
+{
+  "source": "Mixamo",
+  "fps": 30,
+  "clips": [
+    {
+      "name": "idle",
+      "file": "idle.fbx",
+      "mixamo": "Breathing Idle",
+      "bytes": 606448
+    },
+    {
+      "name": "walk",
+      "file": "walk.fbx",
+      "mixamo": "Walking",
+      "bytes": 207520
+    },
+    {
+      "name": "run",
+      "file": "run.fbx",
+      "mixamo": "Running",
+      "bytes": 193043
+    },
+    {
+      "name": "walk_back",
+      "file": "walk_back.fbx",
+      "mixamo": "Walking Backwards",
+      "bytes": 225331
+    },
+    {
+      "name": "strafe_left",
+      "file": "strafe_left.fbx",
+      "mixamo": "Left Strafe Walking",
+      "bytes": 215075
+    },
+    {
+      "name": "strafe_right",
+      "file": "strafe_right.fbx",
+      "mixamo": "Right Strafe Walking",
+      "bytes": 215075
+    },
+    {
+      "name": "jump",
+      "file": "jump.fbx",
+      "mixamo": "Jump",
+      "bytes": 208915
+    },
+    {
+      "name": "fall",
+      "file": "fall.fbx",
+      "mixamo": "Falling Idle",
+      "bytes": 193043
+    },
+    {
+      "name": "land",
+      "file": "land.fbx",
+      "mixamo": "Falling To Landing",
+      "bytes": 212515
+    },
+    {
+      "name": "swim",
+      "file": "swim.fbx",
+      "mixamo": "Swimming",
+      "bytes": 369699
+    },
+    {
+      "name": "tread_water",
+      "file": "tread_water.fbx",
+      "mixamo": "Treading Water",
+      "bytes": 319939
+    },
+    {
+      "name": "swim_to_edge",
+      "file": "swim_to_edge.fbx",
+      "mixamo": "Swimming To Edge",
+      "bytes": 388563
+    },
+    {
+      "name": "getup",
+      "file": "getup.fbx",
+      "mixamo": "Getting Up",
+      "bytes": 517059
+    },
+    {
+      "name": "hit",
+      "file": "hit.fbx",
+      "mixamo": "Hit Reaction",
+      "bytes": 307923
+    },
+    {
+      "name": "dying",
+      "file": "dying.fbx",
+      "mixamo": "Dying",
+      "bytes": 344851
+    },
+    {
+      "name": "pistol_idle",
+      "file": "pistol_idle.fbx",
+      "mixamo": "Pistol Idle",
+      "bytes": 507955
+    },
+    {
+      "name": "pistol_aim",
+      "file": "pistol_aim.fbx",
+      "mixamo": "Pistol Aim",
+      "bytes": 482131
+    },
+    {
+      "name": "pistol_shoot",
+      "file": "pistol_shoot.fbx",
+      "mixamo": "Shooting Pistol",
+      "bytes": 298339
+    },
+    {
+      "name": "pistol_walk",
+      "file": "pistol_walk.fbx",
+      "mixamo": "Pistol Walk",
+      "bytes": 195523
+    },
+    {
+      "name": "pistol_run",
+      "file": "pistol_run.fbx",
+      "mixamo": "Pistol Run",
+      "bytes": 234083
+    },
+    {
+      "name": "pistol_walk_back",
+      "file": "pistol_walk_back.fbx",
+      "mixamo": "Pistol Walk Backward",
+      "bytes": 208387
+    },
+    {
+      "name": "pistol_strafe_left",
+      "file": "pistol_strafe_left.fbx",
+      "mixamo": "Pistol Strafe esquerda",
+      "bytes": 182675
+    },
+    {
+      "name": "pistol_strafe_right",
+      "file": "pistol_strafe_right.fbx",
+      "mixamo": "Pistol Strafe direita",
+      "bytes": 184515
+    },
+    {
+      "name": "rifle_idle",
+      "file": "rifle_idle.fbx",
+      "mixamo": "Rifle Idle",
+      "bytes": 476259
+    },
+    {
+      "name": "rifle_aim",
+      "file": "rifle_aim.fbx",
+      "mixamo": "Rifle Aiming Idle",
+      "bytes": 335603
+    },
+    {
+      "name": "rifle_fire",
+      "file": "rifle_fire.fbx",
+      "mixamo": "Firing Rifle",
+      "bytes": 197251
+    },
+    {
+      "name": "rifle_walk",
+      "file": "rifle_walk.fbx",
+      "mixamo": "Rifle Walk",
+      "bytes": 221667
+    },
+    {
+      "name": "rifle_run",
+      "file": "rifle_run.fbx",
+      "mixamo": "Rifle Run",
+      "bytes": 195811
+    },
+    {
+      "name": "rifle_walk_back",
+      "file": "rifle_walk_back.fbx",
+      "mixamo": "Backwards Rifle Walk",
+      "bytes": 214387
+    },
+    {
+      "name": "rifle_strafe_left",
+      "file": "rifle_strafe_left.fbx",
+      "mixamo": "Rifle Side Step esquerda",
+      "bytes": 232467
+    },
+    {
+      "name": "rifle_strafe_right",
+      "file": "rifle_strafe_right.fbx",
+      "mixamo": "Rifle Side Step direita",
+      "bytes": 215731
+    },
+    {
+      "name": "rifle_walk_stop",
+      "file": "rifle_walk_stop.fbx",
+      "mixamo": "Rifle Walk To Stop",
+      "bytes": 371027
+    },
+    {
+      "name": "rifle_reload",
+      "file": "rifle_reload.fbx",
+      "mixamo": "Reloading",
+      "bytes": 357651
+    },
+    {
+      "name": "knife_idle",
+      "file": "knife_idle.fbx",
+      "mixamo": "Knife Idle",
+      "bytes": 347459
+    },
+    {
+      "name": "knife_stab",
+      "file": "knife_stab.fbx",
+      "mixamo": "Stabbing",
+      "bytes": 296515
+    }
+  ]
+}

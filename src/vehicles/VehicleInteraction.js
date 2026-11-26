@@ -426,6 +426,14 @@ export class VehicleInteraction {
 
   _crashPose() {
     const c = this.crashState, player = this.game.player;
+    // Levantar de bruços com o clipe "Getting Up" (ele começa deitado de bruços, cabeça à frente).
+    const clips = player.clips;
+    if (c.phase === 'getup' && c.lieFrom > 0 && clips.ready && clips.has('getup')) {
+      if (player.clipMode !== 'getup') { player.clipMode = 'getup'; clips.snap(); }
+      player.animator.crash = null;
+      player.setExternalPose(c.standPoint(this._pos), c.yaw, 0, 0);
+      return;
+    }
     player.animator.crash = c.weights;
     // Corpo inteiro girado em torno do quadril (pitch = rolar para a frente).
     player.setExternalPose(c.rootPosition(this._pos), c.yaw, 0, 0, 0, 0, 0, c.roll, c.pitch);
@@ -444,6 +452,7 @@ export class VehicleInteraction {
     const c = this.crashState;
     const player = this.game.player;
     player.animator.crash = null;
+    player.clipMode = null;
     if (c) player.releaseExternalPose(point || c.standPoint(), c.yaw);
     this.crashState = null;
     this._setState(PLAYER_STATES.ON_FOOT);

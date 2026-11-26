@@ -62,10 +62,11 @@ export class WeaponHUD {
       r.panel.classList.toggle('collapsed', !s.drawn);
       this._set('name', s.def.name);
       this._set('mode', MODE_LABEL[s.def.mode] || '');
-      this._set('loaded', String(s.loaded));
-      this._set('reserve', String(s.reserve));
+      const melee = s.def.mode === 'melee';
+      this._set('loaded', melee ? '—' : String(s.loaded));
+      this._set('reserve', melee ? '' : String(s.reserve));
       this._set('cat', AMMO_TYPES[s.def.category]?.label || '');
-      r.loaded.classList.toggle('low', s.loaded <= Math.ceil(s.def.mag * 0.25));
+      r.loaded.classList.toggle('low', !melee && s.loaded <= Math.ceil(s.def.mag * 0.25));
       const reloading = s.reloadK >= 0;
       r.reloadBox.classList.toggle('visible', reloading);
       if (reloading) r.reloadBar.style.transform = `scaleX(${s.reloadK.toFixed(3)})`;

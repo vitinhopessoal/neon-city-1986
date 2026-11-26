@@ -273,6 +273,13 @@ export class PlayerController {
       const x = p.x + fx * r, z = p.z + fz * r;
       const g = this.collision.getGroundHeight(x, z, level - 0.2, c.climbReach);
       if (g > level - 0.4 && g < level + c.climbReach - 0.2 && g > p.y + 0.5) {
+        // Com as animações carregadas, o Player conduz a subida (nadar até a borda e subir).
+        if (this.onClimb?.({ x, y: g, z })) {
+          v.set(0, 0, 0);
+          if (this.swimming) this._setSwimming(false);
+          this.jumpBuffer = 0;
+          return true;
+        }
         p.set(x, g, z);
         v.set(0, 0, 0);
         this._setSwimming(false);

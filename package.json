@@ -32,6 +32,8 @@
     "build:motos": "blender --background --factory-startup --python tools/blender/neon_moto/run_moto.py -- --all --render",
     "build:vice": "python tools/vice-city/convert.py --all",
     "test:vice": "node --test tools/vice-city/collision.test.mjs tools/vice-city/single-map.test.mjs tools/vice-city/water-fallback.test.mjs tools/vice-city/props.test.mjs",
+    "test:anims": "node --test tools/mixamo/anims.test.mjs",
+    "anims:import": "node tools/mixamo/import-anims.mjs",
     "test:interface": "node --test tools/hud/radar-menu.test.mjs tools/hud/waypoint-gauge.test.mjs",
     "test:desktop": "node --test tools/desktop/local-map.test.cjs"
   },
